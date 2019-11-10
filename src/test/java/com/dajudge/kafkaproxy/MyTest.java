@@ -2,6 +2,7 @@ package com.dajudge.kafkaproxy;
 
 import com.dajudge.kafkaproxy.brokermap.BrokerMapper;
 import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
+import com.dajudge.kafkaproxy.networking.KafkaSslConfig;
 import com.dajudge.kafkaproxy.networking.ProxyChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -43,7 +44,16 @@ public class MyTest {
         final NioEventLoopGroup bossGroup = new NioEventLoopGroup();
         final NioEventLoopGroup upstreamWorkerGroup = new NioEventLoopGroup();
         final NioEventLoopGroup downstreamWorkerGroup = new NioEventLoopGroup();
-        channel = new ProxyChannel(PROXY_CHANNEL_PORT, hostname, port, brokerMapper, bossGroup, upstreamWorkerGroup, downstreamWorkerGroup);
+        channel = new ProxyChannel(
+                PROXY_CHANNEL_PORT,
+                hostname,
+                port,
+                new KafkaSslConfig(false, null, null, false),
+                brokerMapper,
+                bossGroup,
+                upstreamWorkerGroup,
+                downstreamWorkerGroup
+        );
     }
 
     @After

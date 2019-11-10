@@ -10,6 +10,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.function.Consumer;
 
+import static io.netty.channel.ChannelOption.SO_KEEPALIVE;
+
+
 public class DownstreamClient {
     private static final Logger LOG = LoggerFactory.getLogger(DownstreamClient.class);
     private final Channel channel;
@@ -17,6 +20,7 @@ public class DownstreamClient {
     public DownstreamClient(
             final String host,
             final int port,
+            final KafkaSslConfig sslConfig,
             final Consumer<ByteBuf> messageSink,
             final Runnable closeCallback,
             final EventLoopGroup workerGroup
@@ -25,11 +29,13 @@ public class DownstreamClient {
             channel = new Bootstrap()
                     .group(workerGroup)
                     .channel(NioSocketChannel.class)
-                    .option(ChannelOption.SO_KEEPALIVE, true)
+                    .option(SO_KEEPALIVE, true)
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         public void initChannel(SocketChannel ch) {
-                            ch.pipeline().addLast(new ProxyClientHandler(messageSink));
+                            final ChannelPipeline pipeline = ch.pipeline();
+                            pipeline.addLast(SslHandlerFactory.create(sslConfig, host, port));
+                            pipeline.addLast(new ProxyClientHandler(messageSink));
                         }
                     })
                     .connect(host, port).sync().channel();

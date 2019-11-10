@@ -21,6 +21,7 @@ public class ProxyChannel {
             final int port,
             final String kafkaHost,
             final int kafkaPort,
+            final KafkaSslConfig kafkaSslConfig,
             final BrokerMapper brokerMapper,
             final NioEventLoopGroup bossGroup,
             final NioEventLoopGroup upstreamWorkerGroup,
@@ -30,6 +31,7 @@ public class ProxyChannel {
             final ChannelInitializer<SocketChannel> childHandler = new ChannelInitializer<SocketChannel>() {
                 @Override
                 public void initChannel(final SocketChannel ch) {
+                    final ChannelPipeline pipeline = ch.pipeline();
                     LOG.trace("Incoming connection: {}", ch.remoteAddress());
                     final Consumer<ByteBuf> sink = buffer -> {
                         ch.writeAndFlush(buffer.copy()).addListener((ChannelFutureListener) future -> {
@@ -50,6 +52,7 @@ public class ProxyChannel {
                     final DownstreamClient downstreamClient = new DownstreamClient(
                             kafkaHost,
                             kafkaPort,
+                            kafkaSslConfig,
                             responseStreamSplitter::onBytesReceived,
                             () -> {
                                 LOG.trace("Closing upstream channel.");
@@ -70,7 +73,7 @@ public class ProxyChannel {
                             requestStore
                     );
                     final KafkaMessageSplitter splitter = new KafkaMessageSplitter(requestProcessor::onRequest);
-                    ch.pipeline().addLast(new ProxyServerHandler(splitter::onBytesReceived));
+                    pipeline.addLast(new ProxyServerHandler(splitter::onBytesReceived));
                 }
             };
             channel = new ServerBootstrap()
