@@ -12,7 +12,7 @@ This is where kafkaproxy comes into play and allows for transparent relaying of 
 the relevant parts of the communication where the brokers publish the endpoint names - with user-configurable endpoints
 where the the proxy instances can be reached.
 
-kafkaproxy is based on netty for high performance and low resource consumption.  
+kafkaproxy is based on netty for high performance and low resource consumption.
 
 # Features
 * TODO: TLS encrypted communication from client to proxy
@@ -41,3 +41,7 @@ proxies:
 
 # Run kafkaproxy in Docker
 TODO
+
+# Further Reading
+* [A Guide To The Kafka Protocol](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol)
+* [Kafka protocol guide](http://kafka.apache.org/protocol.html)
