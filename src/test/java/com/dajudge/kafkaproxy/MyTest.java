@@ -1,9 +1,9 @@
 package com.dajudge.kafkaproxy;
 
-import com.dajudge.kafkaproxy.brokermap.BrokerMapper;
+import com.dajudge.kafkaproxy.brokermap.BrokerMap;
 import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
-import com.dajudge.kafkaproxy.networking.KafkaSslConfig;
-import com.dajudge.kafkaproxy.networking.ProxyChannel;
+import com.dajudge.kafkaproxy.networking.downstream.KafkaSslConfig;
+import com.dajudge.kafkaproxy.networking.upstream.ProxyChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -38,8 +38,8 @@ public class MyTest {
         assertTrue("No match: " + kafka.getBootstrapServers(), matcher.matches());
         final String hostname = matcher.group(1);
         final int port = Integer.parseInt(matcher.group(2));
-        final BrokerMapper brokerMapper = new BrokerMapper(new HashMap<String, BrokerMapping>() {{
-            put(hostname + ":" + port, new BrokerMapping("localhost", PROXY_CHANNEL_PORT));
+        final BrokerMap brokerMap = new BrokerMap(new HashMap<String, BrokerMapping>() {{
+            put(hostname + ":" + port, new BrokerMapping("broker", "localhost", PROXY_CHANNEL_PORT, hostname, port));
         }});
         final NioEventLoopGroup bossGroup = new NioEventLoopGroup();
         final NioEventLoopGroup upstreamWorkerGroup = new NioEventLoopGroup();
@@ -49,7 +49,7 @@ public class MyTest {
                 hostname,
                 port,
                 new KafkaSslConfig(false, null, null, false),
-                brokerMapper,
+                brokerMap,
                 bossGroup,
                 upstreamWorkerGroup,
                 downstreamWorkerGroup

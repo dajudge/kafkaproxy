@@ -1,27 +1,22 @@
-package com.dajudge.kafkaproxy.networking;
+package com.dajudge.kafkaproxy.networking.trustmanager;
 
-import sun.security.util.HostnameChecker;
+import com.dajudge.kafkaproxy.networking.trustmanager.HostnameVerifier;
 
 import javax.net.ssl.X509TrustManager;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
 
-import static sun.security.util.HostnameChecker.TYPE_TLS;
-
 public class HostCheckingTrustManager implements X509TrustManager {
     private final Collection<X509TrustManager> nextManagers;
-    private final String hostname;
-    private final boolean hostnameVerificationEnabled;
+    private final HostnameVerifier hostnameVerifier;
 
     public HostCheckingTrustManager(
             final Collection<X509TrustManager> nextManagers,
-            final String hostname,
-            final boolean hostnameVerificationEnabled
+            final HostnameVerifier hostnameVerifier
     ) {
         this.nextManagers = nextManagers;
-        this.hostname = hostname;
-        this.hostnameVerificationEnabled = hostnameVerificationEnabled;
+        this.hostnameVerifier = hostnameVerifier;
     }
 
     @Override
@@ -34,9 +29,7 @@ public class HostCheckingTrustManager implements X509TrustManager {
         for (final X509TrustManager nextManager : nextManagers) {
             nextManager.checkServerTrusted(chain, authType);
         }
-        if (hostnameVerificationEnabled) {
-            HostnameChecker.getInstance(TYPE_TLS).match(hostname, chain[0]);
-        }
+        hostnameVerifier.verify(chain[0]);
     }
 
     @Override

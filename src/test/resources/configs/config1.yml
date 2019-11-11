@@ -1,0 +1,15 @@
+proxies:
+  - name: broker1
+    proxy:
+      hostname: kafka.example.com
+      port: 39092
+    broker:
+      hostname: broker1.kafka.local
+      port: 9092
+  - name: broker2
+    proxy:
+      hostname: kafka.example.com
+      port: 39093
+    broker:
+      hostname: broker2.kafka.local
+      port: 9092

@@ -1,4 +1,4 @@
-package com.dajudge.kafkaproxy.networking;
+package com.dajudge.kafkaproxy.networking.trustmanager;
 
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
@@ -11,7 +11,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 
-public class DownstreamTrustManager implements TrustManager {
+public class DefaultTrustmanagerFactory implements TrustManager {
     public static TrustManager[] createTrustManagers(final File trustStore, final char[] trustStorePassword) {
         try (final InputStream inputStream = new FileInputStream(trustStore)) {
             final TrustManagerFactory factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());

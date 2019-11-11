@@ -1,4 +1,4 @@
-package com.dajudge.kafkaproxy.networking;
+package com.dajudge.kafkaproxy.networking.downstream;
 
 import java.io.File;
 

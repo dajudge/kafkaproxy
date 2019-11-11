@@ -1,13 +1,13 @@
-package com.dajudge.kafkaproxy.networking;
+package com.dajudge.kafkaproxy.networking.downstream;
 
+import com.dajudge.kafkaproxy.networking.trustmanager.DefaultTrustmanagerFactory;
+import com.dajudge.kafkaproxy.networking.trustmanager.HostCheckingTrustManager;
+import com.dajudge.kafkaproxy.networking.trustmanager.HttpClientHostnameVerifier;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.handler.ssl.SslHandler;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
+import javax.net.ssl.*;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -23,12 +23,11 @@ public class SslHandlerFactory {
         }
         try {
             final SSLContext clientContext = SSLContext.getInstance("TLS");
+            final com.dajudge.kafkaproxy.networking.trustmanager.HostnameVerifier hostnameVerifier = kafkaSslConfig.isHostnameVerificationEnabled()
+                    ? new HttpClientHostnameVerifier(kafkaHostname)
+                    : com.dajudge.kafkaproxy.networking.trustmanager.HostnameVerifier.NULL_VERIFIER;
             final TrustManager[] trustManagers = {
-                    new HostCheckingTrustManager(
-                            createDefaultTrustManagers(kafkaSslConfig),
-                            kafkaHostname,
-                            kafkaSslConfig.isHostnameVerificationEnabled()
-                    )
+                    new HostCheckingTrustManager(createDefaultTrustManagers(kafkaSslConfig), hostnameVerifier)
             };
             clientContext.init(null, trustManagers, null);
             final SSLEngine engine = clientContext.createSSLEngine(kafkaHostname, port);
@@ -40,7 +39,7 @@ public class SslHandlerFactory {
     }
 
     private static List<X509TrustManager> createDefaultTrustManagers(final KafkaSslConfig kafkaSslConfig) {
-        return Stream.of((DownstreamTrustManager.createTrustManagers(
+        return Stream.of((DefaultTrustmanagerFactory.createTrustManagers(
                 kafkaSslConfig.getTrustStore(),
                 kafkaSslConfig.getTrustStorePassword().toCharArray()
         ))).map(it -> (X509TrustManager) it).collect(toList());

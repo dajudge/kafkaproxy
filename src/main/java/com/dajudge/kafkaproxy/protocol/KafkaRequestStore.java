@@ -1,5 +1,6 @@
 package com.dajudge.kafkaproxy.protocol;
 
+import com.dajudge.kafkaproxy.protocol.rewrite.ResponseRewriter;
 import io.netty.buffer.ByteBuf;
 import org.apache.kafka.common.requests.RequestHeader;
 import org.apache.kafka.common.requests.ResponseHeader;

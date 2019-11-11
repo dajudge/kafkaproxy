@@ -1,4 +1,4 @@
-package com.dajudge.kafkaproxy.networking;
+package com.dajudge.kafkaproxy.networking.downstream;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;

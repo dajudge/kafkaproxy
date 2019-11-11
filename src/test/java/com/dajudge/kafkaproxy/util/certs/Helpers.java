@@ -25,13 +25,6 @@ final class Helpers {
         }
     }
 
-    static void call(final ThrowingRunnable runnable) {
-        call(() -> {
-            runnable.call();
-            return null;
-        });
-    }
-
     static X509Certificate selfSignedCert(
             final String dn,
             final KeyPair pair,
@@ -104,10 +97,6 @@ final class Helpers {
 
     interface ThrowingCallable<T> {
         T call() throws Exception;
-    }
-
-    interface ThrowingRunnable<T> {
-        void call() throws Exception;
     }
 
     interface ThrowingConsumer<T> {

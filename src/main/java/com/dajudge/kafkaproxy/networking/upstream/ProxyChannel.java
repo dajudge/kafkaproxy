@@ -1,7 +1,16 @@
-package com.dajudge.kafkaproxy.networking;
+package com.dajudge.kafkaproxy.networking.upstream;
 
-import com.dajudge.kafkaproxy.brokermap.BrokerMapper;
-import com.dajudge.kafkaproxy.protocol.*;
+import com.dajudge.kafkaproxy.brokermap.BrokerMap;
+import com.dajudge.kafkaproxy.networking.downstream.DownstreamClient;
+import com.dajudge.kafkaproxy.networking.downstream.KafkaSslConfig;
+import com.dajudge.kafkaproxy.protocol.KafkaMessageSplitter;
+import com.dajudge.kafkaproxy.protocol.KafkaRequestProcessor;
+import com.dajudge.kafkaproxy.protocol.KafkaRequestStore;
+import com.dajudge.kafkaproxy.protocol.KafkaResponseProcessor;
+import com.dajudge.kafkaproxy.protocol.rewrite.CompositeRewriter;
+import com.dajudge.kafkaproxy.protocol.rewrite.FindCoordinatorRewriter;
+import com.dajudge.kafkaproxy.protocol.rewrite.MetadataRewriter;
+import com.dajudge.kafkaproxy.protocol.rewrite.ResponseRewriter;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
@@ -13,6 +22,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.function.Consumer;
 
+import static java.util.Arrays.asList;
+
 public class ProxyChannel {
     private static final Logger LOG = LoggerFactory.getLogger(ProxyChannel.class);
     private final Channel channel;
@@ -22,7 +33,7 @@ public class ProxyChannel {
             final String kafkaHost,
             final int kafkaPort,
             final KafkaSslConfig kafkaSslConfig,
-            final BrokerMapper brokerMapper,
+            final BrokerMap brokerMap,
             final NioEventLoopGroup bossGroup,
             final NioEventLoopGroup upstreamWorkerGroup,
             final NioEventLoopGroup downstreamWorkerGroup
@@ -43,7 +54,10 @@ public class ProxyChannel {
                             }
                         });
                     };
-                    final ResponseRewriter rewriter = new MetadataRewriter(brokerMapper);
+                    final ResponseRewriter rewriter = new CompositeRewriter(asList(
+                            new MetadataRewriter(brokerMap),
+                            new FindCoordinatorRewriter(brokerMap)
+                    ));
                     final KafkaRequestStore requestStore = new KafkaRequestStore(rewriter);
                     final KafkaResponseProcessor responseProcessor = new KafkaResponseProcessor(sink, requestStore);
                     final KafkaMessageSplitter responseStreamSplitter = new KafkaMessageSplitter(
