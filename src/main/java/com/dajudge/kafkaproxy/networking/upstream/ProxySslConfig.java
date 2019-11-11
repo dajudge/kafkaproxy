@@ -3,6 +3,8 @@ package com.dajudge.kafkaproxy.networking.upstream;
 import java.io.File;
 
 public class ProxySslConfig {
+    public static final ProxySslConfig DISABLED = new ProxySslConfig(false, null, null, null, null, null);
+
     private final boolean enabled;
     private final File trustStore;
     private final String trustStorePassword;

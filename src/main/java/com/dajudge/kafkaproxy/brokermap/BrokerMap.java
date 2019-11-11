@@ -1,5 +1,7 @@
 package com.dajudge.kafkaproxy.brokermap;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static java.util.stream.Collectors.toMap;
@@ -29,5 +31,9 @@ public class BrokerMap {
         return "BrokerMap{" +
                 "mappings=" + byBrokerEndpoint +
                 '}';
+    }
+
+    public List<BrokerMapping> getAll() {
+        return new ArrayList<>(byName.values());
     }
 }
