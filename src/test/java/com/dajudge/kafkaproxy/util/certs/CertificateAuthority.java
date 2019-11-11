@@ -1,5 +1,7 @@
 package com.dajudge.kafkaproxy.util.certs;
 
+import com.dajudge.kafkaproxy.ca.Helpers;
+
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 

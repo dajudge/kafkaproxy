@@ -4,7 +4,8 @@ import java.security.KeyPair;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
-import static com.dajudge.kafkaproxy.util.certs.Helpers.createJks;
+import static com.dajudge.kafkaproxy.ca.Helpers.createJks;
+
 
 public class SignedKeyPair {
     private final KeyPair keyPair;

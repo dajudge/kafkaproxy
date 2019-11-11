@@ -20,11 +20,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.jetbrains.annotations.NotNull;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -136,6 +132,7 @@ public class LoadTest {
     }
 
 
+    @Ignore
     @Test
     public void works_for_a_long_time() {
         try (final KafkaProducer<String, String> producer = new KafkaProducer<>(producerConfig(), new StringSerializer(), new StringSerializer())) {
@@ -163,7 +160,6 @@ public class LoadTest {
         }
     }
 
-    @NotNull
     private Map<String, Object> producerConfig() {
         final Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:" + PROXY_CHANNEL_PORT);

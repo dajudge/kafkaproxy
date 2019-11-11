@@ -14,6 +14,8 @@ dependencies {
     implementation 'org.yaml:snakeyaml:1.25'
     // Used for TLS hostname verification
     implementation 'org.apache.httpcomponents.client5:httpclient5:5.0-beta6'
+    // Used for certificate signing
+    implementation 'org.bouncycastle:bcpkix-jdk15on:1.64'
     // Our logging implementation
     runtimeOnly 'ch.qos.logback:logback-classic:1.2.3'
 
