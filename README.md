@@ -15,9 +15,9 @@ where the the proxy instances can be reached.
 kafkaproxy is based on netty for high performance and low resource consumption.
 
 # Features
-* TODO: TLS encrypted communication from client to proxy
-* TLS encrypted communication from proxy to broker
-* TODO: Forwarding 2-way client TLS authentication information with on-the-fly generation of client certificates via
+* SSL support from client to proxy
+* SSL support from proxy to broker
+* TODO: Forwarding 2-way client SSL authentication information via on-the-fly generation of client certificates via
   * local KeyPair generation / signing
   * CFSSL
   * AWS Certificate Manager Private CA  
