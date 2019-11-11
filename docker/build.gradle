@@ -1,0 +1,38 @@
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+
+plugins {
+    id 'com.bmuschko.docker-remote-api' version '5.3.0'
+}
+
+def dockerBuildDir = file("${project.buildDir}/docker")
+
+task clean(type: Delete) {
+    group "build"
+    delete "${project.buildDir}"
+}
+
+task copyJars(type: Copy) {
+    dependsOn project(":core").tasks.withType(Jar)
+    group "build"
+    from project(":core").tasks.withType(Jar)
+    from project(":core").configurations.runtimeClasspath
+    into dockerBuildDir
+}
+
+task copyDockerSources(type: Copy) {
+    group "build"
+    from file("src/main/docker")
+    into dockerBuildDir
+}
+
+task buildAppImage(type: DockerBuildImage) {
+    group "build"
+    dependsOn copyJars, copyDockerSources
+    inputDir = dockerBuildDir
+    tags.add('dajudge/kafkaproxy:latest')
+}
+
+task build {
+    group "build"
+    dependsOn buildAppImage
+}

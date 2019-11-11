@@ -1,25 +1,12 @@
 apply plugin: "java"
 
-repositories {
-    mavenCentral()
-    maven { url 'https://dl.bintray.com/palantir/releases' }
+subprojects {
+    repositories {
+        mavenCentral()
+        maven { url 'https://dl.bintray.com/palantir/releases' }
+    }
 }
 
-dependencies {
-    // We use the transport objects from the kafka client library
-    implementation 'org.apache.kafka:kafka-clients:2.3.1'
-    // Netty is our network layer
-    implementation 'io.netty:netty-all:4.1.42.Final'
-    // For parsing configs
-    implementation 'org.yaml:snakeyaml:1.25'
-    // Used for TLS hostname verification
-    implementation 'org.apache.httpcomponents.client5:httpclient5:5.0-beta6'
-    // Used for certificate signing
-    implementation 'org.bouncycastle:bcpkix-jdk15on:1.64'
-    // Our logging implementation
-    runtimeOnly 'ch.qos.logback:logback-classic:1.2.3'
-
-    testImplementation "org.testcontainers:kafka:1.12.3"
-    testImplementation 'junit:junit:4.11'
-    testImplementation 'com.palantir.docker.compose:docker-compose-rule-junit4:1.3.0'
+wrapper {
+    version "5.3.1"
 }
