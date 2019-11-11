@@ -22,7 +22,12 @@ kafkaproxy is based on netty for high performance and low resource consumption.
   * CFSSL
   * AWS Certificate Manager Private CA  
 
-# Broker mapping
+# Configuration
+## Client connectivity
+TODO
+## Kafka connectivity
+TODO
+## Broker mapping
 kafkaproxy needs a mapping configuration in order to know how to replace the brokers' endpoints with the endpoints
 where the kafkaproxy instance(s) are reachable. 
 ```yaml
