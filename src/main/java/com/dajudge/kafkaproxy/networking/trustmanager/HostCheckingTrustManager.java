@@ -1,7 +1,5 @@
 package com.dajudge.kafkaproxy.networking.trustmanager;
 
-import com.dajudge.kafkaproxy.networking.trustmanager.HostnameVerifier;
-
 import javax.net.ssl.X509TrustManager;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -9,14 +7,14 @@ import java.util.Collection;
 
 public class HostCheckingTrustManager implements X509TrustManager {
     private final Collection<X509TrustManager> nextManagers;
-    private final HostnameVerifier hostnameVerifier;
+    private final HostnameCheck hostnameCheck;
 
     public HostCheckingTrustManager(
             final Collection<X509TrustManager> nextManagers,
-            final HostnameVerifier hostnameVerifier
+            final HostnameCheck hostnameCheck
     ) {
         this.nextManagers = nextManagers;
-        this.hostnameVerifier = hostnameVerifier;
+        this.hostnameCheck = hostnameCheck;
     }
 
     @Override
@@ -29,7 +27,7 @@ public class HostCheckingTrustManager implements X509TrustManager {
         for (final X509TrustManager nextManager : nextManagers) {
             nextManager.checkServerTrusted(chain, authType);
         }
-        hostnameVerifier.verify(chain[0]);
+        hostnameCheck.verify(chain[0]);
     }
 
     @Override

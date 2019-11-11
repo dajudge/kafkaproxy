@@ -5,16 +5,20 @@ import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
 import com.dajudge.kafkaproxy.load.ProducerLoop;
 import com.dajudge.kafkaproxy.networking.downstream.KafkaSslConfig;
 import com.dajudge.kafkaproxy.networking.upstream.ProxyChannel;
+import com.dajudge.kafkaproxy.networking.upstream.ProxySslConfig;
 import com.dajudge.kafkaproxy.util.ssl.SslTestKeystore;
 import com.dajudge.kafkaproxy.util.ssl.SslTestSetup;
 import com.palantir.docker.compose.DockerComposeRule;
 import com.palantir.docker.compose.connection.Container;
 import com.palantir.docker.compose.connection.DockerMachine;
 import io.netty.channel.nio.NioEventLoopGroup;
+import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -31,6 +35,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import static java.lang.System.currentTimeMillis;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
 
@@ -57,10 +62,16 @@ public class LoadTest {
     }});
 
     @ClassRule
-    public static final TemporaryFolder SSL_TEMP_DIR = createTempFolder();
-    private static final String SSL_CA_DN = "CN=LoadTestCA";
-    private static final SslTestSetup SSL_TEST_SETUP = SslTestSetup.builder(SSL_CA_DN, SSL_TEMP_DIR.getRoot())
+    public static final TemporaryFolder KAFKA_SSL_TEMP_DIR = createTempFolder();
+    @ClassRule
+    public static final TemporaryFolder CLIENT_SSL_TEMP_DIR = createTempFolder();
+    private static final String KAFKA_SSL_CA_DN = "CN=KafkaCA";
+    private static final String CLIENT_SSL_CA_DN = "CN=ClientCA";
+    private static final SslTestSetup KAFKA_SSL_TEST_SETUP = SslTestSetup.builder(KAFKA_SSL_CA_DN, KAFKA_SSL_TEMP_DIR.getRoot())
             .withBrokers(range(0, BROKERS).mapToObj(i -> "kafka" + (i + 1)).collect(toList()))
+            .build();
+    private static final SslTestSetup CLIENT_SSL_TEST_SETUP = SslTestSetup.builder(CLIENT_SSL_CA_DN, CLIENT_SSL_TEMP_DIR.getRoot())
+            .withBrokers(singletonList("localhost"))
             .build();
     private static final DockerMachine DOCKER_MACHINE = addEnvVars(DockerMachine.localMachine()).build();
     @ClassRule
@@ -75,17 +86,27 @@ public class LoadTest {
 
     @Before
     public void setup() {
+        final SslTestKeystore proxyKeystore = CLIENT_SSL_TEST_SETUP.getBroker("localhost");
         for (int i = 0; i < BROKERS; i++) {
             final KafkaSslConfig kafkaSslConfig = new KafkaSslConfig(
                     true,
-                    SSL_TEST_SETUP.getAuthority().getTrustStore(),
-                    SSL_TEST_SETUP.getAuthority().getPassword(),
+                    KAFKA_SSL_TEST_SETUP.getAuthority().getTrustStore(),
+                    KAFKA_SSL_TEST_SETUP.getAuthority().getTrustStorePassword(),
                     false
+            );
+            final ProxySslConfig proxySslConfig = new ProxySslConfig(
+                    true,
+                    CLIENT_SSL_TEST_SETUP.getAuthority().getTrustStore(),
+                    CLIENT_SSL_TEST_SETUP.getAuthority().getTrustStorePassword(),
+                    proxyKeystore.getKeyStore(),
+                    proxyKeystore.getKeystorePassword(),
+                    proxyKeystore.getKeyPassword()
             );
             proxyChannels.add(new ProxyChannel(
                     PROXY_CHANNEL_PORT + i,
                     "localhost",
                     KAFKA_PORT + i,
+                    proxySslConfig,
                     kafkaSslConfig,
                     BROKER_MAPPER,
                     newGroup(),
@@ -103,10 +124,7 @@ public class LoadTest {
 
     @Test
     public void sends_once() throws ExecutionException, InterruptedException {
-        final Map<String, Object> props = new HashMap<>();
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:" + PROXY_CHANNEL_PORT);
-        props.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 30000);
-        try (final KafkaProducer<String, String> producer = new KafkaProducer<>(props, new StringSerializer(), new StringSerializer())) {
+        try (final KafkaProducer<String, String> producer = new KafkaProducer<>(producerConfig(), new StringSerializer(), new StringSerializer())) {
             final ProducerRecord<String, String> record = new ProducerRecord<>("test.topic", "test", "test");
             producer.send(record).get();
         }
@@ -115,10 +133,7 @@ public class LoadTest {
 
     @Test
     public void works_for_a_long_time() {
-        final Map<String, Object> props = new HashMap<>();
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:" + PROXY_CHANNEL_PORT);
-        props.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 30000);
-        try (final KafkaProducer<String, String> producer = new KafkaProducer<>(props, new StringSerializer(), new StringSerializer())) {
+        try (final KafkaProducer<String, String> producer = new KafkaProducer<>(producerConfig(), new StringSerializer(), new StringSerializer())) {
             final ProducerLoop producerLoop = new ProducerLoop(producer);
             final Thread producerThread = new Thread(producerLoop::run);
             producerThread.start();
@@ -143,6 +158,17 @@ public class LoadTest {
         }
     }
 
+    @NotNull
+    private Map<String, Object> producerConfig() {
+        final Map<String, Object> props = new HashMap<>();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:" + PROXY_CHANNEL_PORT);
+        props.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 30000);
+        props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+        props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, CLIENT_SSL_TEST_SETUP.getAuthority().getTrustStore().getAbsolutePath());
+        props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, CLIENT_SSL_TEST_SETUP.getAuthority().getTrustStorePassword());
+        return props;
+    }
+
     private NioEventLoopGroup newGroup() {
         final NioEventLoopGroup group = new NioEventLoopGroup();
         eventLoopGroups.add(group);
@@ -159,18 +185,18 @@ public class LoadTest {
     private static DockerMachine.LocalBuilder addEnvVars(DockerMachine.LocalBuilder localMachine) {
         for (int i = 0; i < BROKERS; i++) {
             final int brokerId = i + 1;
-            final SslTestKeystore brokerKeyStore = SSL_TEST_SETUP.getBroker("kafka" + brokerId);
+            final SslTestKeystore brokerKeyStore = KAFKA_SSL_TEST_SETUP.getBroker("kafka" + brokerId);
             final String prefix = "TEST_BROKER" + brokerId + "_";
-            final String path = brokerKeyStore.getPath();
-            final String keystorePassword = brokerKeyStore.getKeystorePassword().getAbsolutePath();
-            final String keyPassword = brokerKeyStore.getKeyPassword().getAbsolutePath();
+            final String path = brokerKeyStore.getKeyStore().getAbsolutePath();
+            final String keystorePassword = brokerKeyStore.getKeystorePasswordFile().getAbsolutePath();
+            final String keyPassword = brokerKeyStore.getKeyPasswordFile().getAbsolutePath();
             localMachine = withEnv(localMachine, prefix + "KEYSTORE", path);
             localMachine = withEnv(localMachine, prefix + "KEYSTORE_PASSWORD", keystorePassword);
             localMachine = withEnv(localMachine, prefix + "KEY_PASSWORD", keyPassword);
 
         }
-        final String trustStorePath = SSL_TEST_SETUP.getAuthority().getTrustStore().getAbsolutePath();
-        final String trustStorePassword = SSL_TEST_SETUP.getAuthority().getPassword();
+        final String trustStorePath = KAFKA_SSL_TEST_SETUP.getAuthority().getTrustStore().getAbsolutePath();
+        final String trustStorePassword = KAFKA_SSL_TEST_SETUP.getAuthority().getTrustStorePassword();
         localMachine = withEnv(localMachine, "TEST_TRUSTSTORE", trustStorePath);
         localMachine = withEnv(localMachine, "TEST_TRUSTSTORE_PASSWORD", trustStorePassword);
         return localMachine;

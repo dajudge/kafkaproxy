@@ -5,6 +5,7 @@ import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
 import com.dajudge.kafkaproxy.config.BrokerMapParser;
 import com.dajudge.kafkaproxy.networking.downstream.KafkaSslConfig;
 import com.dajudge.kafkaproxy.networking.upstream.ProxyChannel;
+import com.dajudge.kafkaproxy.networking.upstream.ProxySslConfig;
 import io.netty.channel.nio.NioEventLoopGroup;
 
 import java.io.File;
@@ -20,15 +21,17 @@ public class Startup {
         final File brokerMapFile = new File(System.getProperty(PROP_BROKERMAP_LOCATION, DEFAULT_BROKERMAP_LOCATION));
         final BrokerMap brokerMap = readBrokerMap(brokerMapFile);
         final BrokerMapping brokerToProxy = brokerMap.getMappingByBrokerName(System.getProperty(PROP_BROKER_TO_PROXY));
-        final KafkaSslConfig sslConfig = new KafkaSslConfig(false, null, null, false);
+        final KafkaSslConfig kafkaSslConfig = new KafkaSslConfig(false, null, null, false);
         final NioEventLoopGroup bossGroup = new NioEventLoopGroup();
         final NioEventLoopGroup upstreamWorkerGroup = new NioEventLoopGroup();
         final NioEventLoopGroup downstreamWorkerGroup = new NioEventLoopGroup();
+        final ProxySslConfig proxySslConfig = new ProxySslConfig(false, null, null, null, null, null);
         final ProxyChannel channel = new ProxyChannel(
                 brokerToProxy.getProxy().getPort(),
                 brokerToProxy.getBroker().getHost(),
                 brokerToProxy.getBroker().getPort(),
-                sslConfig,
+                proxySslConfig,
+                kafkaSslConfig,
                 brokerMap,
                 bossGroup,
                 upstreamWorkerGroup,

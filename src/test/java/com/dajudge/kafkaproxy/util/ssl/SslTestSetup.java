@@ -50,7 +50,6 @@ public class SslTestSetup {
             public SslTestSetup build() {
                 final String password = randomPassword();
                 final File caTrustStore = write(basePath, "ca.jks", ca.toTrustStore(password));
-                final File passwordFile = write(basePath, "ca.pwd", password);
                 LOG.info("Wrote truststore for CA \"{}\" to {}", dn, caTrustStore.getAbsolutePath());
                 return new SslTestSetup(brokerKeyStores, new SslTestAuthority(caTrustStore, password));
             }
@@ -67,7 +66,13 @@ public class SslTestSetup {
                     final File keyPasswordFile = write(basePath, broker + ".keyPwd", keyPassword);
                     final File keyStorePasswordFile = write(basePath, broker + ".keyStorePwd", keyStorePassword);
                     LOG.info("Wrote keystore for \"{}\" to {}", dn, jksFile.getAbsolutePath());
-                    brokerKeyStores.put(broker, new SslTestKeystore(jksFile, keyStorePasswordFile, keyPasswordFile));
+                    brokerKeyStores.put(broker, new SslTestKeystore(
+                            jksFile,
+                            keyStorePassword,
+                            keyStorePasswordFile,
+                            keyPassword,
+                            keyPasswordFile
+                    ));
                 });
                 return this;
             }

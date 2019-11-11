@@ -32,6 +32,7 @@ public class ProxyChannel {
             final int port,
             final String kafkaHost,
             final int kafkaPort,
+            final ProxySslConfig proxySslConfig,
             final KafkaSslConfig kafkaSslConfig,
             final BrokerMap brokerMap,
             final NioEventLoopGroup bossGroup,
@@ -87,6 +88,7 @@ public class ProxyChannel {
                             requestStore
                     );
                     final KafkaMessageSplitter splitter = new KafkaMessageSplitter(requestProcessor::onRequest);
+                    pipeline.addLast(ProxySslHandlerFactory.createHandler(proxySslConfig));
                     pipeline.addLast(new ProxyServerHandler(splitter::onBytesReceived));
                 }
             };

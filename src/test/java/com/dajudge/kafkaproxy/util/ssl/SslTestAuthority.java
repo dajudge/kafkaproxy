@@ -11,7 +11,7 @@ public class SslTestAuthority {
         this.password = password;
     }
 
-    public String getPassword() {
+    public String getTrustStorePassword() {
         return password;
     }
 

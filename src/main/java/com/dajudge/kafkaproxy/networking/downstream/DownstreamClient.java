@@ -34,7 +34,7 @@ public class DownstreamClient {
                         @Override
                         public void initChannel(SocketChannel ch) {
                             final ChannelPipeline pipeline = ch.pipeline();
-                            pipeline.addLast(SslHandlerFactory.create(sslConfig, host, port));
+                            pipeline.addLast(ClientSslHandlerFactory.createHandler(sslConfig, host, port));
                             pipeline.addLast(new ProxyClientHandler(messageSink));
                         }
                     })

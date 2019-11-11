@@ -4,6 +4,7 @@ import com.dajudge.kafkaproxy.brokermap.BrokerMap;
 import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
 import com.dajudge.kafkaproxy.networking.downstream.KafkaSslConfig;
 import com.dajudge.kafkaproxy.networking.upstream.ProxyChannel;
+import com.dajudge.kafkaproxy.networking.upstream.ProxySslConfig;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -48,6 +49,7 @@ public class MyTest {
                 PROXY_CHANNEL_PORT,
                 hostname,
                 port,
+                new ProxySslConfig(false, null, null, null, null, null),
                 new KafkaSslConfig(false, null, null, false),
                 brokerMap,
                 bossGroup,
