@@ -3,7 +3,9 @@ package com.dajudge.kafkaproxy;
 import com.dajudge.kafkaproxy.brokermap.BrokerMap;
 import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
 import com.dajudge.kafkaproxy.load.ProducerLoop;
+import com.dajudge.kafkaproxy.networking.downstream.DownstreamChannelFactory;
 import com.dajudge.kafkaproxy.networking.downstream.KafkaSslConfig;
+import com.dajudge.kafkaproxy.networking.upstream.ForwardChannelFactory;
 import com.dajudge.kafkaproxy.networking.upstream.ProxyChannel;
 import com.dajudge.kafkaproxy.networking.upstream.ProxySslConfig;
 import com.dajudge.kafkaproxy.util.ssl.SslTestKeystore;
@@ -76,7 +78,7 @@ public class LoadTest {
     private static final DockerMachine DOCKER_MACHINE = addEnvVars(DockerMachine.localMachine()).build();
     @ClassRule
     public static final DockerComposeRule DOCKER_RULE = waitForKafka(DockerComposeRule.builder()
-            .file("src/test/resources/docker-compose.yml")
+            .file("src/test/resources/docker-compose.ssl.yml")
             .machine(DOCKER_MACHINE)
             .saveLogsTo("."))
             .build();
@@ -102,16 +104,19 @@ public class LoadTest {
                     proxyKeystore.getKeystorePassword(),
                     proxyKeystore.getKeyPassword()
             );
-            proxyChannels.add(new ProxyChannel(
-                    PROXY_CHANNEL_PORT + i,
+            final ForwardChannelFactory forwardChannelFactory = new DownstreamChannelFactory(
+                    BROKER_MAPPER,
                     "localhost",
                     KAFKA_PORT + i,
-                    proxySslConfig,
                     kafkaSslConfig,
-                    BROKER_MAPPER,
-                    newGroup(),
-                    newGroup(),
                     newGroup()
+            );
+            proxyChannels.add(new ProxyChannel(
+                    PROXY_CHANNEL_PORT + i,
+                    proxySslConfig,
+                    newGroup(),
+                    newGroup(),
+                    forwardChannelFactory
             ));
         }
     }

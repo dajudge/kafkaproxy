@@ -33,11 +33,11 @@ public class CompositeRewriter implements ResponseRewriter {
     ) {
         for (final ResponseRewriter rewriter : rewriters) {
             if (rewriter.appliesTo(requestHeader)) {
-                LOG.info("Rewriting {} response", requestHeader.apiKey());
+                LOG.trace("Rewriting {} response", requestHeader.apiKey());
                 return rewriter.rewrite(requestHeader, responseHeader, responseBuffer);
             }
         }
-        LOG.info("Passing through unmodified {} response", requestHeader.apiKey());
+        LOG.trace("Passing through unmodified {} response", requestHeader.apiKey());
         return Optional.empty();
     }
 }

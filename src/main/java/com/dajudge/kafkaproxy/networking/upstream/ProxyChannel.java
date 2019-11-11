@@ -1,16 +1,6 @@
 package com.dajudge.kafkaproxy.networking.upstream;
 
-import com.dajudge.kafkaproxy.brokermap.BrokerMap;
-import com.dajudge.kafkaproxy.networking.downstream.DownstreamClient;
-import com.dajudge.kafkaproxy.networking.downstream.KafkaSslConfig;
-import com.dajudge.kafkaproxy.protocol.KafkaMessageSplitter;
-import com.dajudge.kafkaproxy.protocol.KafkaRequestProcessor;
-import com.dajudge.kafkaproxy.protocol.KafkaRequestStore;
-import com.dajudge.kafkaproxy.protocol.KafkaResponseProcessor;
-import com.dajudge.kafkaproxy.protocol.rewrite.CompositeRewriter;
-import com.dajudge.kafkaproxy.protocol.rewrite.FindCoordinatorRewriter;
-import com.dajudge.kafkaproxy.protocol.rewrite.MetadataRewriter;
-import com.dajudge.kafkaproxy.protocol.rewrite.ResponseRewriter;
+import com.dajudge.kafkaproxy.networking.upstream.ForwardChannelFactory.UpstreamCertificateSupplier;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
@@ -21,8 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.function.Consumer;
-
-import static java.util.Arrays.asList;
+import java.util.function.Function;
 
 public class ProxyChannel {
     private static final Logger LOG = LoggerFactory.getLogger(ProxyChannel.class);
@@ -30,14 +19,10 @@ public class ProxyChannel {
 
     public ProxyChannel(
             final int port,
-            final String kafkaHost,
-            final int kafkaPort,
             final ProxySslConfig proxySslConfig,
-            final KafkaSslConfig kafkaSslConfig,
-            final BrokerMap brokerMap,
             final NioEventLoopGroup bossGroup,
             final NioEventLoopGroup upstreamWorkerGroup,
-            final NioEventLoopGroup downstreamWorkerGroup
+            final ForwardChannelFactory forwardChannelFactory
     ) {
         try {
             final ChannelInitializer<SocketChannel> childHandler = new ChannelInitializer<SocketChannel>() {
@@ -45,7 +30,7 @@ public class ProxyChannel {
                 public void initChannel(final SocketChannel ch) {
                     final ChannelPipeline pipeline = ch.pipeline();
                     LOG.trace("Incoming connection: {}", ch.remoteAddress());
-                    final Consumer<ByteBuf> sink = buffer -> {
+                    final Consumer<ByteBuf> upstreamSink = buffer -> {
                         ch.writeAndFlush(buffer.copy()).addListener((ChannelFutureListener) future -> {
                             buffer.release();
                             if (!future.isSuccess()) {
@@ -55,41 +40,27 @@ public class ProxyChannel {
                             }
                         });
                     };
-                    final ResponseRewriter rewriter = new CompositeRewriter(asList(
-                            new MetadataRewriter(brokerMap),
-                            new FindCoordinatorRewriter(brokerMap)
-                    ));
-                    final KafkaRequestStore requestStore = new KafkaRequestStore(rewriter);
-                    final KafkaResponseProcessor responseProcessor = new KafkaResponseProcessor(sink, requestStore);
-                    final KafkaMessageSplitter responseStreamSplitter = new KafkaMessageSplitter(
-                            responseProcessor::onResponse
-                    );
-                    final DownstreamClient downstreamClient = new DownstreamClient(
-                            kafkaHost,
-                            kafkaPort,
-                            kafkaSslConfig,
-                            responseStreamSplitter::onBytesReceived,
-                            () -> {
-                                LOG.trace("Closing upstream channel.");
-                                try {
-                                    ch.close().sync();
-                                } catch (final InterruptedException e) {
-                                    LOG.warn("Cloud not close upstream channel.", e);
-                                }
-                                LOG.trace("Upstream channel closed.");
-                            },
-                            downstreamWorkerGroup
-                    );
-                    ch.closeFuture().addListener(future -> {
-                        downstreamClient.close();
-                    });
-                    final KafkaRequestProcessor requestProcessor = new KafkaRequestProcessor(
-                            downstreamClient::send,
-                            requestStore
-                    );
-                    final KafkaMessageSplitter splitter = new KafkaMessageSplitter(requestProcessor::onRequest);
-                    pipeline.addLast(ProxySslHandlerFactory.createHandler(proxySslConfig));
-                    pipeline.addLast(new ProxyServerHandler(splitter::onBytesReceived));
+
+                    pipeline.addLast("ssl", ProxySslHandlerFactory.createHandler(proxySslConfig));
+                    final Function<UpstreamCertificateSupplier, Consumer<ByteBuf>> downstreamFactory = certSupplier -> {
+                        final Runnable downstreamClosedCallback = () -> {
+                            LOG.trace("Closing upstream channel.");
+                            try {
+                                ch.close().sync();
+                            } catch (final InterruptedException e) {
+                                LOG.warn("Cloud not close upstream channel.", e);
+                            }
+                            LOG.trace("Upstream channel closed.");
+                        };
+                        final ForwardChannel forwardChannel = forwardChannelFactory.create(
+                                certSupplier,
+                                upstreamSink,
+                                downstreamClosedCallback
+                        );
+                        ch.closeFuture().addListener((ChannelFutureListener) future -> forwardChannel.close());
+                        return forwardChannel::accept;
+                    };
+                    pipeline.addLast(new ProxyServerHandler(downstreamFactory));
                 }
             };
             channel = new ServerBootstrap()

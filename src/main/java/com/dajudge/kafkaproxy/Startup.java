@@ -3,7 +3,9 @@ package com.dajudge.kafkaproxy;
 import com.dajudge.kafkaproxy.brokermap.BrokerMap;
 import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
 import com.dajudge.kafkaproxy.config.BrokerMapParser;
+import com.dajudge.kafkaproxy.networking.downstream.DownstreamChannelFactory;
 import com.dajudge.kafkaproxy.networking.downstream.KafkaSslConfig;
+import com.dajudge.kafkaproxy.networking.upstream.ForwardChannelFactory;
 import com.dajudge.kafkaproxy.networking.upstream.ProxyChannel;
 import com.dajudge.kafkaproxy.networking.upstream.ProxySslConfig;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -26,16 +28,19 @@ public class Startup {
         final NioEventLoopGroup upstreamWorkerGroup = new NioEventLoopGroup();
         final NioEventLoopGroup downstreamWorkerGroup = new NioEventLoopGroup();
         final ProxySslConfig proxySslConfig = new ProxySslConfig(false, null, null, null, null, null);
-        final ProxyChannel channel = new ProxyChannel(
-                brokerToProxy.getProxy().getPort(),
+        final ForwardChannelFactory forwardChannelFactory = new DownstreamChannelFactory(
+                brokerMap,
                 brokerToProxy.getBroker().getHost(),
                 brokerToProxy.getBroker().getPort(),
-                proxySslConfig,
                 kafkaSslConfig,
-                brokerMap,
+                downstreamWorkerGroup
+        );
+        final ProxyChannel channel = new ProxyChannel(
+                brokerToProxy.getProxy().getPort(),
+                proxySslConfig,
                 bossGroup,
                 upstreamWorkerGroup,
-                downstreamWorkerGroup
+                forwardChannelFactory
         );
         Runtime.getRuntime().addShutdownHook(new Thread(channel::close));
     }
