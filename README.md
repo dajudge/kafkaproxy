@@ -32,13 +32,17 @@ kafkaproxy needs a mapping configuration in order to know how to replace the bro
 where the kafkaproxy instance(s) are reachable. 
 ```yaml
 proxies:
-  - hostname: kafka.example.com
-    port: 39092
+  - name: broker1
+    proxy:
+      hostname: kafka.example.com
+      port: 39092
     broker:
       hostname: broker1.kafka.local
       port: 9092
-  - hostname: kafka.example.com
-    port: 39093
+  - name: broker2
+    proxy:
+      hostname: kafka.example.com
+      port: 39093
     broker:
       hostname: broker2.kafka.local
       port: 9092
