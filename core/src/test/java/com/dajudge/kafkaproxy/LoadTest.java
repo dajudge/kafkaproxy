@@ -13,6 +13,7 @@ import com.dajudge.kafkaproxy.util.ssl.SslTestSetup;
 import com.palantir.docker.compose.DockerComposeRule;
 import com.palantir.docker.compose.connection.Container;
 import com.palantir.docker.compose.connection.DockerMachine;
+import com.palantir.docker.compose.connection.waiting.HealthChecks;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -33,6 +34,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import static com.dajudge.kafkaproxy.config.FileResource.fromFile;
+import static com.palantir.docker.compose.connection.waiting.HealthChecks.toHaveAllPortsOpen;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -78,6 +80,9 @@ public class LoadTest {
             .file("src/test/resources/docker-compose.ssl.yml")
             .machine(DOCKER_MACHINE)
             .saveLogsTo("."))
+            .waitingForService("kafka1", toHaveAllPortsOpen())
+            .waitingForService("kafka2", toHaveAllPortsOpen())
+            .waitingForService("kafka3", toHaveAllPortsOpen())
             .build();
 
     private final Collection<NioEventLoopGroup> eventLoopGroups = new ArrayList<>();
