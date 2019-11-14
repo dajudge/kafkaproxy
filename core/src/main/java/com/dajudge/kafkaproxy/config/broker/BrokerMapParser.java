@@ -1,13 +1,13 @@
-package com.dajudge.kafkaproxy.config;
+package com.dajudge.kafkaproxy.config.broker;
 
 import com.dajudge.kafkaproxy.brokermap.BrokerMap;
 import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class BrokerMapParser {
     private final BrokerMap brokerMap;
@@ -15,18 +15,17 @@ public class BrokerMapParser {
     @SuppressWarnings("unchecked")
     public BrokerMapParser(final InputStream config) {
         final Map<String, Object> yaml = new Yaml().load(config);
-        brokerMap = new BrokerMap(new HashMap<String, BrokerMapping>() {{
-            ((List<Object>) yaml.get("proxies")).stream()
-                    .map(it -> (Map<String, Object>) it)
-                    .map(BrokerMapParser::toBrokerMapping)
-                    .forEach(m -> put(m.getProxy().getHost() + ":" + m.getProxy().getPort(), m));
-        }});
+        final List<BrokerMapping> brokers = ((List<Object>) yaml.get("proxies")).stream()
+                .map(it -> (Map<String, Object>) it)
+                .map(BrokerMapParser::toBrokerMapping)
+                .collect(Collectors.toList());
+        brokerMap = new BrokerMap(brokers);
     }
 
     @SuppressWarnings("unchecked")
     private static BrokerMapping toBrokerMapping(final Map<String, Object> o) {
         return new BrokerMapping(
-                (String)o.get("name"),
+                (String) o.get("name"),
                 toEndpoint((Map<String, Object>) o.get("broker")),
                 toEndpoint((Map<String, Object>) o.get("proxy"))
         );

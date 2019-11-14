@@ -1,10 +1,10 @@
 package com.dajudge.kafkaproxy.networking.downstream;
 
-import java.io.File;
+import com.dajudge.kafkaproxy.config.FileResource;
 
 public class KafkaSslConfig {
     private final boolean enabled;
-    private final File trustStore;
+    private final FileResource trustStore;
     private final String trustStorePassword;
     private final boolean hostnameVerificationEnabled;
 
@@ -12,7 +12,7 @@ public class KafkaSslConfig {
 
     public KafkaSslConfig(
             final boolean enabled,
-            final File trustStore,
+            final FileResource trustStore,
             final String trustStorePassword,
             final boolean hostnameVerificationEnabled
     ) {
@@ -22,7 +22,7 @@ public class KafkaSslConfig {
         this.hostnameVerificationEnabled = hostnameVerificationEnabled;
     }
 
-    public File getTrustStore() {
+    public FileResource getTrustStore() {
         return trustStore;
     }
 

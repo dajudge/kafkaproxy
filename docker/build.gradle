@@ -29,7 +29,7 @@ task buildAppImage(type: DockerBuildImage) {
     group "build"
     dependsOn copyJars, copyDockerSources
     inputDir = dockerBuildDir
-    tags.add('dajudge/kafkaproxy:latest')
+    tags.addAll(['dajudge/kafkaproxy:devel'])
 }
 
 task build {

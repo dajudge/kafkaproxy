@@ -6,11 +6,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.dajudge.kafkaproxy" level="DEBUG" additivity="false">
-        <appender-ref ref="STDOUT"/>
-    </logger>
-
-    <root level="INFO">
+    <root level="${KAFKAPROXY_LOG_LEVEL:-INFO}">
         <appender-ref ref="STDOUT"/>
     </root>
 </configuration>

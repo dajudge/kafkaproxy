@@ -25,7 +25,7 @@ public class MetadataRewriter extends BaseReflectingRewriter<MetadataResponse> {
         field.setAccessible(true);
         final MetadataResponseData data = (MetadataResponseData) field.get(response);
         data.brokers().forEach(b -> {
-            final BrokerMapping mapping = brokerMap.getMappingByBrokerEndpoint(b.host(), b.port());
+            final BrokerMapping mapping = brokerMap.getByBrokerEndpoint(b.host(), b.port());
             if (mapping == null) {
                 LOG.error("Unknown broker node seen in {}: {}:{}", ApiKeys.METADATA, b.host(), b.port());
             } else {
@@ -34,11 +34,11 @@ public class MetadataRewriter extends BaseReflectingRewriter<MetadataResponse> {
                         ApiKeys.METADATA,
                         b.host(),
                         b.port(),
-                        mapping.getBroker().getHost(),
-                        mapping.getBroker().getPort()
+                        mapping.getProxy().getHost(),
+                        mapping.getProxy().getPort()
                 );
-                b.setHost(mapping.getBroker().getHost());
-                b.setPort(mapping.getBroker().getPort());
+                b.setHost(mapping.getProxy().getHost());
+                b.setPort(mapping.getProxy().getPort());
             }
         });
     }

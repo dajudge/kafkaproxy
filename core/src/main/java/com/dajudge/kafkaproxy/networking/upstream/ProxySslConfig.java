@@ -1,22 +1,22 @@
 package com.dajudge.kafkaproxy.networking.upstream;
 
-import java.io.File;
+import com.dajudge.kafkaproxy.config.FileResource;
 
 public class ProxySslConfig {
     public static final ProxySslConfig DISABLED = new ProxySslConfig(false, null, null, null, null, null);
 
     private final boolean enabled;
-    private final File trustStore;
+    private final FileResource trustStore;
     private final String trustStorePassword;
-    private final File keyStore;
+    private final FileResource keyStore;
     private final String keyStorePassword;
     private final String keyPassword;
 
     public ProxySslConfig(
             final boolean enabled,
-            final File trustStore,
+            final FileResource trustStore,
             final String trustStorePassword,
-            final File keyStore,
+            final FileResource keyStore,
             final String keyStorePassword,
             final String keyPassword
     ) {
@@ -32,7 +32,7 @@ public class ProxySslConfig {
         return enabled;
     }
 
-    public File getTrustStore() {
+    public FileResource getTrustStore() {
         return trustStore;
     }
 
@@ -40,7 +40,7 @@ public class ProxySslConfig {
         return trustStorePassword;
     }
 
-    public File getKeyStore() {
+    public FileResource getKeyStore() {
         return keyStore;
     }
 

@@ -1,5 +1,7 @@
 package com.dajudge.kafkaproxy.common.ssl;
 
+import com.dajudge.kafkaproxy.config.FileResource;
+
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import java.io.File;
@@ -12,8 +14,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 
 public class DefaultTrustManagerFactory {
-    public static TrustManager[] createTrustManagers(final File trustStore, final char[] trustStorePassword) {
-        try (final InputStream inputStream = new FileInputStream(trustStore)) {
+    public static TrustManager[] createTrustManagers(final FileResource trustStore, final char[] trustStorePassword) {
+        try (final InputStream inputStream = trustStore.open()) {
             final TrustManagerFactory factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
             final KeyStore keystore = KeyStore.getInstance("jks");
             keystore.load(inputStream, trustStorePassword);

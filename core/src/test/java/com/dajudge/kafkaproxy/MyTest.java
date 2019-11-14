@@ -18,6 +18,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.testcontainers.containers.KafkaContainer;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -41,8 +42,8 @@ public class MyTest {
         assertTrue("No match: " + kafka.getBootstrapServers(), matcher.matches());
         final String hostname = matcher.group(1);
         final int port = Integer.parseInt(matcher.group(2));
-        final BrokerMap brokerMap = new BrokerMap(new HashMap<String, BrokerMapping>() {{
-            put(hostname + ":" + port, new BrokerMapping("broker", "localhost", PROXY_CHANNEL_PORT, hostname, port));
+        final BrokerMap brokerMap = new BrokerMap(new ArrayList<BrokerMapping>() {{
+            add(new BrokerMapping("broker", "localhost", PROXY_CHANNEL_PORT, hostname, port));
         }});
         final NioEventLoopGroup bossGroup = new NioEventLoopGroup();
         final NioEventLoopGroup upstreamWorkerGroup = new NioEventLoopGroup();

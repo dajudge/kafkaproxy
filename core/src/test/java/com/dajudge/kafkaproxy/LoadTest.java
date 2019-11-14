@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import static com.dajudge.kafkaproxy.config.FileResource.fromFile;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -43,19 +44,19 @@ public class LoadTest {
     private static final int PROXY_CHANNEL_PORT = 19091;
     private static final int KAFKA_PORT = 9091;
     private static final int BROKERS = 3;
-    private static final BrokerMap BROKER_MAPPER = new BrokerMap(new HashMap<String, BrokerMapping>() {{
+    private static final BrokerMap BROKER_MAPPER = new BrokerMap(new ArrayList<BrokerMapping>() {{
         for (int i = 0; i < BROKERS; i++) {
             final int kafkaPort = KAFKA_PORT + i;
             final int proxyPort = PROXY_CHANNEL_PORT + i;
             final int brokerId = i + 1;
             final BrokerMapping mapping = new BrokerMapping(
-                    "broker" + (i + 1),
-                    "localhost",
-                    proxyPort,
+                    "broker" + brokerId,
+                    "kafka" + brokerId,
+                    kafkaPort,
                     "localhost",
                     proxyPort
             );
-            put("kafka" + brokerId + ":" + kafkaPort, mapping);
+            add(mapping);
         }
     }});
 
@@ -88,15 +89,15 @@ public class LoadTest {
         for (int i = 0; i < BROKERS; i++) {
             final KafkaSslConfig kafkaSslConfig = new KafkaSslConfig(
                     true,
-                    KAFKA_SSL_TEST_SETUP.getAuthority().getTrustStore(),
+                    fromFile(KAFKA_SSL_TEST_SETUP.getAuthority().getTrustStore()),
                     KAFKA_SSL_TEST_SETUP.getAuthority().getTrustStorePassword(),
                     false
             );
             final ProxySslConfig proxySslConfig = new ProxySslConfig(
                     true,
-                    CLIENT_SSL_TEST_SETUP.getAuthority().getTrustStore(),
+                    fromFile(CLIENT_SSL_TEST_SETUP.getAuthority().getTrustStore()),
                     CLIENT_SSL_TEST_SETUP.getAuthority().getTrustStorePassword(),
-                    proxyKeystore.getKeyStore(),
+                    fromFile(proxyKeystore.getKeyStore()),
                     proxyKeystore.getKeystorePassword(),
                     proxyKeystore.getKeyPassword()
             );

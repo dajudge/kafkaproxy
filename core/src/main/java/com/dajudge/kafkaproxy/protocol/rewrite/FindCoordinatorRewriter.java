@@ -30,19 +30,19 @@ public class FindCoordinatorRewriter extends BaseReflectingRewriter<FindCoordina
         final Field field = FindCoordinatorResponse.class.getDeclaredField("data");
         field.setAccessible(true);
         final FindCoordinatorResponseData data = (FindCoordinatorResponseData) field.get(response);
-        final BrokerMapping mapping = brokerMap.getMappingByBrokerEndpoint(data.host(), data.port());
+        final BrokerMapping mapping = brokerMap.getByBrokerEndpoint(data.host(), data.port());
         if (mapping == null) {
             LOG.error("Unknown broker node seen in {}: {}:{}", ApiKeys.FIND_COORDINATOR, data.host(), data.port());
         } else {
-            data.setHost(mapping.getBroker().getHost());
-            data.setPort(mapping.getBroker().getPort());
+            data.setHost(mapping.getProxy().getHost());
+            data.setPort(mapping.getProxy().getPort());
             LOG.debug(
                     "Rewriting {}: {}:{} -> {}:{}",
                     ApiKeys.FIND_COORDINATOR,
                     data.host(),
                     data.port(),
-                    mapping.getBroker().getHost(),
-                    mapping.getBroker().getPort()
+                    mapping.getProxy().getHost(),
+                    mapping.getProxy().getPort()
             );
         }
     }

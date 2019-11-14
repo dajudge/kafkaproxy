@@ -5,6 +5,10 @@ subprojects {
         mavenCentral()
         maven { url 'https://dl.bintray.com/palantir/releases' }
     }
+    tasks.withType(JavaCompile) {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
 }
 
 wrapper {
