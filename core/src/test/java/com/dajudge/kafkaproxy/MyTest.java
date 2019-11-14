@@ -7,11 +7,12 @@ import com.dajudge.kafkaproxy.networking.downstream.KafkaSslConfig;
 import com.dajudge.kafkaproxy.networking.upstream.ForwardChannelFactory;
 import com.dajudge.kafkaproxy.networking.upstream.ProxyChannel;
 import com.dajudge.kafkaproxy.networking.upstream.ProxySslConfig;
+import com.dajudge.kafkaproxy.roundtrip.RoundtripTester;
+import com.dajudge.kafkaproxy.roundtrip.SingleRoundtrip;
 import io.netty.channel.nio.NioEventLoopGroup;
-import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -21,8 +22,6 @@ import org.testcontainers.containers.KafkaContainer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,6 +29,10 @@ import static org.junit.Assert.assertTrue;
 
 public class MyTest {
     private static final int PROXY_CHANNEL_PORT = 51577;
+
+    private final NioEventLoopGroup bossGroup = new NioEventLoopGroup();
+    private final NioEventLoopGroup upstreamWorkerGroup = new NioEventLoopGroup();
+    private final NioEventLoopGroup downstreamWorkerGroup = new NioEventLoopGroup();
 
     @Rule
     public KafkaContainer kafka = new KafkaContainer();
@@ -43,11 +46,8 @@ public class MyTest {
         final String hostname = matcher.group(1);
         final int port = Integer.parseInt(matcher.group(2));
         final BrokerMap brokerMap = new BrokerMap(new ArrayList<BrokerMapping>() {{
-            add(new BrokerMapping("broker", "localhost", PROXY_CHANNEL_PORT, hostname, port));
+            add(new BrokerMapping("broker", "localhost", port, hostname, PROXY_CHANNEL_PORT));
         }});
-        final NioEventLoopGroup bossGroup = new NioEventLoopGroup();
-        final NioEventLoopGroup upstreamWorkerGroup = new NioEventLoopGroup();
-        final NioEventLoopGroup downstreamWorkerGroup = new NioEventLoopGroup();
         final ForwardChannelFactory forwardChannelFactory = new DownstreamChannelFactory(
                 brokerMap,
                 hostname,
@@ -67,36 +67,27 @@ public class MyTest {
     @After
     public void stop() throws InterruptedException {
         channel.close().sync();
+        bossGroup.shutdownGracefully();
+        downstreamWorkerGroup.shutdownGracefully();
+        upstreamWorkerGroup.shutdownGracefully();
     }
 
     @Test
-    public void doit() {
-        final Map<String, Object> props = new HashMap<>();
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:" + PROXY_CHANNEL_PORT);
-        props.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 5000);
-        try (final KafkaProducer<String, String> producer = new KafkaProducer<>(props, new StringSerializer(), new StringSerializer())) {
-            final MementoCallback callback = new MementoCallback();
-            try {
-                producer.send(
-                        new ProducerRecord<>("topic", "key", "value"),
-                        callback
-                ).get();
-            } catch (final InterruptedException | ExecutionException e) {
-                throw new AssertionError(e);
-            }
-            assertTrue(waitFor(callback::isCompleted, 5000));
-        }
-    }
+    public void test_roundtrip() {
+        final Map<String, Object> baseProps = new HashMap<>();
+        baseProps.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, "localhost:" + channel.getPort());
 
-    public static boolean waitFor(final Supplier<Boolean> check, final int msecs) {
-        final long start = System.currentTimeMillis();
-        while ((System.currentTimeMillis() - start) < msecs) {
-            if (check.get()) {
-                return true;
-            }
-            Thread.yield();
-        }
-        return false;
+        final Map<String, Object> producerProps = new HashMap<>(baseProps);
+        producerProps.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 60000);
+        final Map<String, Object> consumerProps = new HashMap<>(baseProps);
+        consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, "testgroup");
+        consumerProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
+        final RoundtripTester tester = new RoundtripTester(producerProps, consumerProps, 1);
+        final SingleRoundtrip roundtrip = new SingleRoundtrip(60000);
+        tester.run(roundtrip);
+        assertTrue("Did not complete roundtrip", roundtrip.completed());
     }
 
 }

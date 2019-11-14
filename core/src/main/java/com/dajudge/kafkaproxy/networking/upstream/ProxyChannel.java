@@ -10,6 +10,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetSocketAddress;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -77,5 +78,9 @@ public class ProxyChannel {
 
     public ChannelFuture close() {
         return channel.close();
+    }
+
+    public int getPort() {
+        return ((InetSocketAddress)channel.localAddress()).getPort();
     }
 }
