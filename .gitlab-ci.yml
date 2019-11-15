@@ -13,6 +13,7 @@ stages:
 build:
   stage: build
   script:
+    - "./workbench set"
     - "./workbench ./gradlew clean build"
     - "./workbench ./gradlew publish"
   artifacts:
