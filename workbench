@@ -28,6 +28,9 @@ docker run --rm \
     -e http_proxy="$http_proxy" \
     -e https_proxy="$https_proxy" \
     -e no_proxy="$no_proxy" \
+    -e CI_COMMIT_REF_NAME="$CI_COMMIT_REF_NAME" \
+    -e DOCKERHUB_USERNAME="$DOCKERHUB_USERNAME" \
+    -e DOCKERHUB_PASSWORD="$DOCKERHUB_PASSWORD" \
     -v "${DIR}":/project \
     -v /var/run/docker.sock:/var/run/docker.sock \
     $CONTAINER_OPTS $IMG \
