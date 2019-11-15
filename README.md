@@ -1,3 +1,5 @@
+![ci](https://gitlab.com/dajudge/kafkaproxy/badges/master/pipeline.svg)
+
 # kafkaproxy
 kafkaproxy is a reverse proxy for the wire protocol of Apache Kafka. 
 
