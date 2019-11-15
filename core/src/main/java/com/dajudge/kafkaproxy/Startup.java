@@ -1,9 +1,9 @@
 package com.dajudge.kafkaproxy;
 
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
+import com.dajudge.kafkaproxy.config.Environment;
 import com.dajudge.kafkaproxy.config.RealEnvironment;
 import com.dajudge.kafkaproxy.config.broker.BrokerConfig;
-import com.dajudge.kafkaproxy.config.Environment;
 import com.dajudge.kafkaproxy.networking.downstream.DownstreamChannelFactory;
 import com.dajudge.kafkaproxy.networking.downstream.KafkaSslConfig;
 import com.dajudge.kafkaproxy.networking.upstream.ForwardChannelFactory;
@@ -13,17 +13,33 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.util.Collection;
 
 import static java.util.stream.Collectors.toList;
 
 public class Startup {
     private static final Logger LOG = LoggerFactory.getLogger(Startup.class);
-    private static final String PREFIX = "KAFKAPROXY_";
+    private final Environment environment;
+    private Runnable shutdown;
+
+    public Startup(final Environment environment) {
+        this.environment = environment;
+    }
 
     public static void main(final String argv[]) {
-        final Environment environment = new RealEnvironment();
+        final Startup startup = new Startup(new RealEnvironment());
+        Runtime.getRuntime().addShutdownHook(new Thread(startup::shutdown));
+        startup.start();
+    }
+
+    public void shutdown() {
+        if (shutdown == null) {
+            throw new IllegalStateException("must invoke start() first");
+        }
+        shutdown.run();
+    }
+
+    public void start() {
         final ApplicationConfig appConfig = new ApplicationConfig(environment);
         final BrokerConfig brokerConfig = appConfig.get(BrokerConfig.class);
         final KafkaSslConfig kafkaSslConfig = appConfig.get(KafkaSslConfig.class);
@@ -55,7 +71,7 @@ public class Startup {
                     );
                     return proxyChannel;
                 }).collect(toList());
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+        shutdown = () -> {
             proxies.stream()
                     .map(ProxyChannel::close)
                     .collect(toList())
@@ -69,13 +85,6 @@ public class Startup {
             serverWorkerGroup.shutdownGracefully();
             upstreamWorkerGroup.shutdownGracefully();
             downstreamWorkerGroup.shutdownGracefully();
-        }));
+        };
     }
-
-    private static File file(final String propName) {
-        final String prop = System.getProperty(propName);
-        return prop == null ? null : new File(prop);
-    }
-
-
 }

@@ -7,8 +7,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -39,10 +39,10 @@ public class SslTestSetup {
     public interface Builder {
         SslTestSetup build();
 
-        Builder withBrokers(List<String> collect);
+        Builder withBrokers(Collection<String> collect);
     }
 
-    public static Builder builder(final String dn, final File basePath) {
+    public static Builder sslSetup(final String dn, final File basePath) {
         final Map<String, SslTestKeystore> brokerKeyStores = new HashMap<>();
         final CertificateAuthority ca = CertificateAuthority.create(dn);
         return new Builder() {
@@ -55,7 +55,7 @@ public class SslTestSetup {
             }
 
             @Override
-            public Builder withBrokers(final List<String> brokers) {
+            public Builder withBrokers(final Collection<String> brokers) {
                 brokers.forEach(broker -> {
                     final String keyStorePassword = randomPassword();
                     final String keyPassword = randomPassword();

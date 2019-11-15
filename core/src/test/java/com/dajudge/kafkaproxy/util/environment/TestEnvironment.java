@@ -3,9 +3,13 @@ package com.dajudge.kafkaproxy.util.environment;
 import com.dajudge.kafkaproxy.config.Environment;
 import com.dajudge.kafkaproxy.config.FileResource;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
+import static java.nio.file.Files.readAllBytes;
 
 public class TestEnvironment implements Environment {
     private final Map<String, String> env = new HashMap<>();
@@ -24,6 +28,14 @@ public class TestEnvironment implements Environment {
     public TestEnvironment withFile(final String name, final byte[] data) {
         files.put(name, new ByteArrayFileResource(data));
         return this;
+    }
+
+    public TestEnvironment withFile(final String name, final File file) {
+        try {
+            return withFile(name, readAllBytes(file.toPath()));
+        } catch (final IOException e) {
+            throw new RuntimeException("Failed to read file", e);
+        }
     }
 
     @Override
