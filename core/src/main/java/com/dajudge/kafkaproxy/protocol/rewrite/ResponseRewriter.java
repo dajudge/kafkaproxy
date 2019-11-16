@@ -9,5 +9,6 @@ import java.util.Optional;
 
 public interface ResponseRewriter {
     boolean appliesTo(RequestHeader requestHeader);
+
     Optional<ByteBuf> rewrite(RequestHeader requestHeader, ResponseHeader responseHeader, ByteBuffer responseBuffer);
 }

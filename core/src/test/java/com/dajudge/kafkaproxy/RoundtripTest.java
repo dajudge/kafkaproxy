@@ -21,14 +21,12 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import static com.dajudge.kafkaproxy.util.brokermap.BrokerMapBuilder.brokerMapFile;
 import static com.dajudge.kafkaproxy.util.kafka.KafkaClusterWithSslBuilder.kafkaClusterWithSsl;
 import static com.dajudge.kafkaproxy.util.ssl.SslTestSetup.sslSetup;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertTrue;
 

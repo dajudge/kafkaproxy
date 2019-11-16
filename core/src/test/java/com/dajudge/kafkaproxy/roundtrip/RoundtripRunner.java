@@ -56,7 +56,7 @@ public class RoundtripRunner<K, V> {
         threads.forEach(t -> {
             try {
                 t.join(10000);
-                if(t.isAlive()) {
+                if (t.isAlive()) {
                     LOG.error("Consumer thread did not terminate in time.");
                 }
             } catch (final InterruptedException e) {

@@ -81,6 +81,6 @@ public class ProxyChannel {
     }
 
     public int getPort() {
-        return ((InetSocketAddress)channel.localAddress()).getPort();
+        return ((InetSocketAddress) channel.localAddress()).getPort();
     }
 }

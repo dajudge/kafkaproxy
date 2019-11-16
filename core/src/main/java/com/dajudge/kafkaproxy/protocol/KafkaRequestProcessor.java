@@ -1,7 +1,5 @@
 package com.dajudge.kafkaproxy.protocol;
 
-import com.dajudge.kafkaproxy.protocol.KafkaMessage;
-import com.dajudge.kafkaproxy.protocol.KafkaRequestStore;
 import io.netty.buffer.ByteBuf;
 import org.apache.kafka.common.requests.RequestHeader;
 

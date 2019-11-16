@@ -3,10 +3,6 @@ package com.dajudge.kafkaproxy.config;
 import com.dajudge.kafkaproxy.util.environment.TestEnvironment;
 import org.junit.Test;
 
-import java.util.function.Function;
-
-import static org.junit.Assert.assertNull;
-
 abstract class BaseOptionalConfigTest<C> extends BaseConfigTest<C> {
     @Test
     public void returns_disabled() {
