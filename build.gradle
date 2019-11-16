@@ -17,9 +17,7 @@ wrapper {
 
 
 allprojects {
-    plugins {
-        id "com.github.hierynomus.license" version "0.15.0"
-    }
+    apply plugin: 'com.github.hierynomus.license'
     license {
         header file("${project.rootDir}/HEADER")
     }
