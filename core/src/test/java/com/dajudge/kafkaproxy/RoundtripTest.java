@@ -33,6 +33,7 @@ import static org.junit.Assert.assertTrue;
 public class RoundtripTest {
     @ClassRule
     public static final TemporaryFolder KAFKA_SSL_TEMP_DIR = createTempFolder();
+    @ClassRule
     public static final TemporaryFolder CLIENT_SSL_TEMP_DIR = createTempFolder();
 
     private final SslTestSetup clientSslSetup = sslSetup("CN=ClientCA", CLIENT_SSL_TEMP_DIR.getRoot())
