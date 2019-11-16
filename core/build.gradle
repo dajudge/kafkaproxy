@@ -16,7 +16,6 @@ dependencies {
 
     testImplementation "org.testcontainers:kafka:1.12.3"
     testImplementation 'junit:junit:4.11'
-    testImplementation 'com.palantir.docker.compose:docker-compose-rule-junit4:1.3.0'
 }
 
 jar {
