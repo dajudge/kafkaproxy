@@ -1,5 +1,3 @@
-apply plugin: "java"
-
 subprojects {
     repositories {
         mavenCentral()
