@@ -24,34 +24,22 @@ import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 import org.testcontainers.containers.wait.strategy.WaitStrategyTarget;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
+import static java.util.Collections.reverse;
 import static org.testcontainers.utility.MountableFile.forClasspathResource;
 
-public abstract class KafkaClusterBuilder<B extends KafkaClusterBuilder, T extends KafkaCluster> {
+public final class KafkaClusterBuilder {
     private static final Logger LOG = LoggerFactory.getLogger(KafkaClusterBuilder.class);
-    protected final Set<String> brokers = new HashSet<>();
 
-    protected KafkaClusterBuilder() {
+    private KafkaClusterBuilder() {
+
     }
 
-    public T build() {
-        throw new UnsupportedOperationException();
-    }
-
-    public B withBrokers(final Collection<String> name) {
-        brokers.addAll(name);
-        return (B) this;
-    }
-
-    public B withBroker(final String name) {
-        brokers.add(name);
-        return (B) this;
-    }
-
-    protected static GenericContainer zk(final Network network, final int zkPort) {
+    private static GenericContainer zk(final Network network, final int zkPort) {
         return new GenericContainer("confluentinc/cp-zookeeper:5.2.1")
                 .withNetworkAliases("zk")
                 .withNetwork(network)
@@ -59,7 +47,13 @@ public abstract class KafkaClusterBuilder<B extends KafkaClusterBuilder, T exten
                 .waitingFor(new LogMessageWaitStrategy().withRegEx(".*binding to port.*"));
     }
 
-    protected GenericContainer kafkaContainer(final String hostname, final int brokerId, final Network network, final int zkPort) {
+    private static GenericContainer kafkaContainer(
+            final String hostname,
+            final int brokerId,
+            final Network network,
+            final int zkPort,
+            final BiFunction<String, Integer, String> advertisedListenersFunction
+    ) {
         final GenericContainer container = new GenericContainer("confluentinc/cp-kafka:5.2.1");
         return container
                 .withNetwork(network)
@@ -79,9 +73,10 @@ public abstract class KafkaClusterBuilder<B extends KafkaClusterBuilder, T exten
                     public void waitUntilReady(final WaitStrategyTarget waitStrategyTarget) {
                         try {
                             final int mappedPort = container.getMappedPort(9092);
-                            final String advertisedListeners = advertisedListeners(hostname, mappedPort);
+                            final String advertisedListeners = advertisedListenersFunction.apply(hostname, mappedPort);
                             LOG.info("Writing advertised listeners to container: {}", advertisedListeners);
-                            final String[] cmd = {"/bin/sh", "-c", "echo \"" + advertisedListeners + "\" > /tmp/advertisedListeners.txt"};
+                            final String containerFile = "/tmp/advertisedListeners.txt";
+                            final String[] cmd = {"/bin/sh", "-c", "echo \"" + advertisedListeners + "\" > " + containerFile};
                             final int exitCode = container.execInContainer(cmd).getExitCode();
                             if (exitCode != 0) {
                                 throw new IllegalStateException("Unexpected exit code: " + exitCode);
@@ -94,5 +89,30 @@ public abstract class KafkaClusterBuilder<B extends KafkaClusterBuilder, T exten
                 }.withRegEx(".*started \\(kafka.server.KafkaServer\\).*"));
     }
 
-    protected abstract String advertisedListeners(String hostname, int port);
+    public static KafkaCluster build(
+            final Collection<String> brokers,
+            final ContainerConfigurator configurator,
+            final BiFunction<String, Integer, String> advertisedListeners
+    ) {
+        LOG.info("Building cluster with brokers {}...", brokers);
+        final List<AutoCloseable> resources = new ArrayList<>();
+        final int zkPort = 2181;
+        final Network network = Network.newNetwork();
+        resources.add(network);
+        final GenericContainer zk = zk(network, zkPort);
+        resources.add(zk);
+        zk.start();
+        final AtomicInteger brokerIdCounter = new AtomicInteger();
+        final Map<String, Integer> portMap = new HashMap<>();
+        brokers.forEach(broker -> {
+            final int brokerId = brokerIdCounter.incrementAndGet();
+            final GenericContainer container = kafkaContainer(broker, brokerId, network, zkPort, advertisedListeners);
+            final GenericContainer kafka = configurator.configure(broker, container);
+            kafka.start();
+            resources.add(kafka);
+            portMap.put(broker, kafka.getMappedPort(9092));
+        });
+        reverse(resources); // Ensure proper close order
+        return new KafkaCluster(resources, portMap);
+    }
 }
