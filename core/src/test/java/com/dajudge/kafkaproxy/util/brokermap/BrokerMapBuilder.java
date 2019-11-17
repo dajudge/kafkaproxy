@@ -31,10 +31,10 @@ public final class BrokerMapBuilder {
     private BrokerMapBuilder() {
     }
 
-    public static byte[] brokerMapFile(final KafkaCluster kafkaCluster) {
+    public static byte[] brokerMapFile(final KafkaCluster kafkaCluster, final String proxyHostname) {
         try (final PortFinder portFinder = new PortFinder()) {
             final List<Object> proxies = kafkaCluster.getBrokers().entrySet().stream()
-                    .map(e -> entryFor(e.getKey(), e.getValue(), "localhost", portFinder.nextPort()))
+                    .map(e -> entryFor(e.getKey(), e.getValue(), proxyHostname, portFinder.nextPort()))
                     .collect(toList());
             final HashMap<String, Object> root = new HashMap<String, Object>() {{
                 put("proxies", proxies);

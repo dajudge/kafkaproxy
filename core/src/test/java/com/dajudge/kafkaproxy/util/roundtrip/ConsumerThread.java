@@ -15,9 +15,9 @@
  *
  */
 
-package com.dajudge.kafkaproxy.roundtrip;
+package com.dajudge.kafkaproxy.util.roundtrip;
 
-import com.dajudge.kafkaproxy.roundtrip.RoundtripRunner.RoundtripConsumer;
+import com.dajudge.kafkaproxy.util.roundtrip.RoundtripRunner.RoundtripConsumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.errors.WakeupException;
