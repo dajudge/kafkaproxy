@@ -17,6 +17,8 @@
 
 package com.dajudge.kafkaproxy.config;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,6 +29,10 @@ final class Util {
     private Util() {
     }
 
+    @SuppressFBWarnings(
+            value="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+            justification="False positive" // see https://sourceforge.net/p/findbugs/bugs/1169/
+    )
     static String toString(final FileResource res) {
         try (final InputStream is = res.open()) {
             final ByteArrayOutputStream os = new ByteArrayOutputStream();

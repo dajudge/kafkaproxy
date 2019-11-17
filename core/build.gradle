@@ -16,6 +16,7 @@ dependencies {
 
     testImplementation "org.testcontainers:kafka:1.12.3"
     testImplementation 'junit:junit:4.11'
+    testCompileOnly 'com.google.code.findbugs:annotations:3.0.1'
 }
 
 jar {

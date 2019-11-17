@@ -24,7 +24,6 @@ import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 import org.testcontainers.containers.wait.strategy.WaitStrategyTarget;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -81,9 +80,13 @@ public abstract class KafkaClusterBuilder<B extends KafkaClusterBuilder, T exten
                             final int mappedPort = container.getMappedPort(9092);
                             final String advertisedListeners = advertisedListeners(hostname, mappedPort);
                             LOG.info("Writing advertised listeners to container: {}", advertisedListeners);
-                            container.execInContainer("/bin/sh", "-c", "echo \"" + advertisedListeners + "\" > /tmp/advertisedListeners.txt").getExitCode();
-                        } catch (final IOException | InterruptedException e) {
-                            throw new RuntimeException("Failed to write external broker port to container", e);
+                            final String[] cmd = {"/bin/sh", "-c", "echo \"" + advertisedListeners + "\" > /tmp/advertisedListeners.txt"};
+                            final int exitCode = container.execInContainer(cmd).getExitCode();
+                            if (exitCode != 0) {
+                                throw new IllegalStateException("Unexpected exit code: " + exitCode);
+                            }
+                        } catch (final Exception e) {
+                            throw new RuntimeException("Failed to write advertosed listeners to container", e);
                         }
                         super.waitUntilReady(waitStrategyTarget);
                     }

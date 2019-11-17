@@ -19,9 +19,21 @@ wrapper {
 allprojects {
     apply plugin: 'com.github.hierynomus.license'
     apply plugin: 'pmd'
+    apply plugin: 'findbugs'
+
+    findbugs {
+        toolVersion = "3.0.1"
+    }
+
+    tasks.withType(FindBugs) {
+        reports {
+            xml.enabled false
+            html.enabled true
+        }
+    }
 
     pmd {
-        ruleSets = [project.rootProject.file("pmd.xml")]
+        ruleSets = [project.rootProject.file("pmd.xml").absolutePath]
     }
 
     license {

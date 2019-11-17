@@ -68,7 +68,7 @@ public class RoundtripTester {
                 messagesUnknown++;
             }
         };
-        this.runner = new RoundtripRunner<>(1, producerFactory, 1, consumerFactory, sink);
+        this.runner = new RoundtripRunner<>(1, producerFactory, 1, consumerFactory, sink).start();
     }
 
     public void run(final AbortCondition abortCondition) {

@@ -90,7 +90,7 @@ public final class Helpers {
                     new X500Name(issuerDn),
                     BigInteger.valueOf(SECURE_RANDOM.nextInt()),
                     new Date(currentTimeMillis()),
-                    new Date(currentTimeMillis() + days * 365 * 24 * 60 * 60 * 1000),
+                    new Date(currentTimeMillis() + (long)days * 365 * 24 * 60 * 60 * 1000),
                     new X500Name(ownerDn),
                     SubjectPublicKeyInfo.getInstance(publicKey.getEncoded())
             );

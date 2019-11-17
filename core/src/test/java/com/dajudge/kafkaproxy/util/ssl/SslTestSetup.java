@@ -102,7 +102,10 @@ public class SslTestSetup {
     }
 
     private static File write(final File basePath, final String storeName, final byte[] jks) {
-        basePath.mkdirs();
+        if (!basePath.exists() && !basePath.mkdirs()) {
+            throw new RuntimeException("Could not create directory " + basePath.getAbsolutePath());
+
+        }
         final File outFile = new File(basePath, storeName);
         try (final FileOutputStream fos = new FileOutputStream(outFile)) {
             fos.write(jks);

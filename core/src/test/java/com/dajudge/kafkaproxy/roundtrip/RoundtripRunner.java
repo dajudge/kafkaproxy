@@ -48,14 +48,17 @@ public class RoundtripRunner<K, V> {
         }
         for (int i = 0; i < consumers; i++) {
             final KafkaConsumer<K, V> consumer = consumerFactory.get();
-            final ConsumerThread thread = new ConsumerThread<>(consumer, datasink);
-            thread.start();
-            threads.add(thread);
+            threads.add(new ConsumerThread<>(consumer, datasink));
             this.consumers.add(consumer);
         }
     }
 
-    void produce(final String topic, final K key, final V value) {
+    public RoundtripRunner<K, V> start() {
+        threads.forEach(Thread::start);
+        return this;
+    }
+
+    public void produce(final String topic, final K key, final V value) {
         LOG.trace("Producing message: {}/{}/{}", topic, key, value);
         producers.get(RANDOM.nextInt(producers.size())).send(new ProducerRecord<>(
                 topic,
@@ -64,7 +67,7 @@ public class RoundtripRunner<K, V> {
         ));
     }
 
-    void shutdown() {
+    public void shutdown() {
         LOG.info("Closing producers...");
         producers.forEach(KafkaProducer::close);
         LOG.info("Waking up consumers...");

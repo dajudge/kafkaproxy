@@ -26,7 +26,7 @@ public class ByteArrayFileResource implements FileResource {
     private final byte[] data;
 
     public ByteArrayFileResource(final byte[] data) {
-        this.data = data;
+        this.data = data.clone();
     }
 
     @Override

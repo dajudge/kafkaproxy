@@ -25,7 +25,7 @@ public class KafkaSslConfig {
     private final String trustStorePassword;
     private final boolean hostnameVerificationEnabled;
 
-    public static KafkaSslConfig DISABLED = new KafkaSslConfig(false, null, null, false);
+    public static final KafkaSslConfig DISABLED = new KafkaSslConfig(false, null, null, false);
 
     public KafkaSslConfig(
             final boolean enabled,
