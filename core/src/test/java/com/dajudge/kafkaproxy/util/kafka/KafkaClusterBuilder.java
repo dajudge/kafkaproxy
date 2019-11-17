@@ -24,6 +24,7 @@ import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 import org.testcontainers.containers.wait.strategy.WaitStrategyTarget;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -40,7 +41,7 @@ public abstract class KafkaClusterBuilder<B extends KafkaClusterBuilder, T exten
         throw new UnsupportedOperationException();
     }
 
-    public B withBrokers(final Set<String> name) {
+    public B withBrokers(final Collection<String> name) {
         brokers.addAll(name);
         return (B) this;
     }

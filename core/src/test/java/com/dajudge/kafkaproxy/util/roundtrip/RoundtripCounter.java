@@ -15,7 +15,7 @@
  *
  */
 
-package com.dajudge.kafkaproxy.roundtrip;
+package com.dajudge.kafkaproxy.util.roundtrip;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

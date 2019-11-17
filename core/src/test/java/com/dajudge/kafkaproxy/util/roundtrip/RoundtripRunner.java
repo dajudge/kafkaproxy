@@ -15,7 +15,7 @@
  *
  */
 
-package com.dajudge.kafkaproxy.roundtrip;
+package com.dajudge.kafkaproxy.util.roundtrip;
 
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;

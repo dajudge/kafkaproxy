@@ -15,7 +15,7 @@
  *
  */
 
-package com.dajudge.kafkaproxy.roundtrip;
+package com.dajudge.kafkaproxy.util.roundtrip;
 
 public interface AbortCondition {
     boolean check(final int sent, final int completed, final int inflight, final int messagesUnknown);
