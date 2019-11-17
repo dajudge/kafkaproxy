@@ -6,6 +6,13 @@ plugins {
 }
 
 def dockerBuildDir = file("${project.buildDir}/docker")
+List tagsToBuild = (
+        (System.getenv("CI_COMMIT_REF_NAME").equals("master") ? ["devel"] : []) +
+                ((System.getenv("CI_COMMIT_TAG") ?: "").startsWith("release/") ? System.getenv("CI_COMMIT_TAG").substring("release/".length()) : [])
+).collect { "dajudge/kafkaproxy:$it" }
+if (!tagsToBuild.isEmpty()) {
+    println "Building docker images: $tagsToBuild"
+}
 
 task clean(type: Delete) {
     group "build"
@@ -30,15 +37,7 @@ task buildAppImage(type: DockerBuildImage) {
     group "build"
     dependsOn copyJars, copyDockerSources
     inputDir = dockerBuildDir
-    tags.addAll(['dajudge/kafkaproxy:devel'])
-}
-
-task pushAppImage(type: DockerPushImage) {
-    group "publish"
-    dependsOn buildAppImage
-    imageName = "dajudge/kafkaproxy:devel"
-    registryCredentials.username = System.getenv("DOCKERHUB_USERNAME")
-    registryCredentials.password = System.getenv("DOCKERHUB_PASSWORD")
+    tags.addAll(tagsToBuild)
 }
 
 task build {
@@ -51,9 +50,13 @@ task publish {
     dependsOn build
 }
 
-if (System.getenv("CI_COMMIT_REF_NAME").equals("master")) {
-    println "Publishing branch '${System.getenv("CI_COMMIT_REF_NAME")}'..."
-    publish.dependsOn pushAppImage
-} else {
-    println "Not plublishing branch '${System.getenv("CI_COMMIT_REF_NAME")}'"
+if (!tagsToBuild.isEmpty()) {
+    def taskName = { String str -> str.replaceAll("[/:]", "-") }
+    tagsToBuild.each { tag ->
+        publish.dependsOn task([type: DockerPushImage], "push_${taskName(tag)}", {
+            group "publish"
+            dependsOn buildAppImage
+            imageName = tag
+        })
+    }
 }

@@ -29,6 +29,7 @@ docker run --rm \
     -e https_proxy="$https_proxy" \
     -e no_proxy="$no_proxy" \
     -e CI_COMMIT_REF_NAME="$CI_COMMIT_REF_NAME" \
+    -e CI_COMMIT_TAG="$CI_COMMIT_REF_NAME" \
     -e DOCKERHUB_USERNAME="$DOCKERHUB_USERNAME" \
     -e DOCKERHUB_PASSWORD="$DOCKERHUB_PASSWORD" \
     -v "${DIR}":/project \
