@@ -15,7 +15,7 @@ the relevant parts of the communication where the brokers publish the endpoint n
 where the the proxy instances can be reached.
 
 # Run kafkaproxy in Docker
-kafkaproxy is built to be run in a container. 
+kafkaproxy is built to be run in a container. The released versions are available at [Docker Hub](https://hub.docker.com/r/dajudge/kafkaproxy).
 ## Command line
 The only mandatory configuration is the broker map file. So, once you created a suitable YAML configuration, you can
 start kafkaproxy with the following command line:
