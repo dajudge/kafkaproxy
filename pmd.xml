@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+
+<ruleset name="Custom Rules"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>
+        kafkaproxy PMD ruleset
+    </description>
+
+    <rule ref="category/java/errorprone.xml">
+        <!-- Extremely noisy with false prositives -->
+        <!-- https://github.com/pmd/pmd/issues/1668 -->
+        <exclude name="BeanMembersShouldSerialize"/>
+
+        <!-- Not working properly with Collection.forEach() -->
+        <!-- https://stackoverflow.com/questions/21592497/java-for-each-loop-being-flagged-as-ur-anomaly-by-pmd -->
+        <exclude name="DataflowAnomalyAnalysis"/>
+
+        <!-- Non-static initializers are a very useful Java feature and there's no point in denying their usage. -->
+        <exclude name="NonStaticInitializer"/>
+        <!-- Same for assignments in operands. -->
+        <exclude name="AssignmentInOperand"/>
+
+        <!-- Not a JEE application -->
+        <exclude name="UseProperClassLoader" />
+
+        <!-- False positivies with throwables as last parameter -->
+        <!-- https://github.com/pmd/pmd/issues/939 -->
+        <exclude name="InvalidSlf4jMessageFormat"/>
+    </rule>
+</ruleset>

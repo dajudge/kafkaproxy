@@ -26,7 +26,7 @@ import java.util.Map;
 import static java.util.Collections.unmodifiableMap;
 
 public class KafkaCluster implements AutoCloseable {
-    private static Logger LOG = LoggerFactory.getLogger(KafkaCluster.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KafkaCluster.class);
     private final List<AutoCloseable> resources;
     private final Map<String, Integer> brokers;
 

@@ -1,6 +1,7 @@
 plugins {
     id "com.github.hierynomus.license" version "0.15.0" apply false
 }
+
 subprojects {
     repositories {
         mavenCentral()
@@ -15,9 +16,14 @@ wrapper {
     version "5.3.1"
 }
 
-
 allprojects {
     apply plugin: 'com.github.hierynomus.license'
+    apply plugin: 'pmd'
+
+    pmd {
+        ruleSets = [project.rootProject.file("pmd.xml")]
+    }
+
     license {
         header file("${project.rootDir}/HEADER")
     }

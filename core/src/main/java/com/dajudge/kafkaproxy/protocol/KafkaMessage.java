@@ -29,26 +29,26 @@ import static java.lang.Math.min;
 
 public class KafkaMessage {
     private static final Logger LOG = LoggerFactory.getLogger(KafkaMessage.class);
-    private Integer length;
-    private ByteBuf lengthBuffer = wrappedBuffer(new byte[4]).resetWriterIndex();
+    private Integer messageLength;
+    private ByteBuf messageLengthBuffer = wrappedBuffer(new byte[4]).resetWriterIndex();
     private List<ByteBuf> buffers = new ArrayList<>();
 
     public void append(final ByteBuf remainingBytes) {
-        if (length == null) {
+        if (messageLength == null) {
             LOG.trace(
                     "Length not present, yet. {} bytes in length buffer, {} currently available.",
-                    lengthBuffer.writableBytes(),
+                    messageLengthBuffer.writableBytes(),
                     remainingBytes.readableBytes()
             );
-            final int bytesToRead = min(lengthBuffer.writableBytes(), remainingBytes.readableBytes());
+            final int bytesToRead = min(messageLengthBuffer.writableBytes(), remainingBytes.readableBytes());
             LOG.trace("Reading {} bytes into length buffer...", bytesToRead);
-            lengthBuffer.writeBytes(remainingBytes, bytesToRead);
-            if (lengthBuffer.writableBytes() > 0) {
-                LOG.trace("Length still missing {} bytes. Postponing...", lengthBuffer.writableBytes());
+            messageLengthBuffer.writeBytes(remainingBytes, bytesToRead);
+            if (messageLengthBuffer.writableBytes() > 0) {
+                LOG.trace("Length still missing {} bytes. Postponing...", messageLengthBuffer.writableBytes());
                 return;
             }
-            length = lengthBuffer.readInt();
-            LOG.trace("Length: {}", length);
+            messageLength = messageLengthBuffer.readInt();
+            LOG.trace("Length: {}", messageLength);
         }
         final int missingBytes = missingBytes();
         LOG.trace("Now {} bytes remaining in buffer.", remainingBytes.readableBytes());
@@ -68,14 +68,14 @@ public class KafkaMessage {
     }
 
     public boolean isComplete() {
-        return length != null && missingBytes() == 0;
+        return messageLength != null && missingBytes() == 0;
     }
 
     public int length() {
-        if (length == null) {
+        if (messageLength == null) {
             throw new IllegalArgumentException("Cannot determine missing bytes when length was not read, yet");
         }
-        return length;
+        return messageLength;
     }
 
     public ByteBuf serialize() {

@@ -25,6 +25,8 @@ import com.dajudge.kafkaproxy.roundtrip.RoundtripTester;
 import com.dajudge.kafkaproxy.roundtrip.SingleRoundtrip;
 import com.dajudge.kafkaproxy.util.environment.TestEnvironment;
 import com.dajudge.kafkaproxy.util.kafka.KafkaClusterWihtSsl;
+import com.dajudge.kafkaproxy.util.ssl.SslTestAuthority;
+import com.dajudge.kafkaproxy.util.ssl.SslTestKeystore;
 import com.dajudge.kafkaproxy.util.ssl.SslTestSetup;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -53,19 +55,22 @@ public class RoundtripTest {
     @ClassRule
     public static final TemporaryFolder CLIENT_SSL_TEMP_DIR = createTempFolder();
 
+    private static final String BROKER_HOSTNAME = "localhost";
+    private static final String PROXY_HOSTNAME = "localhost";
+
     private final SslTestSetup clientSslSetup = sslSetup("CN=ClientCA", CLIENT_SSL_TEMP_DIR.getRoot())
-            .withBrokers(singletonList("localhost"))
+            .withBrokers(singletonList(BROKER_HOSTNAME))
             .build();
 
 
-    private Startup proxyApp;
+    private ProxyApplication proxyApp;
     private String bootstrapServers;
     private KafkaClusterWihtSsl kafkaCluster;
 
     @Before
-    public void setup() {
+    public void setUp() {
         kafkaCluster = kafkaClusterWithSsl(sslSetup("CN=KafkaCA", KAFKA_SSL_TEMP_DIR.getRoot()))
-                .withBroker("localhost")
+                .withBroker(PROXY_HOSTNAME)
                 .build();
 
         final byte[] brokerMapFile = brokerMapFile(kafkaCluster);
@@ -74,28 +79,31 @@ public class RoundtripTest {
         final BrokerMapping firstBroker = brokermap.getAll().get(0);
         bootstrapServers = firstBroker.getProxy().getHost() + ":" + firstBroker.getProxy().getPort();
 
+        final SslTestAuthority clientAuthority = clientSslSetup.getAuthority();
+        final SslTestKeystore clientBroker = clientSslSetup.getBroker(PROXY_HOSTNAME);
+        final SslTestAuthority kafkaAuthority = kafkaCluster.getAuthority();
         final Environment env = new TestEnvironment()
                 .withEnv("KAFKAPROXY_CLIENT_SSL_ENABLED", "true")
                 .withEnv("KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_LOCATION", "client/truststore.jks")
-                .withEnv("KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_PASSWORD", clientSslSetup.getAuthority().getTrustStorePassword())
+                .withEnv("KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_PASSWORD", clientAuthority.getTrustStorePassword())
                 .withEnv("KAFKAPROXY_CLIENT_SSL_KEYSTORE_LOCATION", "client/keystore.jks")
-                .withEnv("KAFKAPROXY_CLIENT_SSL_KEYSTORE_PASSWORD", clientSslSetup.getBroker("localhost").getKeystorePassword())
-                .withEnv("KAFKAPROXY_CLIENT_SSL_KEY_PASSWORD", clientSslSetup.getBroker("localhost").getKeyPassword())
-                .withFile("client/truststore.jks", clientSslSetup.getAuthority().getTrustStore())
-                .withFile("client/keystore.jks", clientSslSetup.getBroker("localhost").getKeyStore())
+                .withEnv("KAFKAPROXY_CLIENT_SSL_KEYSTORE_PASSWORD", clientBroker.getKeystorePassword())
+                .withEnv("KAFKAPROXY_CLIENT_SSL_KEY_PASSWORD", clientBroker.getKeyPassword())
+                .withFile("client/truststore.jks", clientAuthority.getTrustStore())
+                .withFile("client/keystore.jks", clientBroker.getKeyStore())
                 .withEnv("KAFKAPROXY_KAFKA_SSL_ENABLED", "true")
                 .withEnv("KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_LOCATION", "kafka/truststore.jks")
-                .withEnv("KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_PASSWORD", kafkaCluster.getAuthority().getTrustStorePassword())
+                .withEnv("KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_PASSWORD", kafkaAuthority.getTrustStorePassword())
                 .withEnv("KAFKAPROXY_KAFKA_SSL_VERIFY_HOSTNAME", "true")
-                .withFile("kafka/truststore.jks", kafkaCluster.getAuthority().getTrustStore())
+                .withFile("kafka/truststore.jks", kafkaAuthority.getTrustStore())
                 .withFile("/etc/kafkaproxy/brokermap.yml", brokerMapFile);
 
-        proxyApp = new Startup(env);
+        proxyApp = ProxyApplication.create(env);
         proxyApp.start();
     }
 
     @After
-    public void shutdown() {
+    public void tearDown() {
         proxyApp.shutdown();
         kafkaCluster.close();
     }

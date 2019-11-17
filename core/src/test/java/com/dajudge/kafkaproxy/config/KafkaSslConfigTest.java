@@ -26,6 +26,12 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.*;
 
 public class KafkaSslConfigTest extends BaseOptionalConfigTest<KafkaSslConfig> {
+
+    private static final String KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_LOCATION = "KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_LOCATION";
+    private static final String KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_PASSWORD = "KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_PASSWORD";
+    private static final String KAFKAPROXY_KAFKA_SSL_VERIFY_HOSTNAME = "KAFKAPROXY_KAFKA_SSL_VERIFY_HOSTNAME";
+    private static final String KAFKAPROXY_KAFKA_SSL_ENABLED = "KAFKAPROXY_KAFKA_SSL_ENABLED";
+
     @Test
     public void accepts_full_config() {
         final KafkaSslConfig config = parse(fullEnvironment());
@@ -36,42 +42,42 @@ public class KafkaSslConfigTest extends BaseOptionalConfigTest<KafkaSslConfig> {
 
     @Test
     public void accepts_unset_truststore_location() {
-        assertAllowsUnset("KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_LOCATION", KafkaSslConfig::getTrustStore);
+        assertAllowsUnset(KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_LOCATION, KafkaSslConfig::getTrustStore);
     }
 
     @Test
     public void accepts_unset_truststore_password() {
-        assertAllowsUnset("KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_PASSWORD", KafkaSslConfig::getTrustStorePassword);
+        assertAllowsUnset(KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_PASSWORD, KafkaSslConfig::getTrustStorePassword);
     }
 
     @Test
     public void accepts_unset_hostname_verification() {
         final Environment env = fullEnvironment()
-                .withEnv("KAFKAPROXY_KAFKA_SSL_VERIFY_HOSTNAME", null);
+                .withEnv(KAFKAPROXY_KAFKA_SSL_VERIFY_HOSTNAME, null);
         assertTrue(parse(env).isHostnameVerificationEnabled());
     }
 
     @Test
     public void parses_true_hostname_verification() {
         final Environment env = fullEnvironment()
-                .withEnv("KAFKAPROXY_KAFKA_SSL_VERIFY_HOSTNAME", "true");
+                .withEnv(KAFKAPROXY_KAFKA_SSL_VERIFY_HOSTNAME, "true");
         assertTrue(parse(env).isHostnameVerificationEnabled());
     }
 
     @Test
     public void parses_false_hostname_verification() {
         final Environment env = fullEnvironment()
-                .withEnv("KAFKAPROXY_KAFKA_SSL_VERIFY_HOSTNAME", "false");
+                .withEnv(KAFKAPROXY_KAFKA_SSL_VERIFY_HOSTNAME, "false");
         assertFalse(parse(env).isHostnameVerificationEnabled());
     }
 
     @Override
     TestEnvironment fullEnvironment() {
         return new TestEnvironment()
-                .withEnv("KAFKAPROXY_KAFKA_SSL_ENABLED", "true")
-                .withEnv("KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_LOCATION", "truststore.jks")
-                .withEnv("KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_PASSWORD", "truststorePassword")
-                .withEnv("KAFKAPROXY_KAFKA_SSL_VERIFY_HOSTNAME", "true")
+                .withEnv(KAFKAPROXY_KAFKA_SSL_ENABLED, "true")
+                .withEnv(KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_LOCATION, "truststore.jks")
+                .withEnv(KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_PASSWORD, "truststorePassword")
+                .withEnv(KAFKAPROXY_KAFKA_SSL_VERIFY_HOSTNAME, "true")
                 .withFile("truststore.jks", "truststore".getBytes(UTF_8));
     }
 
@@ -91,6 +97,6 @@ public class KafkaSslConfigTest extends BaseOptionalConfigTest<KafkaSslConfig> {
 
     @Override
     TestEnvironment disable(final TestEnvironment testEnvironment) {
-        return testEnvironment.withEnv("KAFKAPROXY_KAFKA_SSL_ENABLED", "false");
+        return testEnvironment.withEnv(KAFKAPROXY_KAFKA_SSL_ENABLED, "false");
     }
 }

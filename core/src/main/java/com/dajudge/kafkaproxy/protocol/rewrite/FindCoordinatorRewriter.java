@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Field;
 
 public class FindCoordinatorRewriter extends BaseReflectingRewriter<FindCoordinatorResponse> {
-    private final Logger LOG = LoggerFactory.getLogger(FindCoordinatorRewriter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FindCoordinatorRewriter.class);
     private final BrokerMap brokerMap;
 
     public FindCoordinatorRewriter(final BrokerMap brokerMap) {

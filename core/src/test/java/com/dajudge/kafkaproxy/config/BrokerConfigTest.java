@@ -34,19 +34,28 @@ import static org.junit.Assert.assertNotNull;
 
 public class BrokerConfigTest extends BaseConfigTest<BrokerConfig> {
 
+    private static final String BROKER1 = "broker1";
+    private static final String BROKER2 = "broker2";
+    private static final String BROKER1_ENDPOINT = "broker1.kafka.local";
+    private static final String BROKER2_ENDPOINT = "broker2.kafka.local";
+    private static final int BROKER_PORT = 9092;
+    private static final int BROKER2_PROXY_PORT = 39093;
+    private static final int BROKER1_PROXY_PORT = 39092;
+    private static final String PROXY_ENDPOINT = "kafka.example.com";
+
     @Test
     public void asterisk_proxies_all() {
-        assertProxiedBrokers("*", "broker1", "broker2");
+        assertProxiedBrokers("*", BROKER1, BROKER2);
     }
 
     @Test
     public void can_set_proxied_brokers() {
-        assertProxiedBrokers("broker1", "broker1");
+        assertProxiedBrokers(BROKER1, BROKER1);
     }
 
     @Test
     public void defaults_to_all_brokers_proxied() {
-        assertProxiedBrokers(null, "broker1", "broker2");
+        assertProxiedBrokers(null, BROKER1, BROKER2);
     }
 
     private void assertProxiedBrokers(final String value, final String... brokers) {
@@ -70,23 +79,23 @@ public class BrokerConfigTest extends BaseConfigTest<BrokerConfig> {
     @Test
     public void test_getByBrokerEndpoint() {
         final BrokerMap brokerMap = parse(fullEnvironment()).getBrokerMap();
-        assertMapping1(brokerMap.getByBrokerEndpoint("broker1.kafka.local", 9092));
-        assertMapping2(brokerMap.getByBrokerEndpoint("broker2.kafka.local", 9092));
+        assertMapping1(brokerMap.getByBrokerEndpoint(BROKER1_ENDPOINT, BROKER_PORT));
+        assertMapping2(brokerMap.getByBrokerEndpoint(BROKER2_ENDPOINT, BROKER_PORT));
     }
 
     @Test
     public void test_getByProxyName() {
         final BrokerMap brokerMap = parse(fullEnvironment()).getBrokerMap();
-        assertMapping1(brokerMap.getByProxyName("broker1"));
-        assertMapping2(brokerMap.getByProxyName("broker2"));
+        assertMapping1(brokerMap.getByProxyName(BROKER1));
+        assertMapping2(brokerMap.getByProxyName(BROKER2));
     }
 
     private void assertMapping1(final BrokerMapping endpoint) {
-        assertEndpoint(endpoint, "broker1", "broker1.kafka.local", 39092);
+        assertEndpoint(endpoint, BROKER1, BROKER1_ENDPOINT, BROKER1_PROXY_PORT);
     }
 
     private void assertMapping2(final BrokerMapping endpoint) {
-        assertEndpoint(endpoint, "broker2", "broker2.kafka.local", 39093);
+        assertEndpoint(endpoint, BROKER2, BROKER2_ENDPOINT, BROKER2_PROXY_PORT);
     }
 
     private void assertEndpoint(
@@ -97,9 +106,9 @@ public class BrokerConfigTest extends BaseConfigTest<BrokerConfig> {
     ) {
         assertNotNull(endpoint);
         assertEquals(name, endpoint.getName());
-        assertEquals(9092, endpoint.getBroker().getPort());
+        assertEquals(BROKER_PORT, endpoint.getBroker().getPort());
         assertEquals(proxyPort, endpoint.getProxy().getPort());
-        assertEquals("kafka.example.com", endpoint.getProxy().getHost());
+        assertEquals(PROXY_ENDPOINT, endpoint.getProxy().getHost());
         assertEquals(hostname, endpoint.getBroker().getHost());
     }
 

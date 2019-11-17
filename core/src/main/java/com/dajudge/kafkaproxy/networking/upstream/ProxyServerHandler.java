@@ -46,13 +46,13 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
         final ByteBuf buffer = ((ByteBuf) msg);
         LOG.trace("Received {} bytes from upstream.", buffer.readableBytes());
         try {
-            sink(ctx).accept(buffer);
+            getOrCreateSink(ctx).accept(buffer);
         } finally {
             buffer.release();
         }
     }
 
-    private synchronized Consumer<ByteBuf> sink(final ChannelHandlerContext ctx) {
+    private synchronized Consumer<ByteBuf> getOrCreateSink(final ChannelHandlerContext ctx) {
         if (sink == null) {
             final UpstreamCertificateSupplier certSupplier = () -> {
                 final ChannelHandler sslHandler = ctx.channel().pipeline().get("ssl");

@@ -20,6 +20,7 @@ build:
     when: always
     paths:
       - "*/build/reports/tests/test"
+      - "*/build/reports/pmd"
     reports:
       junit:
         - "*/build/test-results/test/TEST-*.xml"

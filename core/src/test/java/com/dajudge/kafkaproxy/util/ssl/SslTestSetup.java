@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Random;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.util.Locale.US;
 
 public class SslTestSetup {
     private static final Logger LOG = LoggerFactory.getLogger(SslTestSetup.class);
@@ -115,7 +116,7 @@ public class SslTestSetup {
         final StringBuilder builder = new StringBuilder();
         final String alphabet = "abcdefghijklmnopqrstuvwxyz";
         final String numbers = "0123456789";
-        final String chars = alphabet + alphabet.toUpperCase() + numbers;
+        final String chars = alphabet + alphabet.toUpperCase(US) + numbers;
         for (int i = 0; i < 32; i++) {
             builder.append(chars.charAt(RANDOM.nextInt(chars.length())));
         }
