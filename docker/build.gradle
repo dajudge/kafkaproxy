@@ -57,6 +57,8 @@ if (!tagsToBuild.isEmpty()) {
             group "publish"
             dependsOn buildAppImage
             imageName = tag
+            registryCredentials.username = System.getenv("DOCKERHUB_USERNAME")
+            registryCredentials.password = System.getenv("DOCKERHUB_PASSWORD")
         })
     }
 }
