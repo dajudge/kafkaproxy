@@ -60,10 +60,10 @@ public class RoundtripTest {
 
     private static final String BROKER_HOSTNAME = "localhost";
     private static final String PROXY_HOSTNAME = "localhost";
-    private static final int MESSAGES_TO_SEND = 1000 * 1000;
+    private static final int MESSAGES_TO_SEND = 1;
     private static final int TEST_TIMEOUT = 2 * 60 * 1000;
-    private static final int PRODUCERS = 10;
-    private static final int CONSUMERS = 10;
+    private static final int PRODUCERS = 1;
+    private static final int CONSUMERS = 1;
 
     private final SslTestSetup clientSslSetup = sslSetup("CN=ClientCA", CLIENT_SSL_TEMP_DIR.getRoot())
             .withBrokers(singletonList(BROKER_HOSTNAME))
