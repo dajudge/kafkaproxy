@@ -15,7 +15,48 @@ the relevant parts of the communication where the brokers publish the endpoint n
 where the the proxy instances can be reached.
 
 # Run kafkaproxy in Docker
-TODO
+kafkaproxy is built to be run in a container. 
+## Command line
+The only mandatory configuration is the broker map file. So, once you created a suitable YAML configuration, you can
+start kafkaproxy with the following command line:
+```
+docker run -d -v <path/to/brokermap.yml>:/etc/kafkaproxy/brokermap.yml dajudge/kafkaproxy:0.0.1 
+``` 
+*Note:* You will also have to make the proxy ports defined in your broker map available from outside the container with `-p PORT:PORT`.
+
+## Demonstration setup with `docker-compose`
+If you have `docker-compose` installed you can try out kafkaproxy by using the demonstration setup provided in the
+`example` directory. So clone the [kafkaproxy repo](https://github.com/dajudge/kafkaproxy) and run the following commands:
+
+**Step 1:** Start kafka, zookeeper and kafkaproxy.
+```
+docker-compose -f example/docker-compose.yml up -d
+```
+Kafka will take a couple of seconds to fully start and become available.
+
+**Step 2:** Create `my-test-topic`.
+```
+docker run --rm --net host -i confluentinc/cp-zookeeper:5.2.1 kafka-topics --create --topic my-test-topic --bootstrap-server localhost:19092 --partitions 1 --replication-factor 1
+```
+
+**Step 3:** Publish a message to `my-test-topic`.
+```
+echo "Hello, kafkaproxy" | docker run --rm --net host -i confluentinc/cp-zookeeper:5.2.1 kafka-console-producer --broker-list localhost:19092 --topic my-test-topic
+```
+
+**Step 4:** Consume to produced message from `my-test-topic`.
+```
+docker run --rm --net host -it confluentinc/cp-zookeeper:5.2.1 kafka-console-consumer --bootstrap-server localhost:19092 --topic my-test-topic --from-beginning --max-messages 1
+```
+
+**Cleanup:** Stop and remove the demonstration containers.
+```
+docker-compose -f example/docker-compose.yml rm -sf
+```
+
+**Explanation:** The `docker-compose.yml` file starts up a kafka broker (along with it's required zookeeper) that is
+only available from within the docker network as `kafka1:9092`. The kafkaproxy is configured via `brokermap.yml` to
+proxy this kafka instance as `localhost:19092` which is also mapped from outside the docker network.
 
 # Configuration
 kafkaproxy is configured using mostly environment variables and a broker map file in YAML format. The following
@@ -46,7 +87,7 @@ Configuration can be provided using the following environment variables:
 | `KAFKAPROXY_KAFKA_SSL_VERIFY_HOSTNAME`      | `true`        | Indicates if the hostnames of the Kafka brokers are validated against the SSL certificates they provide when connecting.
 
 
-## Broker map & proxy configuration
+## General configuration
 kafkaproxy needs a mapping configuration in order to know how to replace the brokers' endpoints with the endpoints
 where the kafkaproxy instance(s) are reachable. The broker map is provided as a YAML configuration file.
 
@@ -56,6 +97,7 @@ The location of the broker map & proxy configuration is configured using the fol
 | ------------------------------- |---------------------------------| -----------
 | `KAFKAPROXY_BROKERMAP_LOCATION` | `/etc/kafkaproxy/brokermap.yml` | The filesystem location where the broker map YAML file is located.
 | `KAFKAPROXY_PROXIED_BROKERS`    | `*`                             | The list of comma-separated symbolic names of the proxy entries from the broker map YAML file that the kafkaproxy instance should be starting. This setting is useful when different kafkaproxy instances are started to proxy multiple brokers. If you set `*` then all configured proxies will be started.
+| `KAFKAPROXY_LOG_LEVEL`          | `INFO`                          | The log level of the root logger. This must be a valid log level for [logback](http://logback.qos.ch/manual/configuration.html).
  
 ### Format of `brokermap.yml`
 
