@@ -22,26 +22,28 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class SingleRoundtrip implements AbortCondition {
-    private static final Logger LOG = LoggerFactory.getLogger(SingleRoundtrip.class);
+public class RoundtripCounter implements AbortCondition {
+    private static final Logger LOG = LoggerFactory.getLogger(RoundtripCounter.class);
     private final AtomicInteger successCounter = new AtomicInteger();
     private final long startTime = System.currentTimeMillis();
     private final long timeoutMsecs;
+    private final int requiredRoundtrips;
 
-    public SingleRoundtrip(final long timeoutMsecs) {
+    public RoundtripCounter(final long timeoutMsecs, final int requiredRoundtrips) {
         this.timeoutMsecs = timeoutMsecs;
+        this.requiredRoundtrips = requiredRoundtrips;
     }
 
     @Override
     public boolean check(final int sent, final int completed, final int inflight, final int messagesUnknown) {
-        if (completed > 0) {
-            LOG.info("Roundtrip completed.");
+        if (completed >= requiredRoundtrips) {
+            LOG.info("Roundtrips completed.");
             successCounter.incrementAndGet();
             return true;
         }
         final long now = System.currentTimeMillis();
         if ((now - startTime) > timeoutMsecs) {
-            LOG.error("Timeout waiting for roundtrip.");
+            LOG.error("Timeout waiting for roundtrips.");
             return true;
         }
         return false;

@@ -21,8 +21,8 @@ import com.dajudge.kafkaproxy.brokermap.BrokerMap;
 import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
 import com.dajudge.kafkaproxy.config.Environment;
 import com.dajudge.kafkaproxy.config.broker.BrokerMapParser;
+import com.dajudge.kafkaproxy.roundtrip.RoundtripCounter;
 import com.dajudge.kafkaproxy.roundtrip.RoundtripTester;
-import com.dajudge.kafkaproxy.roundtrip.SingleRoundtrip;
 import com.dajudge.kafkaproxy.util.environment.TestEnvironment;
 import com.dajudge.kafkaproxy.util.kafka.KafkaClusterWihtSsl;
 import com.dajudge.kafkaproxy.util.ssl.SslTestAuthority;
@@ -37,6 +37,8 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -50,6 +52,7 @@ import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertTrue;
 
 public class RoundtripTest {
+    private static final Logger LOG = LoggerFactory.getLogger(RoundtripTest.class);
     @ClassRule
     public static final TemporaryFolder KAFKA_SSL_TEMP_DIR = createTempFolder();
     @ClassRule
@@ -57,6 +60,10 @@ public class RoundtripTest {
 
     private static final String BROKER_HOSTNAME = "localhost";
     private static final String PROXY_HOSTNAME = "localhost";
+    private static final int MESSAGES_TO_SEND = 5 * 1000 * 1000;
+    private static final int TEST_TIMEOUT = 2 * 60 * 1000;
+    private static final int PRODUCERS = 10;
+    private static final int CONSUMERS = 10;
 
     private final SslTestSetup clientSslSetup = sslSetup("CN=ClientCA", CLIENT_SSL_TEMP_DIR.getRoot())
             .withBrokers(singletonList(BROKER_HOSTNAME))
@@ -123,10 +130,19 @@ public class RoundtripTest {
         consumerProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
         consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
-        final RoundtripTester tester = new RoundtripTester(producerProps, consumerProps, 1);
-        final SingleRoundtrip roundtrip = new SingleRoundtrip(5000);
+        final RoundtripTester tester = new RoundtripTester(
+                producerProps,
+                consumerProps,
+                MESSAGES_TO_SEND,
+                PRODUCERS,
+                CONSUMERS
+        );
+        final RoundtripCounter roundtrip = new RoundtripCounter(TEST_TIMEOUT, MESSAGES_TO_SEND);
+        final long start = System.currentTimeMillis();
         tester.run(roundtrip);
+        final long end = System.currentTimeMillis();
         assertTrue("Did not complete roundtrip", roundtrip.completed());
+        LOG.info("Executed {} message roundtrip in {}ms", MESSAGES_TO_SEND, end - start);
     }
 
 

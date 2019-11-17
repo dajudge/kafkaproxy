@@ -18,7 +18,6 @@
 package com.dajudge.kafkaproxy.roundtrip;
 
 import com.dajudge.kafkaproxy.roundtrip.RoundtripRunner.RoundtripConsumer;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.errors.WakeupException;
@@ -44,14 +43,14 @@ class ConsumerThread<K, V> extends Thread {
 
     public void run() {
         try {
-            LOG.info("Consumer thread started.");
+            LOG.debug("Consumer thread started.");
             while (true) {
                 try {
                     final ConsumerRecords<K, V> records = consumer.poll(Duration.of(1, SECONDS));
                     if (records.count() > 0) {
                         LOG.trace("Received {} records.", records.count());
                     }
-                    records.forEach(this::consume);
+                    consume(records);
                     consumer.commitAsync();
                 } catch (final WakeupException e) {
                     throw e;
@@ -60,14 +59,17 @@ class ConsumerThread<K, V> extends Thread {
                 }
             }
         } catch (final WakeupException e) {
-            LOG.info("Consumer thread exited.");
             return;
         } finally {
             consumer.close();
+            LOG.debug("Consumer thread exited.");
         }
     }
 
-    private void consume(final ConsumerRecord<K, V> record) {
-        sink.onMessage(record.topic(), record.key(), record.value());
+    private void consume(final ConsumerRecords<K, V> records) {
+        synchronized (sink) {
+            records.forEach(record -> sink.onMessage(record.topic(), record.key(), record.value()));
+        }
     }
+
 }

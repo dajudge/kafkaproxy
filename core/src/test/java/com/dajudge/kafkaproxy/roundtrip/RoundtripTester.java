@@ -22,17 +22,17 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.singletonList;
 
 public class RoundtripTester {
-    private static final Logger LOG = LoggerFactory.getLogger(RoundtripTester.class);
     private static final String TEST_TOPIC = "test.topic";
     private final RoundtripRunner<String, String> runner;
     private final Set<String> inflight = Collections.synchronizedSet(new HashSet<>());
@@ -44,7 +44,9 @@ public class RoundtripTester {
     public RoundtripTester(
             final Map<String, Object> producerProperties,
             final Map<String, Object> consumerProperties,
-            final int maxMessages
+            final int maxMessages,
+            final int producers,
+            final int consumers
     ) {
         this.maxMessages = maxMessages;
         final Supplier<KafkaProducer<String, String>> producerFactory = () -> new KafkaProducer<>(
@@ -68,18 +70,21 @@ public class RoundtripTester {
                 messagesUnknown++;
             }
         };
-        this.runner = new RoundtripRunner<>(1, producerFactory, 1, consumerFactory, sink).start();
+        this.runner = new RoundtripRunner<>(producers, producerFactory, consumers, consumerFactory, sink).start();
     }
 
     public void run(final AbortCondition abortCondition) {
+        long loops = 0;
         while (!abortCondition.check(messagesSent, messagesCompleted, inflight.size(), messagesUnknown)) {
             if (maxMessages <= 0 || messagesSent < maxMessages) {
-                final String uuid = UUID.randomUUID().toString();
+                final String uuid = "" + loops;
                 inflight.add(uuid);
                 runner.produce(TEST_TOPIC, uuid, "" + currentTimeMillis());
                 messagesSent++;
             }
-            Thread.yield();
+            if (++loops % 1000 == 0) {
+                Thread.yield();
+            }
         }
         runner.shutdown();
     }

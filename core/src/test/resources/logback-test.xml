@@ -22,7 +22,7 @@ limitations under the License.
         </encoder>
     </appender>
 
-    <logger name="com.dajudge.kafkaproxy" level="DEBUG" additivity="false">
+    <logger name="com.dajudge.kafkaproxy" level="INFO" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
 
@@ -34,7 +34,7 @@ limitations under the License.
         <appender-ref ref="STDOUT"/>
     </logger>
 
-    <root level="DEBUG">
+    <root level="WARN">
         <appender-ref ref="STDOUT"/>
     </root>
 </configuration>
