@@ -18,7 +18,6 @@
 package com.dajudge.kafkaproxy.util.roundtrip;
 
 import com.dajudge.kafkaproxy.ProxyApplication;
-import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,24 +30,30 @@ public class RoundtripTest implements AutoCloseable {
     private final ProxyApplication proxyApp;
     private final RoundtripTester tester;
     private final RoundtripCounter roundtrip;
-    private final Collection<TemporaryFolder> temporaryFolders;
+    private final Collection<AutoCloseable> resources;
 
     public RoundtripTest(
             final ProxyApplication proxyApp,
             final RoundtripTester tester,
             final RoundtripCounter roundtrip,
-            final Collection<TemporaryFolder> temporaryFolders
+            final Collection<AutoCloseable> resources
     ) {
         this.proxyApp = proxyApp;
         this.tester = tester;
         this.roundtrip = roundtrip;
-        this.temporaryFolders = temporaryFolders;
+        this.resources = resources;
     }
 
     @Override
     public void close() {
         proxyApp.shutdown();
-        temporaryFolders.forEach(TemporaryFolder::delete);
+        resources.forEach(r -> {
+            try {
+                r.close();
+            } catch (final Exception e) {
+                throw new RuntimeException("Failed to close resource", e);
+            }
+        });
     }
 
     public void run() {
