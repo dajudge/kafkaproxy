@@ -15,7 +15,7 @@
  *
  */
 
-package com.dajudge.kafkaproxy.util.roundtrip.clientssl;
+package com.dajudge.kafkaproxy.util.roundtrip.client.ssl;
 
 import com.dajudge.kafkaproxy.util.roundtrip.ClientConfigurator;
 import com.dajudge.kafkaproxy.util.ssl.SslTestAuthority;

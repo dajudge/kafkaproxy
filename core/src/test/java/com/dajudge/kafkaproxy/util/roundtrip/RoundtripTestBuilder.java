@@ -25,10 +25,11 @@ import com.dajudge.kafkaproxy.util.environment.TestEnvironment;
 import com.dajudge.kafkaproxy.util.kafka.ContainerConfigurator;
 import com.dajudge.kafkaproxy.util.kafka.KafkaCluster;
 import com.dajudge.kafkaproxy.util.kafka.KafkaClusterBuilder;
-import com.dajudge.kafkaproxy.util.roundtrip.clientssl.ClientSslClientConfigurator;
-import com.dajudge.kafkaproxy.util.roundtrip.clientssl.ClientSslEnvConfigurator;
-import com.dajudge.kafkaproxy.util.roundtrip.kakfassl.KafkaSslContainerConfigurator;
-import com.dajudge.kafkaproxy.util.roundtrip.kakfassl.KafkaSslEnvConfigurator;
+import com.dajudge.kafkaproxy.util.roundtrip.client.ssl.ClientSslClientConfigurator;
+import com.dajudge.kafkaproxy.util.roundtrip.client.ssl.ClientSslEnvConfigurator;
+import com.dajudge.kafkaproxy.util.roundtrip.kafka.plaintext.KafkaPlaintextConfigurator;
+import com.dajudge.kafkaproxy.util.roundtrip.kafka.ssl.KafkaSslContainerConfigurator;
+import com.dajudge.kafkaproxy.util.roundtrip.kafka.ssl.KafkaSslEnvConfigurator;
 import com.dajudge.kafkaproxy.util.ssl.SslTestSetup;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -75,10 +76,35 @@ public class RoundtripTestBuilder {
                 .build();
         resources.add(new TemporaryFolderResource(tempDir));
         envConfigurators.add(new KafkaSslEnvConfigurator(sslSetup));
-        final KafkaSslContainerConfigurator e = new KafkaSslContainerConfigurator(sslSetup);
-        kafkaConfigurators.add(e);
-        advertisedListeners = e::advertisedListeners;
+        final KafkaSslContainerConfigurator kafkaConfigurator = new KafkaSslContainerConfigurator(sslSetup);
+        kafkaConfigurators.add(kafkaConfigurator);
+        advertisedListeners = kafkaConfigurator::advertisedListeners;
         this.brokers = brokers;
+        return this;
+    }
+
+    public RoundtripTestBuilder withPlaintextKafka(final Collection<String> brokers) {
+        this.brokers = brokers;
+        final KafkaPlaintextConfigurator kafkaConfigurator = new KafkaPlaintextConfigurator();
+        kafkaConfigurators.add(kafkaConfigurator);
+        advertisedListeners = kafkaConfigurator::advertisedListeners;
+        return this;
+    }
+
+    public RoundtripTestBuilder withPlaintextClient(final String hostname) {
+        this.proxyHostname = hostname;
+        return this;
+    }
+
+    public RoundtripTestBuilder withSslClient(final String hostname) {
+        final TemporaryFolder tempDir = createTempFolder();
+        final SslTestSetup sslSetup = sslSetup("CN=ClientCA", tempDir.getRoot())
+                .withBrokers(singletonList(hostname))
+                .build();
+        resources.add(new TemporaryFolderResource(tempDir));
+        envConfigurators.add(new ClientSslEnvConfigurator(sslSetup, hostname));
+        clientConfigurators.add(new ClientSslClientConfigurator(sslSetup));
+        proxyHostname = hostname;
         return this;
     }
 
@@ -99,29 +125,6 @@ public class RoundtripTestBuilder {
 
     public RoundtripTestBuilder withTimeout(final int timeout) {
         this.testTimeout = timeout;
-        return this;
-    }
-
-    public RoundtripTestBuilder withPlaintextKafka(final Collection<String> brokers) {
-        this.brokers = brokers;
-        return this;
-
-    }
-
-    public RoundtripTestBuilder withPlaintextClient(final String hostname) {
-        this.proxyHostname = hostname;
-        return this;
-    }
-
-    public RoundtripTestBuilder withSslClient(final String hostname) {
-        final TemporaryFolder tempDir = createTempFolder();
-        final SslTestSetup sslSetup = sslSetup("CN=ClientCA", tempDir.getRoot())
-                .withBrokers(singletonList(hostname))
-                .build();
-        resources.add(new TemporaryFolderResource(tempDir));
-        envConfigurators.add(new ClientSslEnvConfigurator(sslSetup, hostname));
-        clientConfigurators.add(new ClientSslClientConfigurator(sslSetup));
-        proxyHostname = hostname;
         return this;
     }
 
