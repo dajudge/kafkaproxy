@@ -17,10 +17,14 @@
 
 package com.dajudge.kafkaproxy.util.brokermap;
 
+import com.dajudge.kafkaproxy.brokermap.BrokerMap;
+import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
+import com.dajudge.kafkaproxy.config.broker.BrokerMapParser;
 import com.dajudge.kafkaproxy.util.PortFinder;
 import com.dajudge.kafkaproxy.util.kafka.KafkaCluster;
 import org.testcontainers.shaded.org.yaml.snakeyaml.Yaml;
 
+import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import java.util.List;
 
@@ -31,7 +35,7 @@ public final class BrokerMapBuilder {
     private BrokerMapBuilder() {
     }
 
-    public static byte[] brokerMapFile(final KafkaCluster kafkaCluster, final String proxyHostname) {
+    public static TestBrokerMap brokerMapFor(final KafkaCluster kafkaCluster, final String proxyHostname) {
         try (final PortFinder portFinder = new PortFinder()) {
             final List<Object> proxies = kafkaCluster.getBrokers().entrySet().stream()
                     .map(e -> entryFor(e.getKey(), e.getValue(), proxyHostname, portFinder.nextPort()))
@@ -39,7 +43,24 @@ public final class BrokerMapBuilder {
             final HashMap<String, Object> root = new HashMap<String, Object>() {{
                 put("proxies", proxies);
             }};
-            return new Yaml().dump(root).getBytes(UTF_8);
+            final byte[] data = new Yaml().dump(root).getBytes(UTF_8);
+            return new TestBrokerMap() {
+                @Override
+                public BrokerMap getBrokerMap() {
+                    return new BrokerMapParser(new ByteArrayInputStream(data)).getBrokerMap();
+                }
+
+                @Override
+                public String getBootstrapServers() {
+                    final BrokerMapping someBroker = getBrokerMap().getAll().get(0);
+                    return someBroker.getProxy().getHost() + ":" + someBroker.getProxy().getPort();
+                }
+
+                @Override
+                public byte[] getData() {
+                    return data;
+                }
+            };
         }
     }
 

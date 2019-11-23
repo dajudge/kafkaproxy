@@ -53,7 +53,7 @@ public class ProxyApplication {
         shutdownRunnable.run();
     }
 
-    public void start() {
+    public ProxyApplication start() {
         final ApplicationConfig appConfig = new ApplicationConfig(environment);
         final BrokerConfig brokerConfig = appConfig.get(BrokerConfig.class);
         final KafkaSslConfig kafkaSslConfig = appConfig.get(KafkaSslConfig.class);
@@ -100,5 +100,6 @@ public class ProxyApplication {
             upstreamWorkerGroup.shutdownGracefully();
             downstreamWorkerGroup.shutdownGracefully();
         };
+        return this;
     }
 }

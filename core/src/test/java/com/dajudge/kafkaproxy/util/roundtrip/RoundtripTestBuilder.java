@@ -18,9 +18,7 @@
 package com.dajudge.kafkaproxy.util.roundtrip;
 
 import com.dajudge.kafkaproxy.ProxyApplication;
-import com.dajudge.kafkaproxy.brokermap.BrokerMap;
-import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
-import com.dajudge.kafkaproxy.config.broker.BrokerMapParser;
+import com.dajudge.kafkaproxy.util.brokermap.TestBrokerMap;
 import com.dajudge.kafkaproxy.util.environment.TestEnvironment;
 import com.dajudge.kafkaproxy.util.kafka.ContainerConfigurator;
 import com.dajudge.kafkaproxy.util.kafka.KafkaCluster;
@@ -34,9 +32,9 @@ import com.dajudge.kafkaproxy.util.ssl.SslTestSetup;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.jetbrains.annotations.NotNull;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,7 +42,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-import static com.dajudge.kafkaproxy.util.brokermap.BrokerMapBuilder.brokerMapFile;
+import static com.dajudge.kafkaproxy.util.brokermap.BrokerMapBuilder.brokerMapFor;
 import static com.dajudge.kafkaproxy.util.kafka.ContainerConfigurator.composite;
 import static com.dajudge.kafkaproxy.util.ssl.SslTestSetup.sslSetup;
 import static java.util.Collections.singletonList;
@@ -53,7 +51,13 @@ public class RoundtripTestBuilder {
     private Collection<AutoCloseable> resources = new ArrayList<>();
     private Collection<EnvConfigurator> envConfigurators = new ArrayList<>();
     private Collection<ContainerConfigurator> kafkaConfigurators = new ArrayList<>();
-    private Collection<ClientConfigurator> clientConfigurators = new ArrayList<>();
+    private Collection<ClientConfigurator> baseClientConfigurators = new ArrayList<>();
+    private Collection<ClientConfigurator> consumerClientConfigurators = new ArrayList<>(
+            singletonList(defaultConsumerClientConfig())
+    );
+    private Collection<ClientConfigurator> producerClientConfigurators = new ArrayList<>(
+            singletonList(defaultProducerClientConfig())
+    );
     private int messagesToSend = 1;
     private int producerCount = 1;
     private int consumerCount = 1;
@@ -70,11 +74,9 @@ public class RoundtripTestBuilder {
     }
 
     public RoundtripTestBuilder withSslKafka(final Collection<String> brokers) {
-        final TemporaryFolder tempDir = createTempFolder();
-        final SslTestSetup sslSetup = sslSetup("CN=KafkaCA", tempDir.getRoot())
+        final SslTestSetup sslSetup = sslSetup("CN=KafkaCA", newTempFolder().getRoot())
                 .withBrokers(brokers)
                 .build();
-        resources.add(new TemporaryFolderResource(tempDir));
         envConfigurators.add(new KafkaSslEnvConfigurator(sslSetup));
         final KafkaSslContainerConfigurator kafkaConfigurator = new KafkaSslContainerConfigurator(sslSetup);
         kafkaConfigurators.add(kafkaConfigurator);
@@ -97,13 +99,11 @@ public class RoundtripTestBuilder {
     }
 
     public RoundtripTestBuilder withSslClient(final String hostname) {
-        final TemporaryFolder tempDir = createTempFolder();
-        final SslTestSetup sslSetup = sslSetup("CN=ClientCA", tempDir.getRoot())
+        final SslTestSetup sslSetup = sslSetup("CN=ClientCA", newTempFolder().getRoot())
                 .withBrokers(singletonList(hostname))
                 .build();
-        resources.add(new TemporaryFolderResource(tempDir));
         envConfigurators.add(new ClientSslEnvConfigurator(sslSetup, hostname));
-        clientConfigurators.add(new ClientSslClientConfigurator(sslSetup));
+        baseClientConfigurators.add(new ClientSslClientConfigurator(sslSetup));
         proxyHostname = hostname;
         return this;
     }
@@ -145,42 +145,73 @@ public class RoundtripTestBuilder {
                 advertisedListeners
         );
 
-        final byte[] brokerMapFile = brokerMapFile(kafkaCluster, proxyHostname);
-        final BrokerMap brokermap = new BrokerMapParser(new ByteArrayInputStream(brokerMapFile)).getBrokerMap();
-        final BrokerMapping firstBroker = brokermap.getAll().get(0);
-        final String bootstrapServers = firstBroker.getProxy().getHost() + ":" + firstBroker.getProxy().getPort();
-        TestEnvironment env = new TestEnvironment()
-                .withFile("/etc/kafkaproxy/brokermap.yml", brokerMapFile);
+        final TestBrokerMap brokerMap = brokerMapFor(kafkaCluster, proxyHostname);
+        final TestEnvironment env = new TestEnvironment()
+                .withFile("/etc/kafkaproxy/brokermap.yml", brokerMap.getData());
         for (final EnvConfigurator envConfigurator : envConfigurators) {
-            env = envConfigurator.configure(env);
+            envConfigurator.configure(env);
         }
-        final ProxyApplication proxyApp = ProxyApplication.create(env);
 
-        final Map<String, Object> baseProps = new HashMap<>();
-        baseProps.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        clientConfigurators.forEach(it -> it.apply(baseProps));
+        baseClientConfigurators.add(defaultBaseClientConfig(brokerMap));
 
-        final Map<String, Object> producerConfig = new HashMap<>(baseProps);
-        producerConfig.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 10000);
-
-        final Map<String, Object> consumerConfig = new HashMap<>(baseProps);
-        consumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, "testgroup");
-        consumerConfig.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
-        consumerConfig.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-
-        final RoundtripTester tester = new RoundtripTester(
-                producerConfig,
-                consumerConfig,
-                messagesToSend,
-                producerCount,
-                consumerCount
+        return new RoundtripTest(
+                ProxyApplication.create(env).start(),
+                new RoundtripTester(
+                        producerConfig(),
+                        consumerConfig(),
+                        messagesToSend,
+                        producerCount,
+                        consumerCount
+                ),
+                new RoundtripCounter(testTimeout, messagesToSend),
+                resources
         );
-
-        final RoundtripCounter roundtrip = new RoundtripCounter(testTimeout, messagesToSend);
-
-        proxyApp.start();
-
-        return new RoundtripTest(proxyApp, tester, roundtrip, resources);
     }
 
+    @NotNull
+    private Map<String, Object> producerConfig() {
+        final Map<String, Object> producerConfig = new HashMap<>(getBaseConfig());
+        producerClientConfigurators.forEach(it -> it.apply(producerConfig));
+        return producerConfig;
+    }
+
+    @NotNull
+    private Map<String, Object> consumerConfig() {
+        final Map<String, Object> consumerConfig = new HashMap<>(getBaseConfig());
+        consumerClientConfigurators.forEach(it -> it.apply(consumerConfig));
+        return consumerConfig;
+    }
+
+    @NotNull
+    private Map<String, Object> getBaseConfig() {
+        final Map<String, Object> baseProps = new HashMap<>();
+        baseClientConfigurators.forEach(it -> it.apply(baseProps));
+        return baseProps;
+    }
+
+
+    private ClientConfigurator defaultProducerClientConfig() {
+        return config -> {
+            config.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 10000);
+        };
+    }
+
+    private ClientConfigurator defaultConsumerClientConfig() {
+        return config -> {
+            config.put(ConsumerConfig.GROUP_ID_CONFIG, "testgroup");
+            config.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+            config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        };
+    }
+
+    @NotNull
+    private ClientConfigurator defaultBaseClientConfig(final TestBrokerMap brokerMap) {
+        return config -> config.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, brokerMap.getBootstrapServers());
+    }
+
+    private TemporaryFolder newTempFolder() {
+        final TemporaryFolder tempDir = createTempFolder();
+        resources.add(new TemporaryFolderResource(tempDir));
+        return tempDir;
+    }
 }
