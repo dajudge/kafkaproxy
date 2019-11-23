@@ -67,17 +67,18 @@ public class SslTestSetup {
             @Override
             public SslTestSetup build() {
                 final String password = randomPassword();
+                final File passwordFile = write(basePath, dn + ".trustStorePwd", password);
                 final File caTrustStore = write(basePath, "ca.jks", ca.toTrustStore(password));
                 LOG.info("Wrote truststore for CA \"{}\" to {}", dn, caTrustStore.getAbsolutePath());
-                return new SslTestSetup(brokerKeyStores, new SslTestAuthority(caTrustStore, password));
+                return new SslTestSetup(brokerKeyStores, new SslTestAuthority(caTrustStore, password, passwordFile));
             }
 
             @Override
             public Builder withBrokers(final Collection<String> brokers) {
                 brokers.forEach(broker -> {
+                    final String dn = "CN=" + broker;
                     final String keyStorePassword = randomPassword();
                     final String keyPassword = randomPassword();
-                    final String dn = "CN=" + broker;
                     final byte[] jks = ca.createAndSignKeyPair(dn)
                             .toKeyStore(keyStorePassword, keyPassword);
                     final File jksFile = write(basePath, broker + ".jks", jks);

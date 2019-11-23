@@ -29,8 +29,11 @@ public class KafkaSslContainerConfigurator implements ContainerConfigurator {
     private static final String KAFKA_SECRETS_DIR = "/etc/kafka/secrets/";
     private static final String KEYSTORE_PASSWORD_FILENAME = "keystore.pwd";
     private static final String KEY_PASSWORD_FILENAME = "key.pwd";
+    private static final String TRUSTSTORE_PASSWORD_FILENAME = "truststore.pwd";
     private static final String KEYSTORE_FILENAME = "keystore.jks";
-    private static final String TRUSTSTORE_LOCATION = KAFKA_SECRETS_DIR + "truststore.jks";
+    private static final String TRUSTSTORE_FILENAME = "truststore.jks";
+    private static final String TRUSTSTORE_PASSWORD_LOCATION = KAFKA_SECRETS_DIR + TRUSTSTORE_PASSWORD_FILENAME;
+    private static final String TRUSTSTORE_LOCATION = KAFKA_SECRETS_DIR + TRUSTSTORE_FILENAME;
     private static final String KEYSTORE_LOCATION = KAFKA_SECRETS_DIR + KEYSTORE_FILENAME;
     private static final String KEYSTORE_PASSWORD_LOCATION = KAFKA_SECRETS_DIR + KEYSTORE_PASSWORD_FILENAME;
     private static final String KEY_PASSWORD_LOCATION = KAFKA_SECRETS_DIR + KEY_PASSWORD_FILENAME;
@@ -41,13 +44,18 @@ public class KafkaSslContainerConfigurator implements ContainerConfigurator {
     }
 
     @Override
-    public GenericContainer configure(final String hostname, final GenericContainer c) {
+    public GenericContainer configure(final String hostname, final GenericContainer container) {
         final SslTestAuthority ca = sslSetup.getAuthority();
         final SslTestKeystore keystore = sslSetup.getBroker(hostname);
-        return c.withCopyFileToContainer(
-                forHostPath(ca.getTrustStore().getAbsolutePath()),
-                TRUSTSTORE_LOCATION
-        )
+        return container
+                .withCopyFileToContainer(
+                        forHostPath(ca.getTrustStore().getAbsolutePath()),
+                        TRUSTSTORE_LOCATION
+                )
+                .withCopyFileToContainer(
+                        forHostPath(ca.getTrustStorePasswordFile().getAbsolutePath()),
+                        TRUSTSTORE_PASSWORD_LOCATION
+                )
                 .withCopyFileToContainer(
                         forHostPath(keystore.getKeyStore().getAbsolutePath()),
                         KEYSTORE_LOCATION
@@ -60,8 +68,10 @@ public class KafkaSslContainerConfigurator implements ContainerConfigurator {
                         forHostPath(keystore.getKeyPasswordFile().getAbsolutePath()),
                         KEY_PASSWORD_LOCATION
                 )
+                .withEnv("KAFKA_SSL_TRUSTSTORE_FILENAME", TRUSTSTORE_FILENAME)
                 .withEnv("KAFKA_SSL_TRUSTSTORE_LOCATION", TRUSTSTORE_LOCATION)
                 .withEnv("KAFKA_SSL_TRUSTSTORE_PASSWORD", ca.getTrustStorePassword())
+                .withEnv("KAFKA_SSL_TRUSTSTORE_CREDENTIALS", TRUSTSTORE_PASSWORD_FILENAME)
                 .withEnv("KAFKA_SSL_KEYSTORE_FILENAME", KEYSTORE_FILENAME)
                 .withEnv("KAFKA_SSL_KEYSTORE_CREDENTIALS", KEYSTORE_PASSWORD_FILENAME)
                 .withEnv("KAFKA_SSL_KEY_CREDENTIALS", KEY_PASSWORD_FILENAME)

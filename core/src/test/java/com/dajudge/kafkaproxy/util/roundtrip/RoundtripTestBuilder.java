@@ -28,6 +28,7 @@ import com.dajudge.kafkaproxy.util.roundtrip.client.ssl.ClientSslEnvConfigurator
 import com.dajudge.kafkaproxy.util.roundtrip.kafka.plaintext.KafkaPlaintextConfigurator;
 import com.dajudge.kafkaproxy.util.roundtrip.kafka.ssl.KafkaSslContainerConfigurator;
 import com.dajudge.kafkaproxy.util.roundtrip.kafka.ssl.KafkaSslEnvConfigurator;
+import com.dajudge.kafkaproxy.util.roundtrip.kafka.twowayssl.KafkaTwoWaySslContainerConfigurator;
 import com.dajudge.kafkaproxy.util.ssl.SslTestSetup;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -85,6 +86,11 @@ public class RoundtripTestBuilder {
         return this;
     }
 
+    public RoundtripTestBuilder withTwoWaySslKafka(final Collection<String> brokers) {
+        kafkaConfigurators.add(new KafkaTwoWaySslContainerConfigurator());
+        return this.withSslKafka(brokers);
+    }
+
     public RoundtripTestBuilder withPlaintextKafka(final Collection<String> brokers) {
         this.brokers = brokers;
         final KafkaPlaintextConfigurator kafkaConfigurator = new KafkaPlaintextConfigurator();
@@ -136,6 +142,12 @@ public class RoundtripTestBuilder {
             throw new RuntimeException(e);
         }
         return temporaryFolder;
+    }
+
+    private SslTestSetup kafkaSslSetup(final Collection<String> brokers) {
+        return sslSetup("CN=KafkaCA", newTempFolder().getRoot())
+                .withBrokers(brokers)
+                .build();
     }
 
     public RoundtripTest build() {

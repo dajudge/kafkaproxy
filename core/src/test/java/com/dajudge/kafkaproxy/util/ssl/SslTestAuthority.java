@@ -22,14 +22,20 @@ import java.io.File;
 public class SslTestAuthority {
     private final File caTrustStore;
     private final String password;
+    private final File passwordFile;
 
-    public SslTestAuthority(final File caTrustStore, final String password) {
+    public SslTestAuthority(final File caTrustStore, final String password, final File passwordFile) {
         this.caTrustStore = caTrustStore;
         this.password = password;
+        this.passwordFile = passwordFile;
     }
 
     public String getTrustStorePassword() {
         return password;
+    }
+
+    public File getTrustStorePasswordFile() {
+        return passwordFile;
     }
 
     public File getTrustStore() {
