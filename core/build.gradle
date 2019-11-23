@@ -15,6 +15,8 @@ dependencies {
     implementation 'org.bouncycastle:bcpkix-jdk15on:1.64'
     // The logging implementation
     runtimeOnly 'ch.qos.logback:logback-classic:1.2.3'
+    // The logging API
+    implementation 'org.slf4j:slf4j-api:1.7.28'
 
     testImplementation 'org.testcontainers:kafka:1.12.3'
     testImplementation 'junit:junit:4.11'
