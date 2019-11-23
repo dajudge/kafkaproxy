@@ -17,6 +17,8 @@
 
 package com.dajudge.kafkaproxy.networking.downstream;
 
+import com.dajudge.kafkaproxy.ca.ProxyClientCertificateAuthorityFactory.CertificateAuthority;
+import com.dajudge.kafkaproxy.ca.UpstreamCertificateSupplier;
 import com.dajudge.kafkaproxy.common.ssl.DefaultTrustManagerFactory;
 import com.dajudge.kafkaproxy.common.ssl.NullChannelHandler;
 import com.dajudge.kafkaproxy.networking.trustmanager.HostCheckingTrustManager;
@@ -25,36 +27,60 @@ import com.dajudge.kafkaproxy.networking.trustmanager.HttpClientHostnameCheck;
 import io.netty.channel.ChannelHandler;
 import io.netty.handler.ssl.SslHandler;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
+import javax.net.ssl.*;
+import java.security.*;
 import java.util.List;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 
 public class ClientSslHandlerFactory {
-    public static ChannelHandler createHandler(final KafkaSslConfig config, final String kafkaHostname, final int port) {
-        return config.isEnabled() ? createHandlerInternal(config, kafkaHostname, port) : new NullChannelHandler();
+
+    public static ChannelHandler createHandler(
+            final KafkaSslConfig config,
+            final String kafkaHostname,
+            final int port,
+            final UpstreamCertificateSupplier certSupplier,
+            final CertificateAuthority clientCertFactory,
+            final String keyPassword
+    ) {
+        return config.isEnabled()
+                ? createHandlerInternal(config, kafkaHostname, port, certSupplier, clientCertFactory, keyPassword)
+                : new NullChannelHandler();
     }
 
-    private static ChannelHandler createHandlerInternal(final KafkaSslConfig config, final String kafkaHostname, final int port) {
+    private static ChannelHandler createHandlerInternal(
+            final KafkaSslConfig config,
+            final String kafkaHostname,
+            final int port,
+            final UpstreamCertificateSupplier certificateSupplier,
+            final CertificateAuthority clientCertFactory,
+            final String keyPassword
+    ) {
         try {
             final SSLContext clientContext = SSLContext.getInstance("TLS");
+            final KeyStore keyStore = clientCertFactory.createClientCertificate(certificateSupplier);
             final HostnameCheck hostnameCheck = config.isHostnameVerificationEnabled()
                     ? new HttpClientHostnameCheck(kafkaHostname)
                     : HostnameCheck.NULL_VERIFIER;
             final TrustManager[] trustManagers = {
                     new HostCheckingTrustManager(createDefaultTrustManagers(config), hostnameCheck)
             };
-            clientContext.init(null, trustManagers, null);
+            final KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(
+                    KeyManagerFactory.getDefaultAlgorithm()
+            );
+            keyManagerFactory.init(keyStore, keyPassword.toCharArray());
+            final KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
+            clientContext.init(keyManagers, trustManagers, null);
             final SSLEngine engine = clientContext.createSSLEngine(kafkaHostname, port);
             engine.setUseClientMode(true);
             return new SslHandler(engine);
-        } catch (final NoSuchAlgorithmException | KeyManagementException e) {
+        } catch (final NoSuchAlgorithmException
+                | KeyManagementException
+                | SSLPeerUnverifiedException
+                | KeyStoreException
+                | UnrecoverableKeyException e
+        ) {
             throw new RuntimeException("Failed to initialize downstream SSL handler", e);
         }
     }

@@ -51,6 +51,7 @@ public class ProxySslHandlerFactory {
             clientContext.init(keyManagers, trustManagers, null);
             final SSLEngine engine = clientContext.createSSLEngine();
             engine.setUseClientMode(false);
+            engine.setNeedClientAuth(config.isClientAuthRequired());
             return new SslHandler(engine);
         } catch (final NoSuchAlgorithmException | KeyManagementException e) {
             throw new RuntimeException("Failed to initialize upstream SSL handler", e);

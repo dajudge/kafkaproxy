@@ -17,7 +17,8 @@
 
 package com.dajudge.kafkaproxy.networking.upstream;
 
-import com.dajudge.kafkaproxy.networking.upstream.ForwardChannelFactory.UpstreamCertificateSupplier;
+import com.dajudge.kafkaproxy.ca.UpstreamCertificateSupplier;
+import com.dajudge.kafkaproxy.config.ApplicationConfig;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
@@ -37,7 +38,7 @@ public class ProxyChannel {
 
     public ProxyChannel(
             final int port,
-            final ProxySslConfig proxySslConfig,
+            final ApplicationConfig appConfig,
             final NioEventLoopGroup bossGroup,
             final NioEventLoopGroup upstreamWorkerGroup,
             final ForwardChannelFactory forwardChannelFactory
@@ -59,24 +60,30 @@ public class ProxyChannel {
                         });
                     };
 
+                    final ProxySslConfig proxySslConfig = appConfig.get(ProxySslConfig.class);
                     pipeline.addLast("ssl", ProxySslHandlerFactory.createHandler(proxySslConfig));
                     final Function<UpstreamCertificateSupplier, Consumer<ByteBuf>> downstreamFactory = certSupplier -> {
-                        final Runnable downstreamClosedCallback = () -> {
-                            LOG.trace("Closing upstream channel.");
-                            try {
-                                ch.close().sync();
-                            } catch (final InterruptedException e) {
-                                LOG.warn("Cloud not close upstream channel.", e);
-                            }
-                            LOG.trace("Upstream channel closed.");
-                        };
-                        final ForwardChannel forwardChannel = forwardChannelFactory.create(
-                                certSupplier,
-                                upstreamSink,
-                                downstreamClosedCallback
-                        );
-                        ch.closeFuture().addListener((ChannelFutureListener) future -> forwardChannel.close());
-                        return forwardChannel::accept;
+                        try {
+                            final Runnable downstreamClosedCallback = () -> {
+                                LOG.trace("Closing upstream channel.");
+                                try {
+                                    ch.close().sync();
+                                } catch (final InterruptedException e) {
+                                    LOG.warn("Cloud not close upstream channel.", e);
+                                }
+                                LOG.trace("Upstream channel closed.");
+                            };
+                            final ForwardChannel forwardChannel = forwardChannelFactory.create(
+                                    certSupplier,
+                                    upstreamSink,
+                                    downstreamClosedCallback
+                            );
+                            ch.closeFuture().addListener((ChannelFutureListener) future -> forwardChannel.close());
+                            return forwardChannel::accept;
+                        } catch (final RuntimeException e) {
+                            LOG.error("Failed to create downstream channel", e);
+                            throw e;
+                        }
                     };
                     pipeline.addLast(new ProxyServerHandler(downstreamFactory));
                 }

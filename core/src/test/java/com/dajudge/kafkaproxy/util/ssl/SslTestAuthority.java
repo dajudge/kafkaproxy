@@ -23,11 +23,17 @@ public class SslTestAuthority {
     private final File caTrustStore;
     private final String password;
     private final File passwordFile;
+    private final SslTestKeyStore keyStore;
 
-    public SslTestAuthority(final File caTrustStore, final String password, final File passwordFile) {
+    public SslTestAuthority(
+            final File caTrustStore,
+            final String password,
+            final File passwordFile,
+            final SslTestKeyStore keyStore) {
         this.caTrustStore = caTrustStore;
         this.password = password;
         this.passwordFile = passwordFile;
+        this.keyStore = keyStore;
     }
 
     public String getTrustStorePassword() {
@@ -40,5 +46,9 @@ public class SslTestAuthority {
 
     public File getTrustStore() {
         return caTrustStore;
+    }
+
+    public SslTestKeyStore getKeyStore() {
+        return keyStore;
     }
 }

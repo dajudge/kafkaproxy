@@ -25,10 +25,13 @@ import com.dajudge.kafkaproxy.util.kafka.KafkaCluster;
 import com.dajudge.kafkaproxy.util.kafka.KafkaClusterBuilder;
 import com.dajudge.kafkaproxy.util.roundtrip.client.ssl.ClientSslClientConfigurator;
 import com.dajudge.kafkaproxy.util.roundtrip.client.ssl.ClientSslEnvConfigurator;
+import com.dajudge.kafkaproxy.util.roundtrip.client.twowayssl.ClientTwoWaySslClientConfgurator;
+import com.dajudge.kafkaproxy.util.roundtrip.client.twowayssl.ClientTwoWaySslEnvConfigurator;
 import com.dajudge.kafkaproxy.util.roundtrip.kafka.plaintext.KafkaPlaintextConfigurator;
 import com.dajudge.kafkaproxy.util.roundtrip.kafka.ssl.KafkaSslContainerConfigurator;
 import com.dajudge.kafkaproxy.util.roundtrip.kafka.ssl.KafkaSslEnvConfigurator;
 import com.dajudge.kafkaproxy.util.roundtrip.kafka.twowayssl.KafkaTwoWaySslContainerConfigurator;
+import com.dajudge.kafkaproxy.util.roundtrip.kafka.twowayssl.KafkaTwoWaySslEnvConfigurator;
 import com.dajudge.kafkaproxy.util.ssl.SslTestSetup;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -46,6 +49,7 @@ import java.util.function.BiFunction;
 import static com.dajudge.kafkaproxy.util.brokermap.BrokerMapBuilder.brokerMapFor;
 import static com.dajudge.kafkaproxy.util.kafka.ContainerConfigurator.composite;
 import static com.dajudge.kafkaproxy.util.ssl.SslTestSetup.sslSetup;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 public class RoundtripTestBuilder {
@@ -75,6 +79,11 @@ public class RoundtripTestBuilder {
     }
 
     public RoundtripTestBuilder withSslKafka(final Collection<String> brokers) {
+        kafkaSsl(brokers);
+        return this;
+    }
+
+    private SslTestSetup kafkaSsl(final Collection<String> brokers) {
         final SslTestSetup sslSetup = sslSetup("CN=KafkaCA", newTempFolder().getRoot())
                 .withBrokers(brokers)
                 .build();
@@ -83,12 +92,13 @@ public class RoundtripTestBuilder {
         kafkaConfigurators.add(kafkaConfigurator);
         advertisedListeners = kafkaConfigurator::advertisedListeners;
         this.brokers = brokers;
-        return this;
+        return sslSetup;
     }
 
     public RoundtripTestBuilder withTwoWaySslKafka(final Collection<String> brokers) {
         kafkaConfigurators.add(new KafkaTwoWaySslContainerConfigurator());
-        return this.withSslKafka(brokers);
+        envConfigurators.add(new KafkaTwoWaySslEnvConfigurator(kafkaSsl(brokers)));
+        return this;
     }
 
     public RoundtripTestBuilder withPlaintextKafka(final Collection<String> brokers) {
@@ -104,14 +114,27 @@ public class RoundtripTestBuilder {
         return this;
     }
 
-    public RoundtripTestBuilder withSslClient(final String hostname) {
-        final SslTestSetup sslSetup = sslSetup("CN=ClientCA", newTempFolder().getRoot())
-                .withBrokers(singletonList(hostname))
-                .build();
-        envConfigurators.add(new ClientSslEnvConfigurator(sslSetup, hostname));
-        baseClientConfigurators.add(new ClientSslClientConfigurator(sslSetup));
-        proxyHostname = hostname;
+    public RoundtripTestBuilder withSslClient(final String proxyHostname) {
+        clientSsl(proxyHostname, emptyList());
         return this;
+    }
+
+    public RoundtripTestBuilder withTwoWaySslClient(final String proxyHostname, final String clientDn) {
+        final SslTestSetup sslSetup = clientSsl(proxyHostname, singletonList(clientDn));
+        baseClientConfigurators.add(new ClientTwoWaySslClientConfgurator(sslSetup.getClient(clientDn)));
+        envConfigurators.add(new ClientTwoWaySslEnvConfigurator());
+        return this;
+    }
+
+    private SslTestSetup clientSsl(final String proxyHostname, final Collection<String> clients) {
+        final SslTestSetup sslSetup = sslSetup("CN=ClientCA", newTempFolder().getRoot())
+                .withBrokers(singletonList(proxyHostname))
+                .withClients(clients)
+                .build();
+        envConfigurators.add(new ClientSslEnvConfigurator(sslSetup, proxyHostname));
+        baseClientConfigurators.add(new ClientSslClientConfigurator(sslSetup));
+        this.proxyHostname = proxyHostname;
+        return sslSetup;
     }
 
     public RoundtripTestBuilder withConsumerCount(final int consumerCount) {

@@ -20,7 +20,15 @@ package com.dajudge.kafkaproxy.networking.upstream;
 import com.dajudge.kafkaproxy.config.FileResource;
 
 public class ProxySslConfig {
-    public static final ProxySslConfig DISABLED = new ProxySslConfig(false, null, null, null, null, null);
+    public static final ProxySslConfig DISABLED = new ProxySslConfig(
+            false,
+            null,
+            null,
+            null,
+            null,
+            null,
+            false
+    );
 
     private final boolean enabled;
     private final FileResource trustStore;
@@ -28,6 +36,7 @@ public class ProxySslConfig {
     private final FileResource keyStore;
     private final String keyStorePassword;
     private final String keyPassword;
+    private final boolean clientAuthRequired;
 
     public ProxySslConfig(
             final boolean enabled,
@@ -35,7 +44,8 @@ public class ProxySslConfig {
             final String trustStorePassword,
             final FileResource keyStore,
             final String keyStorePassword,
-            final String keyPassword
+            final String keyPassword,
+            final boolean clientAuthRequired
     ) {
         this.enabled = enabled;
         this.trustStore = trustStore;
@@ -43,6 +53,7 @@ public class ProxySslConfig {
         this.keyStore = keyStore;
         this.keyStorePassword = keyStorePassword;
         this.keyPassword = keyPassword;
+        this.clientAuthRequired = clientAuthRequired;
     }
 
     public boolean isEnabled() {
@@ -67,5 +78,9 @@ public class ProxySslConfig {
 
     public String getKeyPassword() {
         return keyPassword;
+    }
+
+    public boolean isClientAuthRequired() {
+        return clientAuthRequired;
     }
 }

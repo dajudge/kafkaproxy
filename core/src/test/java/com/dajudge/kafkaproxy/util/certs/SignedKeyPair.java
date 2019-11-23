@@ -21,7 +21,7 @@ import java.security.KeyPair;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
-import static com.dajudge.kafkaproxy.ca.Helpers.createJks;
+import static com.dajudge.kafkaproxy.ca.selfsign.Helpers.createJks;
 
 
 public class SignedKeyPair {

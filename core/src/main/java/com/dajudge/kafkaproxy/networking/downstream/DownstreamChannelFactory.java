@@ -18,8 +18,10 @@
 package com.dajudge.kafkaproxy.networking.downstream;
 
 import com.dajudge.kafkaproxy.brokermap.BrokerMap;
+import com.dajudge.kafkaproxy.config.ApplicationConfig;
 import com.dajudge.kafkaproxy.networking.upstream.ForwardChannel;
 import com.dajudge.kafkaproxy.networking.upstream.ForwardChannelFactory;
+import com.dajudge.kafkaproxy.ca.UpstreamCertificateSupplier;
 import com.dajudge.kafkaproxy.protocol.KafkaMessageSplitter;
 import com.dajudge.kafkaproxy.protocol.KafkaRequestProcessor;
 import com.dajudge.kafkaproxy.protocol.KafkaRequestStore;
@@ -40,20 +42,20 @@ public class DownstreamChannelFactory implements ForwardChannelFactory {
     private final BrokerMap brokerMap;
     private final String kafkaHost;
     private final int kafkaPort;
-    private final KafkaSslConfig kafkaSslConfig;
+    private final ApplicationConfig appConfig;
     private final EventLoopGroup downstreamWorkerGroup;
 
     public DownstreamChannelFactory(
             final BrokerMap brokerMap,
             final String kafkaHost,
             final int kafkaPort,
-            final KafkaSslConfig kafkaSslConfig,
+            final ApplicationConfig appConfig,
             final EventLoopGroup downstreamWorkerGroup
     ) {
         this.brokerMap = brokerMap;
         this.kafkaHost = kafkaHost;
         this.kafkaPort = kafkaPort;
-        this.kafkaSslConfig = kafkaSslConfig;
+        this.appConfig = appConfig;
         this.downstreamWorkerGroup = downstreamWorkerGroup;
     }
 
@@ -75,10 +77,11 @@ public class DownstreamChannelFactory implements ForwardChannelFactory {
         final DownstreamClient downstreamClient = new DownstreamClient(
                 kafkaHost,
                 kafkaPort,
-                kafkaSslConfig,
+                appConfig,
                 responseStreamSplitter::onBytesReceived,
                 downstreamClosedCallback,
-                downstreamWorkerGroup
+                downstreamWorkerGroup,
+                certificateSupplier
         );
         final KafkaRequestProcessor requestProcessor = new KafkaRequestProcessor(
                 downstreamClient::send,

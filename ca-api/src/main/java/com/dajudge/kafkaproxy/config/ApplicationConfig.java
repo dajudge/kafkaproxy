@@ -17,24 +17,18 @@
 
 package com.dajudge.kafkaproxy.config;
 
-import com.dajudge.kafkaproxy.config.broker.BrokerConfig;
-import com.dajudge.kafkaproxy.config.broker.BrokerConfigSource;
-import com.dajudge.kafkaproxy.config.kafkassl.KafkaSslConfigSource;
-import com.dajudge.kafkaproxy.config.proxyssl.ProxySslConfigSource;
-import com.dajudge.kafkaproxy.networking.downstream.KafkaSslConfig;
-import com.dajudge.kafkaproxy.networking.upstream.ProxySslConfig;
-
 import java.util.HashMap;
 import java.util.Map;
 
 import static java.util.Collections.unmodifiableMap;
+import static java.util.ServiceLoader.load;
+import static java.util.stream.StreamSupport.stream;
 
 public class ApplicationConfig {
     private final Environment environment;
     private final Map<Class<?>, ConfigSource<?>> sources = unmodifiableMap(new HashMap<Class<?>, ConfigSource<?>>() {{
-        put(BrokerConfig.class, new BrokerConfigSource());
-        put(ProxySslConfig.class, new ProxySslConfigSource());
-        put(KafkaSslConfig.class, new KafkaSslConfigSource());
+        stream(load(ConfigSource.class).spliterator(), false)
+                .forEach(source -> put(source.getConfigClass(), source));
     }});
 
     public ApplicationConfig(final Environment environment) {

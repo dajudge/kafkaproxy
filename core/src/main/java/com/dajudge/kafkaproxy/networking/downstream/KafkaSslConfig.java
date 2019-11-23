@@ -17,6 +17,7 @@
 
 package com.dajudge.kafkaproxy.networking.downstream;
 
+import com.dajudge.kafkaproxy.ca.NullProxyClientCertificateAuthorityFactory;
 import com.dajudge.kafkaproxy.config.FileResource;
 
 public class KafkaSslConfig {
@@ -24,19 +25,28 @@ public class KafkaSslConfig {
     private final FileResource trustStore;
     private final String trustStorePassword;
     private final boolean hostnameVerificationEnabled;
+    private final String certificateFactory;
 
-    public static final KafkaSslConfig DISABLED = new KafkaSslConfig(false, null, null, false);
+    public static final KafkaSslConfig DISABLED = new KafkaSslConfig(
+            false,
+            null,
+            null,
+            false,
+            NullProxyClientCertificateAuthorityFactory.NAME
+    );
 
     public KafkaSslConfig(
             final boolean enabled,
             final FileResource trustStore,
             final String trustStorePassword,
-            final boolean hostnameVerificationEnabled
+            final boolean hostnameVerificationEnabled,
+            final String certificateFactory
     ) {
         this.enabled = enabled;
         this.trustStore = trustStore;
         this.trustStorePassword = trustStorePassword;
         this.hostnameVerificationEnabled = hostnameVerificationEnabled;
+        this.certificateFactory = certificateFactory;
     }
 
     public FileResource getTrustStore() {
@@ -53,5 +63,9 @@ public class KafkaSslConfig {
 
     public boolean isHostnameVerificationEnabled() {
         return hostnameVerificationEnabled;
+    }
+
+    public String getCertificateFactory() {
+        return certificateFactory;
     }
 }

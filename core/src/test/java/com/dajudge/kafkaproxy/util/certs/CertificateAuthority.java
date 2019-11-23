@@ -17,9 +17,10 @@
 
 package com.dajudge.kafkaproxy.util.certs;
 
-import com.dajudge.kafkaproxy.ca.Helpers;
+import com.dajudge.kafkaproxy.ca.selfsign.Helpers;
 
 import java.security.KeyPair;
+import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
 public class CertificateAuthority {
@@ -42,7 +43,7 @@ public class CertificateAuthority {
     }
 
     public SignedKeyPair signKeyPair(final String dn, final KeyPair keyPair) {
-        final X509Certificate cert = Helpers.sign(dn, dn(), caKeyPair, 10, "SHA256withRSA", keyPair.getPublic());
+        final X509Certificate cert = Helpers.sign(dn, dn(), caKeyPair.getPrivate(), 10, "SHA256withRSA", keyPair.getPublic());
         return new SignedKeyPair(keyPair, cert);
     }
 
@@ -56,4 +57,9 @@ public class CertificateAuthority {
         });
     }
 
+    public byte[] toKeyStore(final String alias, final String keystorePassword, final String keyPassword) {
+        return Helpers.createJks(keystorePassword, keyStore -> {
+            keyStore.setKeyEntry(alias, caKeyPair.getPrivate(), keyPassword.toCharArray(), new Certificate[]{caCert});
+        });
+    }
 }

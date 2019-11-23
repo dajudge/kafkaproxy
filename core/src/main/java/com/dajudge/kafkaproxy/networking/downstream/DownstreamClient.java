@@ -17,6 +17,8 @@
 
 package com.dajudge.kafkaproxy.networking.downstream;
 
+import com.dajudge.kafkaproxy.config.ApplicationConfig;
+import com.dajudge.kafkaproxy.ca.UpstreamCertificateSupplier;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
@@ -25,8 +27,10 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.UUID;
 import java.util.function.Consumer;
 
+import static com.dajudge.kafkaproxy.ca.ProxyClientCertificateAuthorityFactoryRegistry.createCertificateFactory;
 import static io.netty.channel.ChannelOption.SO_KEEPALIVE;
 
 
@@ -37,11 +41,22 @@ public class DownstreamClient {
     public DownstreamClient(
             final String host,
             final int port,
-            final KafkaSslConfig sslConfig,
+            final ApplicationConfig appConfig,
             final Consumer<ByteBuf> messageSink,
             final Runnable closeCallback,
-            final EventLoopGroup workerGroup
+            final EventLoopGroup workerGroup,
+            final UpstreamCertificateSupplier certificateSupplier
     ) {
+        final KafkaSslConfig sslConfig = appConfig.get(KafkaSslConfig.class);
+        final String keyPassword = UUID.randomUUID().toString();
+        final ChannelHandler sslHandler = ClientSslHandlerFactory.createHandler(
+                sslConfig,
+                host,
+                port,
+                certificateSupplier,
+                createCertificateFactory(sslConfig.getCertificateFactory(), appConfig, keyPassword),
+                keyPassword
+        );
         try {
             channel = new Bootstrap()
                     .group(workerGroup)
@@ -51,7 +66,7 @@ public class DownstreamClient {
                         @Override
                         public void initChannel(SocketChannel ch) {
                             final ChannelPipeline pipeline = ch.pipeline();
-                            pipeline.addLast(ClientSslHandlerFactory.createHandler(sslConfig, host, port));
+                            pipeline.addLast(sslHandler);
                             pipeline.addLast(new ProxyClientHandler(messageSink));
                         }
                     })

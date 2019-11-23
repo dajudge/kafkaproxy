@@ -19,7 +19,7 @@ package com.dajudge.kafkaproxy.util.roundtrip.kafka.ssl;
 
 import com.dajudge.kafkaproxy.util.kafka.ContainerConfigurator;
 import com.dajudge.kafkaproxy.util.ssl.SslTestAuthority;
-import com.dajudge.kafkaproxy.util.ssl.SslTestKeystore;
+import com.dajudge.kafkaproxy.util.ssl.SslTestKeyStore;
 import com.dajudge.kafkaproxy.util.ssl.SslTestSetup;
 import org.testcontainers.containers.GenericContainer;
 
@@ -46,7 +46,7 @@ public class KafkaSslContainerConfigurator implements ContainerConfigurator {
     @Override
     public GenericContainer configure(final String hostname, final GenericContainer container) {
         final SslTestAuthority ca = sslSetup.getAuthority();
-        final SslTestKeystore keystore = sslSetup.getBroker(hostname);
+        final SslTestKeyStore keystore = sslSetup.getBroker(hostname);
         return container
                 .withCopyFileToContainer(
                         forHostPath(ca.getTrustStore().getAbsolutePath()),
@@ -61,7 +61,7 @@ public class KafkaSslContainerConfigurator implements ContainerConfigurator {
                         KEYSTORE_LOCATION
                 )
                 .withCopyFileToContainer(
-                        forHostPath(keystore.getKeystorePasswordFile().getAbsolutePath()),
+                        forHostPath(keystore.getKeyStorePasswordFile().getAbsolutePath()),
                         KEYSTORE_PASSWORD_LOCATION
                 )
                 .withCopyFileToContainer(

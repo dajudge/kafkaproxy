@@ -19,29 +19,29 @@ package com.dajudge.kafkaproxy.util.ssl;
 
 import java.io.File;
 
-public class SslTestKeystore {
+public class SslTestKeyStore {
     private final File jks;
-    private final String keystorePassword;
-    private final File keystorePasswordFile;
+    private final String keyStorePassword;
+    private final File keyStorePasswordFile;
     private final String keyPassword;
     private final File keyPasswordFile;
 
-    public SslTestKeystore(
+    public SslTestKeyStore(
             final File jks,
-            final String keystorePassword,
-            final File keystorePasswordFile,
+            final String keyStorePassword,
+            final File keyStorePasswordFile,
             final String keyPassword,
             final File keyPasswordFile
     ) {
         this.jks = jks;
-        this.keystorePassword = keystorePassword;
-        this.keystorePasswordFile = keystorePasswordFile;
+        this.keyStorePassword = keyStorePassword;
+        this.keyStorePasswordFile = keyStorePasswordFile;
         this.keyPassword = keyPassword;
         this.keyPasswordFile = keyPasswordFile;
     }
 
-    public File getKeystorePasswordFile() {
-        return keystorePasswordFile;
+    public File getKeyStorePasswordFile() {
+        return keyStorePasswordFile;
     }
 
     public File getKeyPasswordFile() {
@@ -52,8 +52,8 @@ public class SslTestKeystore {
         return jks;
     }
 
-    public String getKeystorePassword() {
-        return keystorePassword;
+    public String getKeyStorePassword() {
+        return keyStorePassword;
     }
 
     public String getKeyPassword() {

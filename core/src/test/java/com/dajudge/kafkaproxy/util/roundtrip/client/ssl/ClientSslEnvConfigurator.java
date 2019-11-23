@@ -20,7 +20,7 @@ package com.dajudge.kafkaproxy.util.roundtrip.client.ssl;
 import com.dajudge.kafkaproxy.util.environment.TestEnvironment;
 import com.dajudge.kafkaproxy.util.roundtrip.EnvConfigurator;
 import com.dajudge.kafkaproxy.util.ssl.SslTestAuthority;
-import com.dajudge.kafkaproxy.util.ssl.SslTestKeystore;
+import com.dajudge.kafkaproxy.util.ssl.SslTestKeyStore;
 import com.dajudge.kafkaproxy.util.ssl.SslTestSetup;
 
 public class ClientSslEnvConfigurator implements EnvConfigurator {
@@ -35,12 +35,12 @@ public class ClientSslEnvConfigurator implements EnvConfigurator {
     @Override
     public TestEnvironment configure(final TestEnvironment e) {
         final SslTestAuthority clientAuthority = sslSetup.getAuthority();
-        final SslTestKeystore clientBroker = sslSetup.getBroker(hostname);
+        final SslTestKeyStore clientBroker = sslSetup.getBroker(hostname);
         return e.withEnv("KAFKAPROXY_CLIENT_SSL_ENABLED", "true")
                 .withEnv("KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_LOCATION", "client/truststore.jks")
                 .withEnv("KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_PASSWORD", clientAuthority.getTrustStorePassword())
                 .withEnv("KAFKAPROXY_CLIENT_SSL_KEYSTORE_LOCATION", "client/keystore.jks")
-                .withEnv("KAFKAPROXY_CLIENT_SSL_KEYSTORE_PASSWORD", clientBroker.getKeystorePassword())
+                .withEnv("KAFKAPROXY_CLIENT_SSL_KEYSTORE_PASSWORD", clientBroker.getKeyStorePassword())
                 .withEnv("KAFKAPROXY_CLIENT_SSL_KEY_PASSWORD", clientBroker.getKeyPassword())
                 .withFile("client/truststore.jks", clientAuthority.getTrustStore())
                 .withFile("client/keystore.jks", clientBroker.getKeyStore());

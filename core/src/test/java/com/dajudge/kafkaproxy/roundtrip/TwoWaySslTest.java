@@ -28,7 +28,7 @@ public class TwoWaySslTest extends BaseRoundtripTest {
     @Override
     protected RoundtripTest build() {
         return roundtripTest()
-                .withSslClient("localhost")
+                .withTwoWaySslClient("localhost", "CN=someFancyClient")
                 .withTwoWaySslKafka(singletonList("localhost"))
                 .build();
     }

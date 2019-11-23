@@ -36,6 +36,7 @@ public class ProxySslConfigTest extends BaseOptionalConfigTest<ProxySslConfig> {
         assertEquals("keystore", Util.toString(config.getKeyStore()));
         assertEquals("keystorePassword", config.getKeyStorePassword());
         assertEquals("keyPassword", config.getKeyPassword());
+        assertTrue(config.isClientAuthRequired());
     }
 
     @Test
@@ -72,6 +73,7 @@ public class ProxySslConfigTest extends BaseOptionalConfigTest<ProxySslConfig> {
                 .withEnv("KAFKAPROXY_CLIENT_SSL_KEYSTORE_LOCATION", "keystore.jks")
                 .withEnv("KAFKAPROXY_CLIENT_SSL_KEYSTORE_PASSWORD", "keystorePassword")
                 .withEnv("KAFKAPROXY_CLIENT_SSL_KEY_PASSWORD", "keyPassword")
+                .withEnv("KAFKAPROXY_CLIENT_SSL_AUTH_REQUIRED", "true")
                 .withFile("truststore.jks", "truststore".getBytes(UTF_8))
                 .withFile("keystore.jks", "keystore".getBytes(UTF_8));
     }

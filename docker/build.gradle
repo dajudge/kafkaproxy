@@ -20,10 +20,12 @@ task clean(type: Delete) {
 }
 
 task copyJars(type: Copy) {
-    dependsOn project(":core").tasks.withType(Jar)
     group "build"
-    from project(":core").tasks.withType(Jar)
-    from project(":core").configurations.runtimeClasspath
+    [":app", ":ca-selfsign"].each {
+        dependsOn project(it).tasks.withType(Jar)
+        from project(it).tasks.withType(Jar)
+        from project(it).configurations.runtimeClasspath
+    }
     into dockerBuildDir
 }
 

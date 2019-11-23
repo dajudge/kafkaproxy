@@ -1,0 +1,7 @@
+apply plugin: "java"
+
+dependencies {
+    implementation project(":ca-api")
+    implementation project(":ca-selfsign")
+    implementation project(":core")
+}

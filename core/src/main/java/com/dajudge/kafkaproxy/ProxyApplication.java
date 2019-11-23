@@ -56,8 +56,6 @@ public class ProxyApplication {
     public ProxyApplication start() {
         final ApplicationConfig appConfig = new ApplicationConfig(environment);
         final BrokerConfig brokerConfig = appConfig.get(BrokerConfig.class);
-        final KafkaSslConfig kafkaSslConfig = appConfig.get(KafkaSslConfig.class);
-        final ProxySslConfig proxySslConfig = appConfig.get(ProxySslConfig.class);
         final NioEventLoopGroup serverWorkerGroup = new NioEventLoopGroup();
         final NioEventLoopGroup upstreamWorkerGroup = new NioEventLoopGroup();
         final NioEventLoopGroup downstreamWorkerGroup = new NioEventLoopGroup();
@@ -67,12 +65,12 @@ public class ProxyApplication {
                             brokerConfig.getBrokerMap(),
                             brokerToProxy.getBroker().getHost(),
                             brokerToProxy.getBroker().getPort(),
-                            kafkaSslConfig,
+                            appConfig,
                             downstreamWorkerGroup
                     );
                     final ProxyChannel proxyChannel = new ProxyChannel(
                             brokerToProxy.getProxy().getPort(),
-                            proxySslConfig,
+                            appConfig,
                             serverWorkerGroup,
                             upstreamWorkerGroup,
                             forwardChannelFactory

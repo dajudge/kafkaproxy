@@ -15,7 +15,7 @@
  *
  */
 
-package com.dajudge.kafkaproxy.ca;
+package com.dajudge.kafkaproxy.ca.selfsign;
 
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
@@ -69,16 +69,30 @@ public final class Helpers {
             final String algorithm
     ) {
         final PublicKey publicKey = pair.getPublic();
-        return sign(dn, dn, pair, days, algorithm, publicKey);
+        return sign(dn, dn, pair.getPrivate(), days, algorithm, publicKey);
     }
 
     public static X509Certificate sign(
             final String ownerDn,
             final String issuerDn,
-            final KeyPair signingPair,
+            final PrivateKey signingKey,
             final int days,
             final String algorithm,
             final PublicKey publicKey
+    ) {
+        final Date notBefore = new Date(currentTimeMillis());
+        final Date notAfter = new Date(currentTimeMillis() + (long) days * 365 * 24 * 60 * 60 * 1000);
+        return sign(ownerDn, issuerDn, signingKey, algorithm, publicKey, notBefore, notAfter);
+    }
+
+    public static X509Certificate sign(
+            final String ownerDn,
+            final String issuerDn,
+            final PrivateKey signingKey,
+            final String algorithm,
+            final PublicKey publicKey,
+            final Date notBefore,
+            final Date notAfter
     ) {
         try {
             final AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder()
@@ -89,14 +103,14 @@ public final class Helpers {
             final X509v3CertificateBuilder certGenerator = new X509v3CertificateBuilder(
                     new X500Name(issuerDn),
                     BigInteger.valueOf(SECURE_RANDOM.nextInt()),
-                    new Date(currentTimeMillis()),
-                    new Date(currentTimeMillis() + (long)days * 365 * 24 * 60 * 60 * 1000),
+                    notBefore,
+                    notAfter,
                     new X500Name(ownerDn),
                     SubjectPublicKeyInfo.getInstance(publicKey.getEncoded())
             );
 
             final ContentSigner sigGen = new BcRSAContentSignerBuilder(sigAlgId, digAlgId)
-                    .build(PrivateKeyFactory.createKey(signingPair.getPrivate().getEncoded()));
+                    .build(PrivateKeyFactory.createKey(signingKey.getEncoded()));
 
             final X509CertificateHolder holder = certGenerator.build(sigGen);
             final Certificate eeX509CertificateStructure = holder.toASN1Structure();
