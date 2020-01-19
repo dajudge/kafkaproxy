@@ -18,28 +18,21 @@
 package com.dajudge.kafkaproxy.brokermap;
 
 public class BrokerMapping {
-    private final String name;
     private final Endpoint broker;
     private final Endpoint proxy;
 
-    public BrokerMapping(final String name, final Endpoint broker, final Endpoint proxy) {
-        this.name = name;
+    public BrokerMapping(final Endpoint broker, final Endpoint proxy) {
         this.broker = broker;
         this.proxy = proxy;
     }
 
     public BrokerMapping(
-            final String name,
             final String brokerHost,
             final int brokerPort,
             final String proxyHost,
             final int proxyPort
     ) {
-        this(name, new Endpoint(brokerHost, brokerPort), new Endpoint(proxyHost, proxyPort));
-    }
-
-    public String getName() {
-        return name;
+        this(new Endpoint(brokerHost, brokerPort), new Endpoint(proxyHost, proxyPort));
     }
 
     public Endpoint getBroker() {

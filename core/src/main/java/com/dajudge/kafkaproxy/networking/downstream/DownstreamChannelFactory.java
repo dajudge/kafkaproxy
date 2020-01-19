@@ -17,6 +17,7 @@
 
 package com.dajudge.kafkaproxy.networking.downstream;
 
+import com.dajudge.kafkaproxy.ProxyChannelManager;
 import com.dajudge.kafkaproxy.brokermap.BrokerMap;
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
 import com.dajudge.kafkaproxy.networking.upstream.ForwardChannel;
@@ -39,20 +40,20 @@ import java.util.function.Consumer;
 import static java.util.Arrays.asList;
 
 public class DownstreamChannelFactory implements ForwardChannelFactory {
-    private final BrokerMap brokerMap;
+    private final ProxyChannelManager proxyChannelManager;
     private final String kafkaHost;
     private final int kafkaPort;
     private final ApplicationConfig appConfig;
     private final EventLoopGroup downstreamWorkerGroup;
 
     public DownstreamChannelFactory(
-            final BrokerMap brokerMap,
+            final ProxyChannelManager proxyChannelManager,
             final String kafkaHost,
             final int kafkaPort,
             final ApplicationConfig appConfig,
             final EventLoopGroup downstreamWorkerGroup
     ) {
-        this.brokerMap = brokerMap;
+        this.proxyChannelManager = proxyChannelManager;
         this.kafkaHost = kafkaHost;
         this.kafkaPort = kafkaPort;
         this.appConfig = appConfig;
@@ -66,8 +67,8 @@ public class DownstreamChannelFactory implements ForwardChannelFactory {
             final Runnable downstreamClosedCallback
     ) {
         final ResponseRewriter rewriter = new CompositeRewriter(asList(
-                new MetadataRewriter(brokerMap),
-                new FindCoordinatorRewriter(brokerMap)
+                new MetadataRewriter(proxyChannelManager),
+                new FindCoordinatorRewriter(proxyChannelManager)
         ));
         final KafkaRequestStore requestStore = new KafkaRequestStore(rewriter);
         final KafkaResponseProcessor responseProcessor = new KafkaResponseProcessor(upstreamSink, requestStore);

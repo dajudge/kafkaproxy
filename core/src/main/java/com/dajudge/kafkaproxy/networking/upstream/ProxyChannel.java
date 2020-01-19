@@ -34,15 +34,38 @@ import java.util.function.Function;
 
 public class ProxyChannel {
     private static final Logger LOG = LoggerFactory.getLogger(ProxyChannel.class);
-    private final Channel channel;
+    private final String hostname;
+    private boolean initialized = false;
+    private final int port;
+    private final ApplicationConfig appConfig;
+    private final NioEventLoopGroup bossGroup;
+    private final NioEventLoopGroup upstreamWorkerGroup;
+    private final ForwardChannelFactory forwardChannelFactory;
+
+    private Channel channel;
 
     public ProxyChannel(
+            final String hostname,
             final int port,
             final ApplicationConfig appConfig,
             final NioEventLoopGroup bossGroup,
             final NioEventLoopGroup upstreamWorkerGroup,
             final ForwardChannelFactory forwardChannelFactory
     ) {
+        this.hostname = hostname;
+        this.port = port;
+        this.appConfig = appConfig;
+        this.bossGroup = bossGroup;
+        this.upstreamWorkerGroup = upstreamWorkerGroup;
+        this.forwardChannelFactory = forwardChannelFactory;
+    }
+
+    public void start() {
+        if (initialized) {
+            return;
+        }
+        initialized = true;
+        LOG.info("Starting proxy channel {}:{}", hostname, port);
         try {
             final ChannelInitializer<SocketChannel> childHandler = new ChannelInitializer<SocketChannel>() {
                 @Override
@@ -106,5 +129,9 @@ public class ProxyChannel {
 
     public int getPort() {
         return ((InetSocketAddress) channel.localAddress()).getPort();
+    }
+
+    public String getHost() {
+        return hostname;
     }
 }

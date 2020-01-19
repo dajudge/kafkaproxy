@@ -96,7 +96,6 @@ The location of the broker map & proxy configuration is configured using the fol
 | Name                            | Default value                   | Destription
 | ------------------------------- |---------------------------------| -----------
 | `KAFKAPROXY_BROKERMAP_LOCATION` | `/etc/kafkaproxy/brokermap.yml` | The filesystem location where the broker map YAML file is located.
-| `KAFKAPROXY_PROXIED_BROKERS`    | `*`                             | The list of comma-separated symbolic names of the proxy entries from the broker map YAML file that the kafkaproxy instance should be starting. This setting is useful when different kafkaproxy instances are started to proxy multiple brokers. If you set `*` then all configured proxies will be started.
 | `KAFKAPROXY_LOG_LEVEL`          | `INFO`                          | The log level of the root logger. This must be a valid log level for [logback](http://logback.qos.ch/manual/configuration.html).
  
 ### Format of `brokermap.yml`
@@ -104,7 +103,6 @@ The location of the broker map & proxy configuration is configured using the fol
 | Configuration key         | Value type | Destription
 | ------------------------- | ---------- | -----------
 | `proxies`                 | `List`     | The list of all proxied brokers.
-| `proxies.name`            | `String`   | A unique symbolic name for the proxied broker. This name is used in the `KAFKAPROXY_PROXIED_BROKERS` environment variable to identify the brokers to proxy.
 | `proxies.proxy`           | `Object`   | The proxy configuration for the proxied broker.
 | `proxies.proxy.hostname`  | `String`   | The hostname of the proxy instance. This hostname must be reachable from the Kafka proxy.
 | `proxies.proxy.port`      | `Integer`  | The port of the proxy instance.
@@ -116,20 +114,18 @@ The location of the broker map & proxy configuration is configured using the fol
 This is an example with two proxied brokers:
 ```yaml
 proxies:
-  - name: broker1
-    proxy:
+  - proxy:
       hostname: kafka.example.com
       port: 39092
     broker:
       hostname: broker1.kafka.local
       port: 9092
-  - name: broker2
-    proxy:
+  - proxy:
       hostname: kafka.example.com
       port: 39093
     broker:
       hostname: broker2.kafka.local
-      port: 9092
+      port: 9093
 ```
 # Features
 * SSL support from client to proxy

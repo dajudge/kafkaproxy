@@ -19,17 +19,10 @@ package com.dajudge.kafkaproxy;
 
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
 import com.dajudge.kafkaproxy.config.Environment;
-import com.dajudge.kafkaproxy.config.broker.BrokerConfig;
-import com.dajudge.kafkaproxy.networking.downstream.DownstreamChannelFactory;
-import com.dajudge.kafkaproxy.networking.downstream.KafkaSslConfig;
-import com.dajudge.kafkaproxy.networking.upstream.ForwardChannelFactory;
 import com.dajudge.kafkaproxy.networking.upstream.ProxyChannel;
-import com.dajudge.kafkaproxy.networking.upstream.ProxySslConfig;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collection;
 
 import static java.util.stream.Collectors.toList;
 
@@ -55,36 +48,19 @@ public class ProxyApplication {
 
     public ProxyApplication start() {
         final ApplicationConfig appConfig = new ApplicationConfig(environment);
-        final BrokerConfig brokerConfig = appConfig.get(BrokerConfig.class);
         final NioEventLoopGroup serverWorkerGroup = new NioEventLoopGroup();
         final NioEventLoopGroup upstreamWorkerGroup = new NioEventLoopGroup();
         final NioEventLoopGroup downstreamWorkerGroup = new NioEventLoopGroup();
-        final Collection<ProxyChannel> proxies = brokerConfig.getBrokersToProxy().stream()
-                .map(brokerToProxy -> {
-                    final ForwardChannelFactory forwardChannelFactory = new DownstreamChannelFactory(
-                            brokerConfig.getBrokerMap(),
-                            brokerToProxy.getBroker().getHost(),
-                            brokerToProxy.getBroker().getPort(),
-                            appConfig,
-                            downstreamWorkerGroup
-                    );
-                    final ProxyChannel proxyChannel = new ProxyChannel(
-                            brokerToProxy.getProxy().getPort(),
-                            appConfig,
-                            serverWorkerGroup,
-                            upstreamWorkerGroup,
-                            forwardChannelFactory
-                    );
-                    LOG.info(
-                            "Started proxy listener for {}:{} on port {}",
-                            brokerToProxy.getBroker().getHost(),
-                            brokerToProxy.getBroker().getPort(),
-                            brokerToProxy.getProxy().getPort()
-                    );
-                    return proxyChannel;
-                }).collect(toList());
+        final ProxyChannelManager.ProxyChannelFactory channelFactory = new StaticProxyChannelFactory(
+                appConfig,
+                downstreamWorkerGroup,
+                serverWorkerGroup,
+                upstreamWorkerGroup
+        );
+        final ProxyChannelManager proxyChannelManager = new ProxyChannelManager(channelFactory);
+        channelFactory.bootstrap(proxyChannelManager);
         shutdownRunnable = () -> {
-            proxies.stream()
+            proxyChannelManager.proxies().stream()
                     .map(ProxyChannel::close)
                     .collect(toList())
                     .forEach(future -> {
@@ -100,4 +76,5 @@ public class ProxyApplication {
         };
         return this;
     }
+
 }

@@ -1,6 +1,5 @@
 proxies:
-  - name: kafka1
-    proxy:
+  - proxy:
       hostname: localhost
       port: 19092
     broker:

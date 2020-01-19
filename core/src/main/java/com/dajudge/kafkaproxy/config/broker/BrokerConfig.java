@@ -24,18 +24,12 @@ import java.util.Collection;
 
 public class BrokerConfig {
     private final BrokerMap brokerMap;
-    private final Collection<BrokerMapping> brokersToProxy;
 
-    public BrokerConfig(final BrokerMap brokerMap, final Collection<BrokerMapping> brokersToProxy) {
+    public BrokerConfig(final BrokerMap brokerMap) {
         this.brokerMap = brokerMap;
-        this.brokersToProxy = brokersToProxy;
     }
 
     public BrokerMap getBrokerMap() {
         return brokerMap;
-    }
-
-    public Collection<BrokerMapping> getBrokersToProxy() {
-        return brokersToProxy;
     }
 }

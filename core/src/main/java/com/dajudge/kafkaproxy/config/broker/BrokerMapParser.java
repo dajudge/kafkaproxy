@@ -42,7 +42,6 @@ public class BrokerMapParser {
     @SuppressWarnings("unchecked")
     private static BrokerMapping toBrokerMapping(final Map<String, Object> o) {
         return new BrokerMapping(
-                (String) o.get("name"),
                 toEndpoint((Map<String, Object>) o.get("broker")),
                 toEndpoint((Map<String, Object>) o.get("proxy"))
         );

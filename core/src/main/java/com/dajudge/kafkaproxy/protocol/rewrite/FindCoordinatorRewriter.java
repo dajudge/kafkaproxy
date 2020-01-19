@@ -17,7 +17,7 @@
 
 package com.dajudge.kafkaproxy.protocol.rewrite;
 
-import com.dajudge.kafkaproxy.brokermap.BrokerMap;
+import com.dajudge.kafkaproxy.ProxyChannelManager;
 import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
 import org.apache.kafka.common.message.FindCoordinatorResponseData;
 import org.apache.kafka.common.protocol.ApiKeys;
@@ -30,10 +30,10 @@ import java.lang.reflect.Field;
 
 public class FindCoordinatorRewriter extends BaseReflectingRewriter<FindCoordinatorResponse> {
     private static final Logger LOG = LoggerFactory.getLogger(FindCoordinatorRewriter.class);
-    private final BrokerMap brokerMap;
+    private final ProxyChannelManager proxyChannelManager;
 
-    public FindCoordinatorRewriter(final BrokerMap brokerMap) {
-        this.brokerMap = brokerMap;
+    public FindCoordinatorRewriter(final ProxyChannelManager proxyChannelManager) {
+        this.proxyChannelManager = proxyChannelManager;
     }
 
     @Override
@@ -50,20 +50,16 @@ public class FindCoordinatorRewriter extends BaseReflectingRewriter<FindCoordina
         if (data.host() == null || data.host().isEmpty()) {
             return;
         }
-        final BrokerMapping mapping = brokerMap.getByBrokerEndpoint(data.host(), data.port());
-        if (mapping == null) {
-            LOG.error("Unknown broker node seen in {}: {}:{}", ApiKeys.FIND_COORDINATOR, data.host(), data.port());
-        } else {
-            LOG.debug(
-                    "Rewriting {}: {}:{} -> {}:{}",
-                    ApiKeys.FIND_COORDINATOR,
-                    data.host(),
-                    data.port(),
-                    mapping.getProxy().getHost(),
-                    mapping.getProxy().getPort()
-            );
-            data.setHost(mapping.getProxy().getHost());
-            data.setPort(mapping.getProxy().getPort());
-        }
+        final BrokerMapping mapping = proxyChannelManager.getByBrokerEndpoint(data.host(), data.port());
+        LOG.debug(
+                "Rewriting {}: {}:{} -> {}:{}",
+                ApiKeys.FIND_COORDINATOR,
+                data.host(),
+                data.port(),
+                mapping.getProxy().getHost(),
+                mapping.getProxy().getPort()
+        );
+        data.setHost(mapping.getProxy().getHost());
+        data.setPort(mapping.getProxy().getPort());
     }
 }
