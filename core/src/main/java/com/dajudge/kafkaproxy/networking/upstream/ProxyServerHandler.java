@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Alex Stockinger
+ * Copyright 2019-2020 Alex Stockinger
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 
 package com.dajudge.kafkaproxy.networking.upstream;
 
-import com.dajudge.kafkaproxy.networking.upstream.ForwardChannelFactory.UpstreamCertificateSupplier;
+import com.dajudge.kafkaproxy.ca.UpstreamCertificateSupplier;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -59,7 +60,7 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
                 if (sslHandler instanceof SslHandler) {
                     final SSLSession session = ((SslHandler) sslHandler).engine().getSession();
                     final Certificate[] clientCerts = session.getPeerCertificates();
-                    return clientCerts[0];
+                    return (X509Certificate) clientCerts[0];
                 } else {
                     throw new SSLPeerUnverifiedException("Upstream SSL not enabled");
                 }

@@ -1,5 +1,5 @@
 #! /bin/sh
-# Copyright 2019 Alex Stockinger
+# Copyright 2019-2020 Alex Stockinger
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,9 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo "Waiting for advertised listeners..."
-while [ ! -f /tmp/advertisedListeners.txt ]; do sleep 1; done
+echo "Waiting for config..."
+while [ ! -f /tmp/config.env ]; do sleep 1; done
 
-echo "Advertised listeners: $(cat /tmp/advertisedListeners.txt)"
+echo "Kafka configuration: $(cat /tmp/config.env)"
+. /tmp/config.env
 
-KAFKA_ADVERTISED_LISTENERS=$(cat /tmp/advertisedListeners.txt) /etc/confluent/docker/run
+KAFKA_ADVERTISED_LISTENERS=${KAFKA_ADVERTISED_LISTENERS} /etc/confluent/docker/run

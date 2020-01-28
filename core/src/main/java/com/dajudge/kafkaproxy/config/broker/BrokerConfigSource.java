@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Alex Stockinger
+ * Copyright 2019-2020 Alex Stockinger
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,27 +17,13 @@
 
 package com.dajudge.kafkaproxy.config.broker;
 
-import com.dajudge.kafkaproxy.brokermap.BrokerMap;
 import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
 import com.dajudge.kafkaproxy.config.ConfigSource;
 import com.dajudge.kafkaproxy.config.Environment;
-import com.dajudge.kafkaproxy.config.FileResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.toList;
+import static java.lang.Integer.parseUnsignedInt;
 
 public class BrokerConfigSource implements ConfigSource<BrokerConfig> {
-    private static final Logger LOG = LoggerFactory.getLogger(BrokerConfigSource.class);
-    private static final String ENV_BROKERMAP_LOCATION = PREFIX + "BROKERMAP_LOCATION";
-    private static final String ENV_PROXIED_BROKERS = PREFIX + "PROXIED_BROKERS";
-    private static final String DEFAULT_BROKERMAP_LOCATION = "/etc/kafkaproxy/brokermap.yml";
-    private static final String DEFAULT_PROXIED_BROKERS = "*";
 
     @Override
     public Class<BrokerConfig> getConfigClass() {
@@ -46,30 +32,16 @@ public class BrokerConfigSource implements ConfigSource<BrokerConfig> {
 
     @Override
     public BrokerConfig parse(final Environment environment) {
-        final BrokerMap brokerMap = getBrokerMap(environment);
-        final Collection<BrokerMapping> brokersToProxy = getBrokersToProxy(environment, brokerMap);
-        brokerMap.getAll().forEach(b -> LOG.debug("Found brokermap entry: {}", b));
-        LOG.debug("Brokers to proxy: {}", brokersToProxy.stream().map(BrokerMapping::getName).collect(toList()));
-        return new BrokerConfig(brokerMap, brokersToProxy);
+        return new BrokerConfig(
+                getBootstrapBrokers(environment),
+                environment.requiredString("KAFKAPROXY_HOSTNAME"),
+                environment.requiredInt("KAFKAPROXY_BASE_PORT")
+        );
     }
 
-    private static List<BrokerMapping> getBrokersToProxy(final Environment environment, final BrokerMap brokerMap) {
-        final String property = environment.requiredString(ENV_PROXIED_BROKERS, DEFAULT_PROXIED_BROKERS);
-        if ("*".equals(property)) {
-            return brokerMap.getAll();
-        }
-        return Stream.of(property.split(","))
-                .map(String::trim)
-                .map(brokerMap::getByProxyName)
-                .collect(toList());
-    }
-
-    private BrokerMap getBrokerMap(final Environment environment) {
-        final FileResource brokerMapFile = environment.requiredFile(ENV_BROKERMAP_LOCATION, DEFAULT_BROKERMAP_LOCATION);
-        try (final InputStream inputStream = brokerMapFile.open()) {
-            return new BrokerMapParser(inputStream).getBrokerMap();
-        } catch (final Exception e) {
-            throw new RuntimeException("Failed to read broker map", e);
-        }
+    private BrokerMapping.Endpoint getBootstrapBrokers(final Environment environment) {
+        final String bootstrapServer = environment.requiredString("KAFKAPROXY_BOOTSTRAP_SERVER");
+        final String[] bootstrapServerParts = bootstrapServer.split(":");
+        return new BrokerMapping.Endpoint(bootstrapServerParts[0], parseUnsignedInt(bootstrapServerParts[1]));
     }
 }

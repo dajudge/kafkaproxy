@@ -29,5 +29,8 @@
         <!-- False positivies with throwables as last parameter -->
         <!-- https://github.com/pmd/pmd/issues/939 -->
         <exclude name="InvalidSlf4jMessageFormat"/>
+
+        <!-- Not super useful -->
+        <exclude name="ReturnEmptyArrayRatherThanNull" />
     </rule>
 </ruleset>

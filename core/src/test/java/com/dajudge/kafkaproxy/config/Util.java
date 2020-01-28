@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Alex Stockinger
+ * Copyright 2019-2020 Alex Stockinger
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,8 +30,8 @@ final class Util {
     }
 
     @SuppressFBWarnings(
-            value="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
-            justification="False positive" // see https://sourceforge.net/p/findbugs/bugs/1169/
+            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+            justification = "False positive" // see https://sourceforge.net/p/findbugs/bugs/1169/
     )
     static String toString(final FileResource res) {
         try (final InputStream is = res.open()) {

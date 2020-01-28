@@ -24,11 +24,13 @@ services:
       KAFKA_BROKER_ID: 1
 
   kafkaproxy:
-    image: "dajudge/kafkaproxy:0.0.1"
+    image: "dajudge/kafkaproxy:0.0.2"
     ports:
-      - 19092:19092
+      - 4000:4000
     depends_on:
       - kafka1
     restart: always
-    volumes:
-      - "./brokermap.yml:/etc/kafkaproxy/brokermap.yml"
+    environment:
+      KAFKAPROXY_HOSTNAME: localhost
+      KAFKAPROXY_BASE_PORT: 4000
+      KAFKAPROXY_BOOTSTRAP_SERVER: kafka1:9092

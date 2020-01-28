@@ -1,5 +1,5 @@
 <!--
-Copyright 2019 Alex Stockinger
+Copyright 2019-2020 Alex Stockinger
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,14 +15,14 @@ limitations under the License.
 -->
 
 <configuration>
-
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
-    <logger name="com.dajudge.kafkaproxy" level="INFO" additivity="false">
+
+    <logger name="com.dajudge.kafkaproxy.roundtrip.cluster.container" level="WARN" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
 
@@ -30,11 +30,11 @@ limitations under the License.
         <appender-ref ref="STDOUT"/>
     </logger>
 
-    <logger name="org.apache.kafka" level="WARN" additivity="false">
+    <logger name="org.apache.kafka" level="ERROR" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
 
-    <root level="WARN">
+    <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>
 </configuration>

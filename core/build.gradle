@@ -1,6 +1,8 @@
 apply plugin: "java"
 
 dependencies {
+    implementation project(":ca-api")
+
     // We use the transport objects from the kafka client library
     implementation 'org.apache.kafka:kafka-clients:2.3.1'
     // Netty is our network layer
@@ -13,9 +15,12 @@ dependencies {
     implementation 'org.bouncycastle:bcpkix-jdk15on:1.64'
     // The logging implementation
     runtimeOnly 'ch.qos.logback:logback-classic:1.2.3'
+    // The logging API
+    implementation 'org.slf4j:slf4j-api:1.7.28'
 
-    testImplementation "org.testcontainers:kafka:1.12.3"
+    testImplementation 'org.testcontainers:kafka:1.12.3'
     testImplementation 'junit:junit:4.11'
+    testImplementation project(":ca-selfsign")
     testCompileOnly 'com.google.code.findbugs:annotations:3.0.1'
 }
 

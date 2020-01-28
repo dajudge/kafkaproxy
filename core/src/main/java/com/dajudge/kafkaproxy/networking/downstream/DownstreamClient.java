@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Alex Stockinger
+ * Copyright 2019-2020 Alex Stockinger
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
 
 package com.dajudge.kafkaproxy.networking.downstream;
 
+import com.dajudge.kafkaproxy.ca.KeyStoreWrapper;
+import com.dajudge.kafkaproxy.config.ApplicationConfig;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
@@ -26,7 +28,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
+import static com.dajudge.kafkaproxy.networking.downstream.ClientSslHandlerFactory.createHandler;
 import static io.netty.channel.ChannelOption.SO_KEEPALIVE;
 
 
@@ -37,11 +41,20 @@ public class DownstreamClient {
     public DownstreamClient(
             final String host,
             final int port,
-            final KafkaSslConfig sslConfig,
+            final ApplicationConfig appConfig,
             final Consumer<ByteBuf> messageSink,
             final Runnable closeCallback,
-            final EventLoopGroup workerGroup
+            final EventLoopGroup workerGroup,
+            final Supplier<KeyStoreWrapper> clientKeystoreSupplier
     ) {
+        final KafkaSslConfig sslConfig = appConfig.get(KafkaSslConfig.class);
+
+        final ChannelHandler sslHandler = createHandler(
+                sslConfig,
+                host,
+                port,
+                clientKeystoreSupplier
+        );
         try {
             channel = new Bootstrap()
                     .group(workerGroup)
@@ -51,7 +64,7 @@ public class DownstreamClient {
                         @Override
                         public void initChannel(SocketChannel ch) {
                             final ChannelPipeline pipeline = ch.pipeline();
-                            pipeline.addLast(ClientSslHandlerFactory.createHandler(sslConfig, host, port));
+                            pipeline.addLast(sslHandler);
                             pipeline.addLast(new ProxyClientHandler(messageSink));
                         }
                     })

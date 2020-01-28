@@ -1,4 +1,4 @@
-# Copyright 2019 Alex Stockinger
+# Copyright 2019-2020 Alex Stockinger
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,15 +13,13 @@
 # limitations under the License.
 
 proxies:
-  - name: broker1
-    proxy:
+  - proxy:
       hostname: kafka.example.com
       port: 39092
     broker:
       hostname: broker1.kafka.local
       port: 9092
-  - name: broker2
-    proxy:
+  - proxy:
       hostname: kafka.example.com
       port: 39093
     broker:

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Alex Stockinger
+ * Copyright 2019-2020 Alex Stockinger
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 
 package com.dajudge.kafkaproxy.config;
 
-import com.dajudge.kafkaproxy.util.environment.TestEnvironment;
+import com.dajudge.kafkaproxy.roundtrip.util.TestEnvironment;
 import org.junit.Test;
 
 abstract class BaseOptionalConfigTest<C> extends BaseConfigTest<C> {

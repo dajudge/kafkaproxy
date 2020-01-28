@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Alex Stockinger
+ * Copyright 2019-2020 Alex Stockinger
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,8 @@
 
 package com.dajudge.kafkaproxy.networking.upstream;
 
-import com.dajudge.kafkaproxy.networking.upstream.ForwardChannelFactory.UpstreamCertificateSupplier;
+import com.dajudge.kafkaproxy.ca.UpstreamCertificateSupplier;
+import com.dajudge.kafkaproxy.config.ApplicationConfig;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
@@ -33,15 +34,38 @@ import java.util.function.Function;
 
 public class ProxyChannel {
     private static final Logger LOG = LoggerFactory.getLogger(ProxyChannel.class);
-    private final Channel channel;
+    private final String hostname;
+    private boolean initialized = false;
+    private final int port;
+    private final ApplicationConfig appConfig;
+    private final NioEventLoopGroup bossGroup;
+    private final NioEventLoopGroup upstreamWorkerGroup;
+    private final ForwardChannelFactory forwardChannelFactory;
+
+    private Channel channel;
 
     public ProxyChannel(
+            final String hostname,
             final int port,
-            final ProxySslConfig proxySslConfig,
+            final ApplicationConfig appConfig,
             final NioEventLoopGroup bossGroup,
             final NioEventLoopGroup upstreamWorkerGroup,
             final ForwardChannelFactory forwardChannelFactory
     ) {
+        this.hostname = hostname;
+        this.port = port;
+        this.appConfig = appConfig;
+        this.bossGroup = bossGroup;
+        this.upstreamWorkerGroup = upstreamWorkerGroup;
+        this.forwardChannelFactory = forwardChannelFactory;
+    }
+
+    public void start() {
+        if (initialized) {
+            return;
+        }
+        initialized = true;
+        LOG.info("Starting proxy channel {}:{}", hostname, port);
         try {
             final ChannelInitializer<SocketChannel> childHandler = new ChannelInitializer<SocketChannel>() {
                 @Override
@@ -59,24 +83,30 @@ public class ProxyChannel {
                         });
                     };
 
+                    final ProxySslConfig proxySslConfig = appConfig.get(ProxySslConfig.class);
                     pipeline.addLast("ssl", ProxySslHandlerFactory.createHandler(proxySslConfig));
                     final Function<UpstreamCertificateSupplier, Consumer<ByteBuf>> downstreamFactory = certSupplier -> {
-                        final Runnable downstreamClosedCallback = () -> {
-                            LOG.trace("Closing upstream channel.");
-                            try {
-                                ch.close().sync();
-                            } catch (final InterruptedException e) {
-                                LOG.warn("Cloud not close upstream channel.", e);
-                            }
-                            LOG.trace("Upstream channel closed.");
-                        };
-                        final ForwardChannel forwardChannel = forwardChannelFactory.create(
-                                certSupplier,
-                                upstreamSink,
-                                downstreamClosedCallback
-                        );
-                        ch.closeFuture().addListener((ChannelFutureListener) future -> forwardChannel.close());
-                        return forwardChannel::accept;
+                        try {
+                            final Runnable downstreamClosedCallback = () -> {
+                                LOG.trace("Closing upstream channel.");
+                                try {
+                                    ch.close().sync();
+                                } catch (final InterruptedException e) {
+                                    LOG.warn("Cloud not close upstream channel.", e);
+                                }
+                                LOG.trace("Upstream channel closed.");
+                            };
+                            final ForwardChannel forwardChannel = forwardChannelFactory.create(
+                                    certSupplier,
+                                    upstreamSink,
+                                    downstreamClosedCallback
+                            );
+                            ch.closeFuture().addListener((ChannelFutureListener) future -> forwardChannel.close());
+                            return forwardChannel::accept;
+                        } catch (final RuntimeException e) {
+                            LOG.error("Failed to create downstream channel", e);
+                            throw e;
+                        }
                     };
                     pipeline.addLast(new ProxyServerHandler(downstreamFactory));
                 }
@@ -99,5 +129,9 @@ public class ProxyChannel {
 
     public int getPort() {
         return ((InetSocketAddress) channel.localAddress()).getPort();
+    }
+
+    public String getHost() {
+        return hostname;
     }
 }

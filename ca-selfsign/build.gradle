@@ -1,0 +1,10 @@
+apply plugin: "java"
+
+dependencies {
+    implementation project(":ca-api")
+
+    // Used for certificate signing
+    implementation 'org.bouncycastle:bcpkix-jdk15on:1.64'
+    // The logging API
+    implementation 'org.slf4j:slf4j-api:1.7.28'
+}

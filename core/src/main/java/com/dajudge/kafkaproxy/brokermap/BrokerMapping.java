@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Alex Stockinger
+ * Copyright 2019-2020 Alex Stockinger
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,28 +18,21 @@
 package com.dajudge.kafkaproxy.brokermap;
 
 public class BrokerMapping {
-    private final String name;
     private final Endpoint broker;
     private final Endpoint proxy;
 
-    public BrokerMapping(final String name, final Endpoint broker, final Endpoint proxy) {
-        this.name = name;
+    public BrokerMapping(final Endpoint broker, final Endpoint proxy) {
         this.broker = broker;
         this.proxy = proxy;
     }
 
     public BrokerMapping(
-            final String name,
             final String brokerHost,
             final int brokerPort,
             final String proxyHost,
             final int proxyPort
     ) {
-        this(name, new Endpoint(brokerHost, brokerPort), new Endpoint(proxyHost, proxyPort));
-    }
-
-    public String getName() {
-        return name;
+        this(new Endpoint(brokerHost, brokerPort), new Endpoint(proxyHost, proxyPort));
     }
 
     public Endpoint getBroker() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Alex Stockinger
+ * Copyright 2019-2020 Alex Stockinger
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,25 +17,28 @@
 
 package com.dajudge.kafkaproxy.config.broker;
 
-import com.dajudge.kafkaproxy.brokermap.BrokerMap;
-import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
-
-import java.util.Collection;
+import com.dajudge.kafkaproxy.brokermap.BrokerMapping.Endpoint;
 
 public class BrokerConfig {
-    private final BrokerMap brokerMap;
-    private final Collection<BrokerMapping> brokersToProxy;
+    private final Endpoint bootstrapBroker;
+    private final String proxyHostname;
+    private final int proxyBasePort;
 
-    public BrokerConfig(final BrokerMap brokerMap, final Collection<BrokerMapping> brokersToProxy) {
-        this.brokerMap = brokerMap;
-        this.brokersToProxy = brokersToProxy;
+    public BrokerConfig(final Endpoint bootstrapBroker, final String proxyHostname, final int proxyBasePort) {
+        this.bootstrapBroker = bootstrapBroker;
+        this.proxyHostname = proxyHostname;
+        this.proxyBasePort = proxyBasePort;
     }
 
-    public BrokerMap getBrokerMap() {
-        return brokerMap;
+    public Endpoint getBootstrapBroker() {
+        return bootstrapBroker;
     }
 
-    public Collection<BrokerMapping> getBrokersToProxy() {
-        return brokersToProxy;
+    public String getProxyHostname() {
+        return proxyHostname;
+    }
+
+    public int getProxyBasePort() {
+        return proxyBasePort;
     }
 }
