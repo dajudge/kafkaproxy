@@ -97,7 +97,7 @@ public class KafkaClusterBuilder {
                 .withEnv("KAFKAPROXY_KAFKA_SSL_KEYSTORE_PASSWORD", proxyClient.getKeyStorePassword())
                 .withEnv("KAFKAPROXY_KAFKA_SSL_KEY_PASSWORD", proxyClient.getKeyPassword())
                 .withEnv("KAFKAPROXY_KAFKA_SSL_CLIENT_CERT_STRATEGY", proxyClient.getProxyCertStrategy())
-                .withEnv("KAFKAPROXY_KAFKA_BOOTSTRAP_SERVERS", kafka.getBootstrapServerList().iterator().next())
+                .withEnv("KAFKAPROXY_KAFKA_BOOTSTRAP_SERVER", kafka.getBootstrapServerList().iterator().next())
                 .withEnv("KAFKAPROXY_CLIENT_SSL_ENABLED", valueOf("SSL".equals(proxySecurity.getClientProtocol())))
                 .withEnv("KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_LOCATION", proxySecurity.getTrustStoreLocation())
                 .withEnv("KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_PASSWORD", proxySecurity.getTrustStorePassword())

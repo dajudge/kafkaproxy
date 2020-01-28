@@ -17,7 +17,6 @@
 
 package com.dajudge.kafkaproxy;
 
-import com.dajudge.kafkaproxy.ProxyChannelFactory.BrokerMappingStrategy;
 import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
 import com.dajudge.kafkaproxy.config.Environment;
@@ -26,8 +25,6 @@ import com.dajudge.kafkaproxy.networking.upstream.ProxyChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Set;
 
 import static java.util.stream.Collectors.toList;
 
@@ -56,9 +53,7 @@ public class ProxyApplication {
         final NioEventLoopGroup serverWorkerGroup = new NioEventLoopGroup();
         final NioEventLoopGroup upstreamWorkerGroup = new NioEventLoopGroup();
         final NioEventLoopGroup downstreamWorkerGroup = new NioEventLoopGroup();
-        final BrokerMappingStrategy brokerMappingStrategy = new FixedBootstrapMappingStrategy(
-                appConfig.get(BrokerConfig.class)
-        );
+        final BrokerMapper brokerMappingStrategy = new BrokerMapper(appConfig.get(BrokerConfig.class));
         final ProxyChannelFactory channelFactory = new ProxyChannelFactory(
                 appConfig,
                 brokerMappingStrategy,
@@ -67,8 +62,8 @@ public class ProxyApplication {
                 upstreamWorkerGroup
         );
         final ProxyChannelManager proxyChannelManager = new ProxyChannelManager(channelFactory);
-        final Set<BrokerMapping> bootstrapBrokers = channelFactory.bootstrap(proxyChannelManager);
-        LOG.info("Bootstrap brokers: {}", bootstrapBrokers);
+        final BrokerMapping boostrapMapping = channelFactory.bootstrap(proxyChannelManager);
+        LOG.info("Bootstrap broker mapping: {}", boostrapMapping);
         shutdownRunnable = () -> {
             proxyChannelManager.proxies().stream()
                     .map(ProxyChannel::close)

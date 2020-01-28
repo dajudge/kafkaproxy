@@ -17,23 +17,24 @@
 
 package com.dajudge.kafkaproxy.config.broker;
 
+import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
 import com.dajudge.kafkaproxy.brokermap.BrokerMapping.Endpoint;
 
 import java.util.List;
 
 public class BrokerConfig {
-    private final List<Endpoint> bootstrapBrokers;
+    private final Endpoint bootstrapBroker;
     private final String proxyHostname;
     private final int proxyBasePort;
 
-    public BrokerConfig(final List<Endpoint> bootstrapBrokers, final String proxyHostname, final int proxyBasePort) {
-        this.bootstrapBrokers = bootstrapBrokers;
+    public BrokerConfig(final Endpoint bootstrapBroker, final String proxyHostname, final int proxyBasePort) {
+        this.bootstrapBroker = bootstrapBroker;
         this.proxyHostname = proxyHostname;
         this.proxyBasePort = proxyBasePort;
     }
 
-    public List<Endpoint> getBootstrapBrokers() {
-        return bootstrapBrokers;
+    public Endpoint getBootstrapBroker() {
+        return bootstrapBroker;
     }
 
     public String getProxyHostname() {

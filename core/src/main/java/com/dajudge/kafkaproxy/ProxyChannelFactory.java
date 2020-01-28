@@ -27,35 +27,30 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.Set;
-
-import static java.util.stream.Collectors.toSet;
-
 public class ProxyChannelFactory {
     private static final Logger LOG = LoggerFactory.getLogger(ProxyChannelFactory.class);
     private final ApplicationConfig appConfig;
-    private final BrokerMappingStrategy brokerMappingStrategy;
+    private final BrokerMapper brokerMapper;
     private final NioEventLoopGroup downstreamWorkerGroup;
     private final NioEventLoopGroup serverWorkerGroup;
     private final NioEventLoopGroup upstreamWorkerGroup;
 
     public ProxyChannelFactory(
             final ApplicationConfig appConfig,
-            final BrokerMappingStrategy brokerMappingStrategy,
+            final BrokerMapper brokerMapper,
             final NioEventLoopGroup downstreamWorkerGroup,
             final NioEventLoopGroup serverWorkerGroup,
             final NioEventLoopGroup upstreamWorkerGroup
     ) {
         this.appConfig = appConfig;
-        this.brokerMappingStrategy = brokerMappingStrategy;
+        this.brokerMapper = brokerMapper;
         this.downstreamWorkerGroup = downstreamWorkerGroup;
         this.serverWorkerGroup = serverWorkerGroup;
         this.upstreamWorkerGroup = upstreamWorkerGroup;
     }
 
     public ProxyChannel create(final ProxyChannelManager manager, final Endpoint endpoint) {
-        final BrokerMapping brokerToProxy = brokerMappingStrategy.getBrokerMapping(endpoint);
+        final BrokerMapping brokerToProxy = brokerMapper.getBrokerMapping(endpoint);
         if (brokerToProxy == null) {
             throw new IllegalArgumentException("No proxy configuration provided for " + endpoint);
         }
@@ -84,16 +79,8 @@ public class ProxyChannelFactory {
         return proxyChannel;
     }
 
-    public Set<BrokerMapping> bootstrap(final ProxyChannelManager manager) {
-        return brokerMappingStrategy.getBootstrapBrokers().stream()
-                .map(BrokerMapping::getBroker)
-                .map(manager::getByBrokerEndpoint)
-                .collect(toSet());
+    public BrokerMapping bootstrap(final ProxyChannelManager manager) {
+        return manager.getByBrokerEndpoint(brokerMapper.getBootstrapBroker());
     }
 
-    interface BrokerMappingStrategy {
-        BrokerMapping getBrokerMapping(final Endpoint endpoint);
-
-        Collection<BrokerMapping> getBootstrapBrokers();
-    }
 }

@@ -21,10 +21,7 @@ import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
 import com.dajudge.kafkaproxy.config.ConfigSource;
 import com.dajudge.kafkaproxy.config.Environment;
 
-import java.util.List;
-import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.toList;
+import static java.lang.Integer.parseUnsignedInt;
 
 public class BrokerConfigSource implements ConfigSource<BrokerConfig> {
 
@@ -42,10 +39,9 @@ public class BrokerConfigSource implements ConfigSource<BrokerConfig> {
         );
     }
 
-    private List<BrokerMapping.Endpoint> getBootstrapBrokers(final Environment environment) {
-        return Stream.of(environment.requiredString("KAFKAPROXY_KAFKA_BOOTSTRAP_SERVERS").split(","))
-                .map(it -> it.split(":", 2))
-                .map(it -> new BrokerMapping.Endpoint(it[0], Integer.parseUnsignedInt(it[1])))
-                .collect(toList());
+    private BrokerMapping.Endpoint getBootstrapBrokers(final Environment environment) {
+        final String bootstrapServer = environment.requiredString("KAFKAPROXY_KAFKA_BOOTSTRAP_SERVER");
+        final String[] bootstrapServerParts = bootstrapServer.split(":");
+        return new BrokerMapping.Endpoint(bootstrapServerParts[0], parseUnsignedInt(bootstrapServerParts[1]));
     }
 }

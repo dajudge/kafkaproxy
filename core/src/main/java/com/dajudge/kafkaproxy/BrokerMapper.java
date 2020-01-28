@@ -17,32 +17,25 @@
 
 package com.dajudge.kafkaproxy;
 
-import com.dajudge.kafkaproxy.ProxyChannelFactory.BrokerMappingStrategy;
 import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
 import com.dajudge.kafkaproxy.brokermap.BrokerMapping.Endpoint;
 import com.dajudge.kafkaproxy.config.broker.BrokerConfig;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import static java.util.stream.Collectors.toSet;
-
-public class FixedBootstrapMappingStrategy implements BrokerMappingStrategy {
+public class BrokerMapper {
     private final Map<String, BrokerMapping> allMappings = new HashMap<>();
-    private final Collection<BrokerMapping> bootstrapMappings;
     private final String proxyHostname;
+    private final Endpoint bootstrapBroker;
     private int nextBrokerPort;
 
-    public FixedBootstrapMappingStrategy(final BrokerConfig brokerConfig) {
+    public BrokerMapper(final BrokerConfig brokerConfig) {
         nextBrokerPort = brokerConfig.getProxyBasePort();
         proxyHostname = brokerConfig.getProxyHostname();
-        bootstrapMappings = brokerConfig.getBootstrapBrokers().stream()
-                .map(this::getBrokerMapping)
-                .collect(toSet());
+        bootstrapBroker = brokerConfig.getBootstrapBroker();
     }
 
-    @Override
     public BrokerMapping getBrokerMapping(final Endpoint brokerEndpoint) {
         return allMappings.computeIfAbsent(keyOf(brokerEndpoint), key -> new BrokerMapping(
                 brokerEndpoint,
@@ -50,9 +43,8 @@ public class FixedBootstrapMappingStrategy implements BrokerMappingStrategy {
         ));
     }
 
-    @Override
-    public Collection<BrokerMapping> getBootstrapBrokers() {
-        return bootstrapMappings;
+    public Endpoint getBootstrapBroker() {
+        return bootstrapBroker;
     }
 
     private String keyOf(final Endpoint host) {
