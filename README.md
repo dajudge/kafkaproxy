@@ -9,6 +9,7 @@ can be a cumbersome restriction in several different situations, such as:
 * Network topologies preventing direct access to the broker nodes
 * Multiple networks from which broker nodes should be reachable
 * DNS resolution restrictions when accessing TLS secured broker nodes
+* Using the sidecar pattern for TLS termination in Kubernetes 
 
 This is where kafkaproxy comes into play and allows for transparent relaying of the Kafka wire protocol by rewriting
 the relevant parts of the communication where the brokers publish the endpoint names - with user-configurable endpoints
@@ -21,6 +22,7 @@ The following configuration parameters are mandatory:
 * `KAFKAPROXY_HOSTNAME`: the hostname at which the proxy can be reached from the clients.
 * `KAFKAPROXY_BASE_PORT`: the first port to be used by kafkaproxy.
 * `KAFKAPROXY_BOOTSTRAP_SERVER`: the bootstrap server via which the kafka cluster can be contacted. This is usually a load balancer in front of the kafka cluster.
+
 For example:
 ```
 docker run \
@@ -30,7 +32,7 @@ docker run \
     -e KAFKAPROXY_BOOTSTRAP_SERVER=kafka:9092 \
     -d dajudge/kafkaproxy:0.0.2
 ``` 
-*Note:* You will also have to make the proxy ports defined in your broker map available from outside the container with `-p PORT:PORT`.
+*Note:* You will have to make the proxy ports defined in your broker map available from outside the container with `-p PORT:PORT` if you're not using `--net host`.
 
 ## Demonstration setup with `docker-compose`
 If you have `docker-compose` installed you can try out kafkaproxy by using the demonstration setup provided in the
@@ -63,13 +65,23 @@ docker-compose -f example/docker-compose.yml rm -sf
 ```
 
 **Explanation:** The `docker-compose.yml` file starts up a kafka broker (along with it's required zookeeper) that is
-only available from within the docker network as `kafka1:9092`. The kafkaproxy is configured via `brokermap.yml` to
-proxy this kafka instance as `localhost:19092` which is also mapped from outside the docker network.
+only available from within the docker network as `kafka1:9092`. The kafkaproxy is configured to
+proxy this kafka instance as `localhost:4000` which is also mapped from outside the docker network.
 
 # Configuration
 kafkaproxy is configured using mostly environment variables and a broker map file in YAML format. The following
 section describe the configuration options in detail.
 
+## General configuration
+kafkaproxy requires some general information to start. 
+
+| Name                          | Default value | Destription
+| ----------------------------- | ------------- | -----------
+| `KAFKAPROXY_HOSTNAME`         |               | The hostname of the proxy as seen by the clients.
+| `KAFKAPROXY_BASE_PORT`        |               | The base of the ports to be used by the proxy. Each new required port is created by incrementing on top of the base port.
+| `KAFKAPROXY_BOOTSTRAP_SERVER` |               | The bootstrap endpoint of the kafka cluster. This is usually a load balancer in front of the kafka brokers.
+| `KAFKAPROXY_LOG_LEVEL`        | `INFO`        | The log level of the root logger. This must be a valid log level for [logback](http://logback.qos.ch/manual/configuration.html).
+ 
 ## Client SSL configuration
 The client SSL configuration determines how the Kafka clients have to connect to the kafkaproxy instances.
 Configuration can be provided using the following environment variables:
@@ -99,19 +111,6 @@ Configuration can be provided using the following environment variables:
 | `KAFKAPROXY_KAFKA_SSL_KEYSTORE_PASSWORD`    |               | The password to access the proxy's client key store. Provide no value if the key store is not password protected.
 | `KAFKAPROXY_KAFKA_SSL_KEY_PASSWORD`         |               | The password to access the proxy's client key. Provide no value if the key is not password protected.
 
-## General configuration
-kafkaproxy needs a mapping configuration in order to know how to replace the brokers' endpoints with the endpoints
-where the kafkaproxy instance(s) are reachable. The broker map is provided as a YAML configuration file.
-
-The location of the broker map & proxy configuration is configured using the following environment variable:
-
-| Name                          | Default value | Destription
-| ----------------------------- | ------------- | -----------
-| `KAFKAPROXY_HOSTNAME`         |               | The hostname of the proxy as seen by the clients.
-| `KAFKAPROXY_BASE_PORT`        |               | The base of the ports to be used by the proxy. Each new required port is created by incrementing on top of the base port.
-| `KAFKAPROXY_BOOTSTRAP_SERVER` |               | The bootstrap endpoint of the kafka cluster. This is usually a load balancer in front of the kafka brokers.
-| `KAFKAPROXY_LOG_LEVEL`        | `INFO`        | The log level of the root logger. This must be a valid log level for [logback](http://logback.qos.ch/manual/configuration.html).
- 
 # Features
 * SSL support from client to proxy
 * SSL support from proxy to broker

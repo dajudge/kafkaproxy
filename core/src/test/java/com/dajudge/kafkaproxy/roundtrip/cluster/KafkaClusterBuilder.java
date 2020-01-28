@@ -30,10 +30,8 @@ import com.dajudge.kafkaproxy.roundtrip.util.TestEnvironment;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
