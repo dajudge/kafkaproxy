@@ -20,7 +20,6 @@ package com.dajudge.kafkaproxy.ca;
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
 
 import javax.net.ssl.SSLPeerUnverifiedException;
-import java.security.KeyStore;
 
 public interface ProxyClientCertificateAuthorityFactory {
     String getName();

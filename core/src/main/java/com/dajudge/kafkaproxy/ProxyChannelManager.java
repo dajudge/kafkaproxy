@@ -23,7 +23,6 @@ import com.dajudge.kafkaproxy.networking.upstream.ProxyChannel;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 public class ProxyChannelManager {
     private final Map<String, ProxyChannel> channels = new HashMap<>();

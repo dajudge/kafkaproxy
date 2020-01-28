@@ -104,8 +104,8 @@ public class RoundtripTest {
     }
 
     @SuppressFBWarnings(
-            value="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
-            justification="False positive" // see https://sourceforge.net/p/findbugs/bugs/1169/
+            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+            justification = "False positive" // see https://sourceforge.net/p/findbugs/bugs/1169/
     )
     private void runRoundtripTest(
             final ClientFactory producerClientFactory,

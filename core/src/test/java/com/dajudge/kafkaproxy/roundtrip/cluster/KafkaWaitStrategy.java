@@ -42,8 +42,8 @@ public class KafkaWaitStrategy extends AbstractWaitStrategy {
 
     @Override
     @SuppressFBWarnings(
-            value="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
-            justification="False positive" // see https://sourceforge.net/p/findbugs/bugs/1169/
+            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+            justification = "False positive" // see https://sourceforge.net/p/findbugs/bugs/1169/
     )
     protected void waitUntilReady() {
         final String bootstrapServers = "localhost:" + waitStrategyTarget.getMappedPort(internalClientPort);

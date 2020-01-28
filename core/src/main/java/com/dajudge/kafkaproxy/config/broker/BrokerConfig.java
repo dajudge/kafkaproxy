@@ -17,10 +17,7 @@
 
 package com.dajudge.kafkaproxy.config.broker;
 
-import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
 import com.dajudge.kafkaproxy.brokermap.BrokerMapping.Endpoint;
-
-import java.util.List;
 
 public class BrokerConfig {
     private final Endpoint bootstrapBroker;
