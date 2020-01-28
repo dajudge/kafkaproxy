@@ -31,6 +31,6 @@ services:
       - kafka1
     restart: always
     environment:
-      KAFKAPROXY_CLIENT_HOSTNAME: localhost
-      KAFKAPROXY_CLIENT_BASE_PORT: 4000
+      KAFKAPROXY_HOSTNAME: localhost
+      KAFKAPROXY_BASE_PORT: 4000
       KAFKAPROXY_BOOTSTRAP_SERVER: kafka1:9092

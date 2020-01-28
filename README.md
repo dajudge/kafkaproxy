@@ -18,15 +18,15 @@ where the the proxy instances can be reached.
 kafkaproxy is built to be run in a container. The released versions are available at [Docker Hub](https://hub.docker.com/r/dajudge/kafkaproxy).
 ## Command line
 The following configuration parameters are mandatory:
-* `KAFKAPROXY_CLIENT_HOSTNAME`: the hostname at which the proxy can be reached from the clients.
-* `KAFKAPROXY_CLIENT_BASE_PORT`: the first port to be used by kafkaproxy.
+* `KAFKAPROXY_HOSTNAME`: the hostname at which the proxy can be reached from the clients.
+* `KAFKAPROXY_BASE_PORT`: the first port to be used by kafkaproxy.
 * `KAFKAPROXY_BOOTSTRAP_SERVER`: the bootstrap server via which the kafka cluster can be contacted. This is usually a load balancer in front of the kafka cluster.
 For example:
 ```
 docker run \
     --net host \
-    -e KAFKAPROXY_CLIENT_HOSTNAME=localhost \
-    -e KAFKAPROXY_CLIENT_BASE_PORT=4000 \
+    -e KAFKAPROXY_HOSTNAME=localhost \
+    -e KAFKAPROXY_BASE_PORT=4000 \
     -e KAFKAPROXY_BOOTSTRAP_SERVER=kafka:9092 \
     -d dajudge/kafkaproxy:0.0.2
 ``` 
@@ -107,8 +107,8 @@ The location of the broker map & proxy configuration is configured using the fol
 
 | Name                          | Default value | Destription
 | ----------------------------- | ------------- | -----------
-| `KAFKAPROXY_CLIENT_HOSTNAME`  |               | The hostname of the proxy as seen by the clients.
-| `KAFKAPROXY_CLIENT_BASE_PORT` |               | The base of the ports to be used by the proxy. Each new required port is created by incrementing on top of the base port.
+| `KAFKAPROXY_HOSTNAME`         |               | The hostname of the proxy as seen by the clients.
+| `KAFKAPROXY_BASE_PORT`        |               | The base of the ports to be used by the proxy. Each new required port is created by incrementing on top of the base port.
 | `KAFKAPROXY_BOOTSTRAP_SERVER` |               | The bootstrap endpoint of the kafka cluster. This is usually a load balancer in front of the kafka brokers.
 | `KAFKAPROXY_LOG_LEVEL`        | `INFO`        | The log level of the root logger. This must be a valid log level for [logback](http://logback.qos.ch/manual/configuration.html).
  

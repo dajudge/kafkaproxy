@@ -34,8 +34,8 @@ public class BrokerConfigSource implements ConfigSource<BrokerConfig> {
     public BrokerConfig parse(final Environment environment) {
         return new BrokerConfig(
                 getBootstrapBrokers(environment),
-                environment.requiredString("KAFKAPROXY_CLIENT_HOSTNAME"),
-                environment.requiredInt("KAFKAPROXY_CLIENT_BASE_PORT")
+                environment.requiredString("KAFKAPROXY_HOSTNAME"),
+                environment.requiredInt("KAFKAPROXY_BASE_PORT")
         );
     }
 

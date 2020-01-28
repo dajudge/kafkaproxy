@@ -90,7 +90,9 @@ public class KafkaClusterBuilder {
         final ServerSecurity proxySecurity = proxyComm.getServerSecurity("CN=localhost");
         final ClientSslConfig proxyClient = brokerSecurity.newClient("CN=proxy");
         final TestEnvironment env = new TestEnvironment()
-                .withEnv("KAKFAPROXY_BOOTSTRAP_SERVER", kafka.getBootstrapServerList().iterator().next())
+                .withEnv("KAFKAPROXY_BOOTSTRAP_SERVER", kafka.getBootstrapServerList().iterator().next())
+                .withEnv("KAFKAPROXY_BASE_PORT", valueOf(bootstrapPort))
+                .withEnv("KAFKAPROXY_HOSTNAME", "localhost")
                 .withEnv("KAFKAPROXY_KAFKA_SSL_ENABLED", valueOf("SSL".equals(brokerSecurity.getProtocol())))
                 .withEnv("KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_LOCATION", brokerSecurity.getTrustStoreLocation())
                 .withEnv("KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_PASSWORD", brokerSecurity.getTrustStorePassword())
@@ -104,8 +106,6 @@ public class KafkaClusterBuilder {
                 .withEnv("KAFKAPROXY_CLIENT_SSL_KEYSTORE_LOCATION", proxySecurity.getKeyStoreLocation())
                 .withEnv("KAFKAPROXY_CLIENT_SSL_KEYSTORE_PASSWORD", proxySecurity.getKeyStorePassword())
                 .withEnv("KAFKAPROXY_CLIENT_SSL_KEY_PASSWORD", proxySecurity.getKeyPassword())
-                .withEnv("KAFKAPROXY_CLIENT_BASE_PORT", valueOf(bootstrapPort))
-                .withEnv("KAFKAPROXY_CLIENT_HOSTNAME", "localhost")
                 .withFile(brokerSecurity.getTrustStoreLocation())
                 .withFile(proxyClient.getKeyStoreLocation())
                 .withFile(proxySecurity.getTrustStoreLocation(), proxySecurity.getTrustStore())
