@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Alex Stockinger
+ * Copyright 2019-2020 Alex Stockinger
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,13 @@
 package com.dajudge.kafkaproxy.networking.downstream;
 
 import com.dajudge.kafkaproxy.ProxyChannelManager;
-import com.dajudge.kafkaproxy.brokermap.BrokerMap;
+import com.dajudge.kafkaproxy.ca.KeyStoreWrapper;
+import com.dajudge.kafkaproxy.ca.ProxyClientCertificateAuthorityFactory.CertificateAuthority;
+import com.dajudge.kafkaproxy.ca.UpstreamCertificateSupplier;
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
+import com.dajudge.kafkaproxy.config.FileResource;
 import com.dajudge.kafkaproxy.networking.upstream.ForwardChannel;
 import com.dajudge.kafkaproxy.networking.upstream.ForwardChannelFactory;
-import com.dajudge.kafkaproxy.ca.UpstreamCertificateSupplier;
 import com.dajudge.kafkaproxy.protocol.KafkaMessageSplitter;
 import com.dajudge.kafkaproxy.protocol.KafkaRequestProcessor;
 import com.dajudge.kafkaproxy.protocol.KafkaRequestStore;
@@ -35,8 +37,17 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.EventLoopGroup;
 
+import javax.net.ssl.SSLPeerUnverifiedException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
+import static com.dajudge.kafkaproxy.ca.ProxyClientCertificateAuthorityFactoryRegistry.createCertificateFactory;
 import static java.util.Arrays.asList;
 
 public class DownstreamChannelFactory implements ForwardChannelFactory {
@@ -75,6 +86,7 @@ public class DownstreamChannelFactory implements ForwardChannelFactory {
         final KafkaMessageSplitter responseStreamSplitter = new KafkaMessageSplitter(
                 responseProcessor::onResponse
         );
+        final Supplier<KeyStoreWrapper> clientKeystoreSupplier = createClientKeyStoreSupplier(certificateSupplier);
         final DownstreamClient downstreamClient = new DownstreamClient(
                 kafkaHost,
                 kafkaPort,
@@ -82,7 +94,7 @@ public class DownstreamChannelFactory implements ForwardChannelFactory {
                 responseStreamSplitter::onBytesReceived,
                 downstreamClosedCallback,
                 downstreamWorkerGroup,
-                certificateSupplier
+                clientKeystoreSupplier
         );
         final KafkaRequestProcessor requestProcessor = new KafkaRequestProcessor(
                 downstreamClient::send,
@@ -98,6 +110,63 @@ public class DownstreamChannelFactory implements ForwardChannelFactory {
             @Override
             public void accept(final ByteBuf byteBuf) {
                 splitter.onBytesReceived(byteBuf);
+            }
+        };
+    }
+
+    private Supplier<KeyStoreWrapper> createClientKeyStoreSupplier(
+            final UpstreamCertificateSupplier certificateSupplier
+    ) {
+        final KafkaSslConfig sslConfig = appConfig.get(KafkaSslConfig.class);
+        switch (sslConfig.getClientCertificateStrategy()) {
+            case KEYSTORE:
+                return createKeyStoreSupplier(sslConfig);
+            case CA:
+                return createCaKeyStoreSupplier(sslConfig, certificateSupplier);
+            case NONE:
+                return emptyKeyStoreSupplier();
+            default:
+                throw new IllegalArgumentException("Unhandled client certificate strategy: "
+                        + sslConfig.getClientCertificateStrategy());
+        }
+    }
+
+    private Supplier<KeyStoreWrapper> emptyKeyStoreSupplier() {
+        return () -> {
+            try {
+                final KeyStore keyStore = KeyStore.getInstance("jks");
+                keyStore.load(null, null);
+                return new KeyStoreWrapper(keyStore, "noPassword");
+            } catch (final KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
+                throw new RuntimeException("Failed to create empty key store", e);
+            }
+        };
+    }
+
+    private Supplier<KeyStoreWrapper> createKeyStoreSupplier(final KafkaSslConfig sslConfig) {
+        final FileResource fileResource = sslConfig.getKeyStore();
+        try (final InputStream is = fileResource.open()) {
+            final KeyStore keyStore = KeyStore.getInstance("jks");
+            keyStore.load(is, sslConfig.getKeyStorePassword().toCharArray());
+            final KeyStoreWrapper wrapper = new KeyStoreWrapper(keyStore, sslConfig.getKeyPassword());
+            return () -> wrapper;
+        } catch (final IOException | KeyStoreException | NoSuchAlgorithmException | CertificateException e) {
+            throw new RuntimeException("Failed to load client key store", e);
+        }
+    }
+
+    private Supplier<KeyStoreWrapper> createCaKeyStoreSupplier(
+            final KafkaSslConfig sslConfig,
+            final UpstreamCertificateSupplier certificateSupplier) {
+        final CertificateAuthority clientAuthority = createCertificateFactory(
+                sslConfig.getCertificateFactory(),
+                appConfig
+        );
+        return () -> {
+            try {
+                return clientAuthority.createClientCertificate(certificateSupplier);
+            } catch (final SSLPeerUnverifiedException e) {
+                throw new RuntimeException("Client did not provide certificate", e);
             }
         };
     }

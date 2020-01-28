@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Alex Stockinger
+ * Copyright 2019-2020 Alex Stockinger
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,11 +26,11 @@ public interface Environment {
 
     Optional<String> optionalString(final String variable);
 
-    FileResource requiredFile(final String variable);
-
-    FileResource requiredFile(final String variable, final String defaultValue);
-
     Optional<FileResource> optionalFile(String variable);
 
     boolean requiredBoolean(String variable, boolean defaultValue);
+
+    int requiredInt(String proxy_base_port);
+
+    FileResource requiredFile(String filename);
 }

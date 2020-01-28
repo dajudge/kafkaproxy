@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Alex Stockinger
+ * Copyright 2019-2020 Alex Stockinger
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,13 +33,12 @@ public class ProxyClientCertificateAuthorityFactoryRegistry {
 
     public static CertificateAuthority createCertificateFactory(
             final String name,
-            final ApplicationConfig config,
-            final String keyPassword
+            final ApplicationConfig config
     ) {
         final ProxyClientCertificateAuthorityFactory factory = FACTORIES.get(name);
         return ofNullable(factory)
                 .orElseThrow(() -> new IllegalArgumentException("No such proxy client-certificate factory: " + name))
-                .createFactory(config, keyPassword);
+                .createFactory(config);
     }
 
     private static Map<String, ProxyClientCertificateAuthorityFactory> collectFactories() {

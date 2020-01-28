@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Alex Stockinger
+ * Copyright 2019-2020 Alex Stockinger
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,9 @@ import com.dajudge.kafkaproxy.networking.upstream.ProxyChannel;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class ProxyChannelManager {
-
     private final Map<String, ProxyChannel> channels = new HashMap<>();
     private final ProxyChannelFactory channelFactory;
 
@@ -39,18 +39,16 @@ public class ProxyChannelManager {
         return channels.values();
     }
 
-    public synchronized BrokerMapping getByBrokerEndpoint(final String brokerHost, final int brokerPort) {
-        final String key = brokerHost + ":" + brokerPort;
-        final ProxyChannel channel = channels.computeIfAbsent(key, k ->
-                channelFactory.create(this, brokerHost, brokerPort)
+    public synchronized BrokerMapping getByBrokerEndpoint(final BrokerMapping.Endpoint brokerEndpoint) {
+        final ProxyChannel channel = channels.computeIfAbsent(keyOf(brokerEndpoint), k ->
+                channelFactory.create(this, brokerEndpoint)
         );
         channel.start();
-        return new BrokerMapping(brokerHost, brokerPort, channel.getHost(), channel.getPort());
+        return new BrokerMapping(brokerEndpoint, new BrokerMapping.Endpoint(channel.getHost(), channel.getPort()));
     }
 
-    public interface ProxyChannelFactory {
-        ProxyChannel create(ProxyChannelManager manager, String brokerHostname, int brokerPort);
-
-        void bootstrap(ProxyChannelManager proxyChannelManager);
+    private String keyOf(final BrokerMapping.Endpoint brokerEndpoint) {
+        return brokerEndpoint.getHost() + ":" + brokerEndpoint.getPort();
     }
+
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Alex Stockinger
+ * Copyright 2019-2020 Alex Stockinger
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,13 +26,21 @@ public class KafkaSslConfig {
     private final String trustStorePassword;
     private final boolean hostnameVerificationEnabled;
     private final String certificateFactory;
+    private final ClientCertificateStrategy clientCertificateStrategy;
+    private final FileResource keyStore;
+    private final String keyStorePassword;
+    private final String keyPassword;
 
     public static final KafkaSslConfig DISABLED = new KafkaSslConfig(
             false,
             null,
             null,
             false,
-            NullProxyClientCertificateAuthorityFactory.NAME
+            NullProxyClientCertificateAuthorityFactory.NAME,
+            ClientCertificateStrategy.NONE,
+            null,
+            null,
+            null
     );
 
     public KafkaSslConfig(
@@ -40,13 +48,21 @@ public class KafkaSslConfig {
             final FileResource trustStore,
             final String trustStorePassword,
             final boolean hostnameVerificationEnabled,
-            final String certificateFactory
+            final String certificateFactory,
+            final ClientCertificateStrategy clientCertificateStrategy,
+            final FileResource keyStore,
+            final String keyStorePassword,
+            final String keyPassword
     ) {
         this.enabled = enabled;
         this.trustStore = trustStore;
         this.trustStorePassword = trustStorePassword;
         this.hostnameVerificationEnabled = hostnameVerificationEnabled;
         this.certificateFactory = certificateFactory;
+        this.clientCertificateStrategy = clientCertificateStrategy;
+        this.keyStore = keyStore;
+        this.keyStorePassword = keyStorePassword;
+        this.keyPassword = keyPassword;
     }
 
     public FileResource getTrustStore() {
@@ -67,5 +83,21 @@ public class KafkaSslConfig {
 
     public String getCertificateFactory() {
         return certificateFactory;
+    }
+
+    public ClientCertificateStrategy getClientCertificateStrategy() {
+        return clientCertificateStrategy;
+    }
+
+    public FileResource getKeyStore() {
+        return keyStore;
+    }
+
+    public String getKeyStorePassword() {
+        return keyStorePassword;
+    }
+
+    public String getKeyPassword() {
+        return keyPassword;
     }
 }

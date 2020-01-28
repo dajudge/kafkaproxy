@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Alex Stockinger
+ * Copyright 2019-2020 Alex Stockinger
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,16 +42,6 @@ public class RealEnvironment implements Environment {
     }
 
     @Override
-    public FileResource requiredFile(final String variable) {
-        return file(requiredString(variable, variable));
-    }
-
-    @Override
-    public FileResource requiredFile(final String variable, final String defaultValue) {
-        return file(requiredString(variable, defaultValue));
-    }
-
-    @Override
     public Optional<FileResource> optionalFile(final String variable) {
         return optionalString(variable).map(this::file);
     }
@@ -59,6 +49,16 @@ public class RealEnvironment implements Environment {
     @Override
     public boolean requiredBoolean(final String variable, final boolean defaultValue) {
         return optionalString(variable).map(Boolean::parseBoolean).orElse(defaultValue);
+    }
+
+    @Override
+    public int requiredInt(final String variable) {
+        return Integer.parseInt(requiredString(variable));
+    }
+
+    @Override
+    public FileResource requiredFile(final String filename) {
+        return file(filename);
     }
 
     private FileResource file(final String filename) {

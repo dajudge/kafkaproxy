@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Alex Stockinger
+ * Copyright 2019-2020 Alex Stockinger
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 
 package com.dajudge.kafkaproxy.ca.selfsign;
 
+import com.dajudge.kafkaproxy.ca.KeyStoreWrapper;
 import com.dajudge.kafkaproxy.ca.ProxyClientCertificateAuthorityFactory;
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
 import com.dajudge.kafkaproxy.config.FileResource;
@@ -29,6 +30,7 @@ import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.UUID;
 
 public class CertificateAuthorityFactory implements ProxyClientCertificateAuthorityFactory {
     private static final Logger LOG = LoggerFactory.getLogger(CertificateAuthorityFactory.class);
@@ -68,8 +70,7 @@ public class CertificateAuthorityFactory implements ProxyClientCertificateAuthor
 
     @Override
     public CertificateAuthority createFactory(
-            final ApplicationConfig appConfig,
-            final String keyPassword
+            final ApplicationConfig appConfig
     ) {
         try {
             final SelfSignConfig config = appConfig.get(SelfSignConfig.class);
@@ -82,7 +83,11 @@ public class CertificateAuthorityFactory implements ProxyClientCertificateAuthor
                 keyStore.load(data, config.getKeyStorePassword());
             }
             final PrivateKey caKeyPair = loadKey(keyStore, alias, config.getKeyPassword());
-            return client -> createProxyCertificate(issuerDn, client.get(), algorithm, caKeyPair, keyPassword);
+            return client -> {
+                final String keyPassword = UUID.randomUUID().toString();
+                final KeyStore clientKeyStore = createProxyCertificate(issuerDn, client.get(), algorithm, caKeyPair, keyPassword);
+                return new KeyStoreWrapper(keyStore, keyPassword);
+            };
         } catch (final KeyStoreException | IOException | CertificateException | NoSuchAlgorithmException e) {
             throw new IllegalArgumentException("Failed to initialize self-signing proxy client-certificate factory", e);
         }

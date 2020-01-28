@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Alex Stockinger
+ * Copyright 2019-2020 Alex Stockinger
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,7 @@
 
 package com.dajudge.kafkaproxy.networking.downstream;
 
-import com.dajudge.kafkaproxy.ca.ProxyClientCertificateAuthorityFactory.CertificateAuthority;
-import com.dajudge.kafkaproxy.ca.UpstreamCertificateSupplier;
+import com.dajudge.kafkaproxy.ca.KeyStoreWrapper;
 import com.dajudge.kafkaproxy.common.ssl.DefaultTrustManagerFactory;
 import com.dajudge.kafkaproxy.common.ssl.NullChannelHandler;
 import com.dajudge.kafkaproxy.networking.trustmanager.HostCheckingTrustManager;
@@ -26,26 +25,31 @@ import com.dajudge.kafkaproxy.networking.trustmanager.HostnameCheck;
 import com.dajudge.kafkaproxy.networking.trustmanager.HttpClientHostnameCheck;
 import io.netty.channel.ChannelHandler;
 import io.netty.handler.ssl.SslHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.*;
-import java.security.*;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 
 public class ClientSslHandlerFactory {
+    private static final Logger LOG = LoggerFactory.getLogger(ClientSslHandlerFactory.class);
 
     public static ChannelHandler createHandler(
             final KafkaSslConfig config,
             final String kafkaHostname,
             final int port,
-            final UpstreamCertificateSupplier certSupplier,
-            final CertificateAuthority clientCertFactory,
-            final String keyPassword
+            final Supplier<KeyStoreWrapper> clientKeyStoreSupplier
     ) {
         return config.isEnabled()
-                ? createHandlerInternal(config, kafkaHostname, port, certSupplier, clientCertFactory, keyPassword)
+                ? createHandlerInternal(config, kafkaHostname, port, clientKeyStoreSupplier)
                 : new NullChannelHandler();
     }
 
@@ -53,13 +57,12 @@ public class ClientSslHandlerFactory {
             final KafkaSslConfig config,
             final String kafkaHostname,
             final int port,
-            final UpstreamCertificateSupplier certificateSupplier,
-            final CertificateAuthority clientCertFactory,
-            final String keyPassword
+            final Supplier<KeyStoreWrapper> clientKeyStoreSupplier
     ) {
         try {
+            LOG.info("Creating client SSL handler for {}:{}", kafkaHostname, port);
             final SSLContext clientContext = SSLContext.getInstance("TLS");
-            final KeyStore keyStore = clientCertFactory.createClientCertificate(certificateSupplier);
+            final KeyStoreWrapper keyStore = clientKeyStoreSupplier.get();
             final HostnameCheck hostnameCheck = config.isHostnameVerificationEnabled()
                     ? new HttpClientHostnameCheck(kafkaHostname)
                     : HostnameCheck.NULL_VERIFIER;
@@ -69,7 +72,9 @@ public class ClientSslHandlerFactory {
             final KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(
                     KeyManagerFactory.getDefaultAlgorithm()
             );
-            keyManagerFactory.init(keyStore, keyPassword.toCharArray());
+            if (keyStore != null) {
+                keyManagerFactory.init(keyStore.getKeyStore(), keyStore.getKeyPassword().toCharArray());
+            }
             final KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
             clientContext.init(keyManagers, trustManagers, null);
             final SSLEngine engine = clientContext.createSSLEngine(kafkaHostname, port);
@@ -77,7 +82,6 @@ public class ClientSslHandlerFactory {
             return new SslHandler(engine);
         } catch (final NoSuchAlgorithmException
                 | KeyManagementException
-                | SSLPeerUnverifiedException
                 | KeyStoreException
                 | UnrecoverableKeyException e
         ) {

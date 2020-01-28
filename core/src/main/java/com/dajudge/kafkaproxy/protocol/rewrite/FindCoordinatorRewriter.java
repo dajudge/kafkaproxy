@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Alex Stockinger
+ * Copyright 2019-2020 Alex Stockinger
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package com.dajudge.kafkaproxy.protocol.rewrite;
 
 import com.dajudge.kafkaproxy.ProxyChannelManager;
 import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
+import com.dajudge.kafkaproxy.brokermap.BrokerMapping.Endpoint;
 import org.apache.kafka.common.message.FindCoordinatorResponseData;
 import org.apache.kafka.common.protocol.ApiKeys;
 import org.apache.kafka.common.requests.FindCoordinatorResponse;
@@ -50,7 +51,7 @@ public class FindCoordinatorRewriter extends BaseReflectingRewriter<FindCoordina
         if (data.host() == null || data.host().isEmpty()) {
             return;
         }
-        final BrokerMapping mapping = proxyChannelManager.getByBrokerEndpoint(data.host(), data.port());
+        final BrokerMapping mapping = proxyChannelManager.getByBrokerEndpoint(new Endpoint(data.host(), data.port()));
         LOG.debug(
                 "Rewriting {}: {}:{} -> {}:{}",
                 ApiKeys.FIND_COORDINATOR,

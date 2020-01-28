@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Alex Stockinger
+ * Copyright 2019-2020 Alex Stockinger
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,17 @@
 
 package com.dajudge.kafkaproxy;
 
+import com.dajudge.kafkaproxy.ProxyChannelFactory.BrokerMappingStrategy;
+import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
 import com.dajudge.kafkaproxy.config.Environment;
+import com.dajudge.kafkaproxy.config.broker.BrokerConfig;
 import com.dajudge.kafkaproxy.networking.upstream.ProxyChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Set;
 
 import static java.util.stream.Collectors.toList;
 
@@ -51,14 +56,19 @@ public class ProxyApplication {
         final NioEventLoopGroup serverWorkerGroup = new NioEventLoopGroup();
         final NioEventLoopGroup upstreamWorkerGroup = new NioEventLoopGroup();
         final NioEventLoopGroup downstreamWorkerGroup = new NioEventLoopGroup();
-        final ProxyChannelManager.ProxyChannelFactory channelFactory = new StaticProxyChannelFactory(
+        final BrokerMappingStrategy brokerMappingStrategy = new FixedBootstrapMappingStrategy(
+                appConfig.get(BrokerConfig.class)
+        );
+        final ProxyChannelFactory channelFactory = new ProxyChannelFactory(
                 appConfig,
+                brokerMappingStrategy,
                 downstreamWorkerGroup,
                 serverWorkerGroup,
                 upstreamWorkerGroup
         );
         final ProxyChannelManager proxyChannelManager = new ProxyChannelManager(channelFactory);
-        channelFactory.bootstrap(proxyChannelManager);
+        final Set<BrokerMapping> bootstrapBrokers = channelFactory.bootstrap(proxyChannelManager);
+        LOG.info("Bootstrap brokers: {}", bootstrapBrokers);
         shutdownRunnable = () -> {
             proxyChannelManager.proxies().stream()
                     .map(ProxyChannel::close)
@@ -76,5 +86,4 @@ public class ProxyApplication {
         };
         return this;
     }
-
 }

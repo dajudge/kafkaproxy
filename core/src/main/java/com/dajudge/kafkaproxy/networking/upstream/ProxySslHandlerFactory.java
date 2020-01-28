@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Alex Stockinger
+ * Copyright 2019-2020 Alex Stockinger
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ package com.dajudge.kafkaproxy.networking.upstream;
 import com.dajudge.kafkaproxy.common.ssl.NullChannelHandler;
 import io.netty.channel.ChannelHandler;
 import io.netty.handler.ssl.SslHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
@@ -32,11 +34,14 @@ import static com.dajudge.kafkaproxy.common.ssl.DefaultKeyManagerFactory.createK
 import static com.dajudge.kafkaproxy.common.ssl.DefaultTrustManagerFactory.createTrustManagers;
 
 public class ProxySslHandlerFactory {
+    private static final Logger LOG = LoggerFactory.getLogger(ProxySslHandlerFactory.class);
+
     public static ChannelHandler createHandler(final ProxySslConfig config) {
         return config.isEnabled() ? createHandlerInternal(config) : new NullChannelHandler();
     }
 
     private static ChannelHandler createHandlerInternal(final ProxySslConfig config) {
+        LOG.info("Creating proxy channel SSL handler");
         try {
             final SSLContext clientContext = SSLContext.getInstance("TLS");
             final TrustManager[] trustManagers = createTrustManagers(

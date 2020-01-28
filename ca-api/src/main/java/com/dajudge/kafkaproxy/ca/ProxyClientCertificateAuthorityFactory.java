@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Alex Stockinger
+ * Copyright 2019-2020 Alex Stockinger
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,10 +25,10 @@ import java.security.KeyStore;
 public interface ProxyClientCertificateAuthorityFactory {
     String getName();
 
-    CertificateAuthority createFactory(ApplicationConfig config, final String keyPassword);
+    CertificateAuthority createFactory(ApplicationConfig config);
 
     interface CertificateAuthority {
-        KeyStore createClientCertificate(UpstreamCertificateSupplier certificateSupplier)
+        KeyStoreWrapper createClientCertificate(UpstreamCertificateSupplier certificateSupplier)
                 throws SSLPeerUnverifiedException;
     }
 }
