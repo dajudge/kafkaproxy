@@ -40,7 +40,7 @@ public class BrokerConfigSource implements ConfigSource<BrokerConfig> {
     }
 
     private BrokerMapping.Endpoint getBootstrapBrokers(final Environment environment) {
-        final String bootstrapServer = environment.requiredString("KAFKAPROXY_KAFKA_BOOTSTRAP_SERVER");
+        final String bootstrapServer = environment.requiredString("KAFKAPROXY_BOOTSTRAP_SERVER");
         final String[] bootstrapServerParts = bootstrapServer.split(":");
         return new BrokerMapping.Endpoint(bootstrapServerParts[0], parseUnsignedInt(bootstrapServerParts[1]));
     }

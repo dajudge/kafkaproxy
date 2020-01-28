@@ -90,6 +90,7 @@ public class KafkaClusterBuilder {
         final ServerSecurity proxySecurity = proxyComm.getServerSecurity("CN=localhost");
         final ClientSslConfig proxyClient = brokerSecurity.newClient("CN=proxy");
         final TestEnvironment env = new TestEnvironment()
+                .withEnv("KAKFAPROXY_BOOTSTRAP_SERVER", kafka.getBootstrapServerList().iterator().next())
                 .withEnv("KAFKAPROXY_KAFKA_SSL_ENABLED", valueOf("SSL".equals(brokerSecurity.getProtocol())))
                 .withEnv("KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_LOCATION", brokerSecurity.getTrustStoreLocation())
                 .withEnv("KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_PASSWORD", brokerSecurity.getTrustStorePassword())
@@ -97,7 +98,6 @@ public class KafkaClusterBuilder {
                 .withEnv("KAFKAPROXY_KAFKA_SSL_KEYSTORE_PASSWORD", proxyClient.getKeyStorePassword())
                 .withEnv("KAFKAPROXY_KAFKA_SSL_KEY_PASSWORD", proxyClient.getKeyPassword())
                 .withEnv("KAFKAPROXY_KAFKA_SSL_CLIENT_CERT_STRATEGY", proxyClient.getProxyCertStrategy())
-                .withEnv("KAFKAPROXY_KAFKA_BOOTSTRAP_SERVER", kafka.getBootstrapServerList().iterator().next())
                 .withEnv("KAFKAPROXY_CLIENT_SSL_ENABLED", valueOf("SSL".equals(proxySecurity.getClientProtocol())))
                 .withEnv("KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_LOCATION", proxySecurity.getTrustStoreLocation())
                 .withEnv("KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_PASSWORD", proxySecurity.getTrustStorePassword())
@@ -117,10 +117,8 @@ public class KafkaClusterBuilder {
     }
 
     private KafkaCluster buildKafkaCluster() {
-        final Collection<GenericContainer<?>> containers = new ArrayList<>();
         final Network network = newNetwork();
         final ZookeeperContainer zookeeper = new ZookeeperContainer(network);
-        containers.add(zookeeper);
         zookeeper.start();
         final List<KafkaContainer> kafkaContainers = rangeClosed(1, 3)
                 .mapToObj(i -> new KafkaContainer(zookeeper, i, network, brokerComm))

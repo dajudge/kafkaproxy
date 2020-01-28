@@ -17,10 +17,18 @@ where the the proxy instances can be reached.
 # Run kafkaproxy in Docker
 kafkaproxy is built to be run in a container. The released versions are available at [Docker Hub](https://hub.docker.com/r/dajudge/kafkaproxy).
 ## Command line
-The only mandatory configuration is the broker map file. So, once you created a suitable YAML configuration, you can
-start kafkaproxy with the following command line:
+The following configuration parameters are mandatory:
+* `KAFKAPROXY_CLIENT_HOSTNAME`: the hostname at which the proxy can be reached from the clients.
+* `KAFKAPROXY_CLIENT_BASE_PORT`: the first port to be used by kafkaproxy.
+* `KAFKAPROXY_BOOTSTRAP_SERVER`: the bootstrap server via which the kafka cluster can be contacted. This is usually a load balancer in front of the kafka cluster.
+For example:
 ```
-docker run -d -v <path/to/brokermap.yml>:/etc/kafkaproxy/brokermap.yml dajudge/kafkaproxy:0.0.1 
+docker run \
+    --net host \
+    -e KAFKAPROXY_CLIENT_HOSTNAME=localhost \
+    -e KAFKAPROXY_CLIENT_BASE_PORT=4000 \
+    -e KAFKAPROXY_BOOTSTRAP_SERVER=kafka:9092 \
+    -d dajudge/kafkaproxy:0.0.2
 ``` 
 *Note:* You will also have to make the proxy ports defined in your broker map available from outside the container with `-p PORT:PORT`.
 
@@ -36,17 +44,17 @@ Kafka will take a couple of seconds to fully start and become available.
 
 **Step 2:** Create `my-test-topic`.
 ```
-docker run --rm --net host -i confluentinc/cp-zookeeper:5.2.1 kafka-topics --create --topic my-test-topic --bootstrap-server localhost:19092 --partitions 1 --replication-factor 1
+docker run --rm --net host -i confluentinc/cp-zookeeper:5.2.1 kafka-topics --create --topic my-test-topic --bootstrap-server localhost:4000 --partitions 1 --replication-factor 1
 ```
 
 **Step 3:** Publish a message to `my-test-topic`.
 ```
-echo "Hello, kafkaproxy" | docker run --rm --net host -i confluentinc/cp-zookeeper:5.2.1 kafka-console-producer --broker-list localhost:19092 --topic my-test-topic
+echo "Hello, kafkaproxy" | docker run --rm --net host -i confluentinc/cp-zookeeper:5.2.1 kafka-console-producer --broker-list localhost:4000 --topic my-test-topic
 ```
 
 **Step 4:** Consume to produced message from `my-test-topic`.
 ```
-docker run --rm --net host -it confluentinc/cp-zookeeper:5.2.1 kafka-console-consumer --bootstrap-server localhost:19092 --topic my-test-topic --from-beginning --max-messages 1
+docker run --rm --net host -it confluentinc/cp-zookeeper:5.2.1 kafka-console-consumer --bootstrap-server localhost:4000 --topic my-test-topic --from-beginning --max-messages 1
 ```
 
 **Cleanup:** Stop and remove the demonstration containers.
@@ -71,9 +79,10 @@ Configuration can be provided using the following environment variables:
 | `KAFKAPROXY_CLIENT_SSL_ENABLED`             | `false`       | Enables SSL encrypted communication between clients and kafkaproxy. 
 | `KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_LOCATION` |               | The filesystem location of the trust store to use. If no value is provided the JRE's default trust store will be used.
 | `KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_PASSWORD` |               | The password to access the trust store. Provide no value if the trust store is not password protected.
-| `KAFKAPROXY_CLIENT_SSL_KEYSTORE_LOCATION`   |               | The filesystem location of the key store. If not value is provided the JRE's default key store will be used.
-| `KAFKAPROXY_CLIENT_SSL_KEYSTORE_PASSWORD`   |               | The password to access the key store. Provide no value if the key store is not password protected.
-| `KAFKAPROXY_CLIENT_SSL_KEY_PASSWORD`        |               | The password to access the key. Provide no value if the key is not password protected.
+| `KAFKAPROXY_CLIENT_SSL_KEYSTORE_LOCATION`   |               | The filesystem location of the proxy's server key store. If no value is provided the JRE's default key store will be used.
+| `KAFKAPROXY_CLIENT_SSL_KEYSTORE_PASSWORD`   |               | The password to access the proxy's server key store. Provide no value if the key store is not password protected.
+| `KAFKAPROXY_CLIENT_SSL_KEY_PASSWORD`        |               | The password to access the proxy's server key. Provide no value if the key is not password protected.
+| `KAFKAPROXY_CLIENT_SSL_AUTH_REQUIRED`       | `false`       | Require a valid client certificate from clients connecting to the proxy.
 
 ## Kafka SSL configuration
 The Kafka SSL configuration determines how kafkaproxy connects to the Kafka broker instances.
@@ -85,7 +94,10 @@ Configuration can be provided using the following environment variables:
 | `KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_LOCATION`  |               | The filesystem location of the trust store to use. If no value is provided the JRE's default trust store will be used.
 | `KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_PASSWORD`  |               | The password to access the trust store. Provide no value if the trust store is not password protected.
 | `KAFKAPROXY_KAFKA_SSL_VERIFY_HOSTNAME`      | `true`        | Indicates if the hostnames of the Kafka brokers are validated against the SSL certificates they provide when connecting.
-
+| `KAFKAPROXY_KAFKA_SSL_CLIENT_CERT_STRATEGY` | `NONE`        | <ul><li>`NONE`: don't use a client certificate for broker connections.</li><li>`KEYSTORE`: use the client certificate provided by `KAFKAPROXY_KAFKA_SSL_KEYSTORE_LOCATION`</li></ul>  
+| `KAFKAPROXY_KAFKA_SSL_KEYSTORE_LOCATION`    |               | The filesystem location of the proxy's client key store. Required only when `KAFKAPROXY_KAFKA_SSL_CLIENT_CERT_STRATEGY` is set to `KEYSTORE`. 
+| `KAFKAPROXY_KAFKA_SSL_KEYSTORE_PASSWORD`    |               | The password to access the proxy's client key store. Provide no value if the key store is not password protected.
+| `KAFKAPROXY_KAFKA_SSL_KEY_PASSWORD`         |               | The password to access the proxy's client key. Provide no value if the key is not password protected.
 
 ## General configuration
 kafkaproxy needs a mapping configuration in order to know how to replace the brokers' endpoints with the endpoints
@@ -93,44 +105,17 @@ where the kafkaproxy instance(s) are reachable. The broker map is provided as a 
 
 The location of the broker map & proxy configuration is configured using the following environment variable:
 
-| Name                            | Default value                   | Destription
-| ------------------------------- |---------------------------------| -----------
-| `KAFKAPROXY_BROKERMAP_LOCATION` | `/etc/kafkaproxy/brokermap.yml` | The filesystem location where the broker map YAML file is located.
-| `KAFKAPROXY_LOG_LEVEL`          | `INFO`                          | The log level of the root logger. This must be a valid log level for [logback](http://logback.qos.ch/manual/configuration.html).
+| Name                          | Default value | Destription
+| ----------------------------- | ------------- | -----------
+| `KAFKAPROXY_CLIENT_HOSTNAME`  |               | The hostname of the proxy as seen by the clients.
+| `KAFKAPROXY_CLIENT_BASE_PORT` |               | The base of the ports to be used by the proxy. Each new required port is created by incrementing on top of the base port.
+| `KAFKAPROXY_BOOTSTRAP_SERVER` |               | The bootstrap endpoint of the kafka cluster. This is usually a load balancer in front of the kafka brokers.
+| `KAFKAPROXY_LOG_LEVEL`        | `INFO`        | The log level of the root logger. This must be a valid log level for [logback](http://logback.qos.ch/manual/configuration.html).
  
-### Format of `brokermap.yml`
-
-| Configuration key         | Value type | Destription
-| ------------------------- | ---------- | -----------
-| `proxies`                 | `List`     | The list of all proxied brokers.
-| `proxies.proxy`           | `Object`   | The proxy configuration for the proxied broker.
-| `proxies.proxy.hostname`  | `String`   | The hostname of the proxy instance. This hostname must be reachable from the Kafka proxy.
-| `proxies.proxy.port`      | `Integer`  | The port of the proxy instance.
-| `proxies.broker`          | `Object`   | The proxy configuration for the proxied broker.
-| `proxies.broker.hostname` | `String`   | The hostname of the Kafka broker instance. The Kafka broker must be reachable from kafkaproxy under this hostname and identify itself using the hostname in message responses. 
-| `proxies.broker.port`     | `Integer`  | The port of the Kafka broker instance.
- 
-### Example `brokermap.yml`
-This is an example with two proxied brokers:
-```yaml
-proxies:
-  - proxy:
-      hostname: kafka.example.com
-      port: 39092
-    broker:
-      hostname: broker1.kafka.local
-      port: 9092
-  - proxy:
-      hostname: kafka.example.com
-      port: 39093
-    broker:
-      hostname: broker2.kafka.local
-      port: 9093
-```
 # Features
 * SSL support from client to proxy
 * SSL support from proxy to broker
-* TODO: Forwarding 2-way client SSL authentication information via on-the-fly generation of client certificates via
+* TODO: Forwarding 2-way client SSL authentication information via on-the-fly generation of impostor certificates via
   * local KeyPair generation / signing
   * CFSSL
   * AWS Certificate Manager Private CA
