@@ -25,37 +25,33 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
-import static java.util.Collections.synchronizedMap;
+import static java.util.Collections.synchronizedList;
 
 public class KafkaRequestStore {
     private static final Logger LOG = LoggerFactory.getLogger(KafkaRequestStore.class);
-    private final Map<Integer, RequestHeader> requests = synchronizedMap(new HashMap<>());
+    private final List<RequestHeader> requests = synchronizedList(new ArrayList<>());
     private final ResponseRewriter rewriter;
 
     public KafkaRequestStore(final ResponseRewriter rewriter) {
         this.rewriter = rewriter;
     }
 
-    public void add(final RequestHeader requestHeader) {
+    void add(final RequestHeader requestHeader) {
         LOG.trace("Add client request: {}", requestHeader);
-        requests.put(requestHeader.correlationId(), requestHeader);
+        requests.add(requestHeader);
     }
 
-    public void process(final KafkaMessage response, final Consumer<ByteBuf> sink) {
+    void process(final KafkaMessage response, final Consumer<ByteBuf> sink) {
         final ByteBuffer responseBuffer = response.payload().nioBuffer();
-        final ResponseHeader responseHeader = ResponseHeader.parse(responseBuffer);
+        final RequestHeader requestHeader = requests.remove(0);
+        final short headerVersion = requestHeader.apiKey().responseHeaderVersion(requestHeader.apiVersion());
+        final ResponseHeader responseHeader = ResponseHeader.parse(responseBuffer, headerVersion);
         final int correlationId = responseHeader.correlationId();
-        final RequestHeader requestHeader = requests.get(correlationId);
-        if (requestHeader == null) {
-            LOG.warn("Failed to correlate response with correlationId {}", correlationId);
-            sink.accept(response.serialize());
-        } else {
-            LOG.trace("Mapped response with correlationId {} for {}", correlationId, requestHeader);
-            sink.accept(rewriter.rewrite(requestHeader, responseHeader, responseBuffer).orElse(response.serialize()));
-        }
+        LOG.trace("Mapped response with correlationId {} for {}", correlationId, requestHeader);
+        sink.accept(rewriter.rewrite(requestHeader, responseHeader, responseBuffer).orElse(response.serialize()));
     }
 }
