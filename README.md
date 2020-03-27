@@ -30,7 +30,7 @@ docker run \
     -e KAFKAPROXY_HOSTNAME=localhost \
     -e KAFKAPROXY_BASE_PORT=4000 \
     -e KAFKAPROXY_BOOTSTRAP_SERVER=kafka:9092 \
-    -d dajudge/kafkaproxy:0.0.2
+    -d dajudge/kafkaproxy:0.0.3
 ``` 
 *Note:* You will have to make the proxy ports defined in your broker map available from outside the container with `-p PORT:PORT` if you're not using `--net host`.
 
