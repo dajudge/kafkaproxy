@@ -71,7 +71,7 @@ public class DownstreamChannelFactory implements ForwardChannelFactory {
     }
 
     @Override
-    public ForwardChannel create(
+    public ForwardChannel<ByteBuf> create(
             final UpstreamCertificateSupplier certificateSupplier,
             final Consumer<ByteBuf> upstreamSink,
             final Runnable downstreamClosedCallback
@@ -100,7 +100,7 @@ public class DownstreamChannelFactory implements ForwardChannelFactory {
                 requestStore
         );
         final KafkaMessageSplitter splitter = new KafkaMessageSplitter(requestProcessor::onRequest);
-        return new ForwardChannel() {
+        return new ForwardChannel<ByteBuf>() {
             @Override
             public ChannelFuture close() {
                 return downstreamClient.close();

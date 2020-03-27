@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 
 public interface ForwardChannelFactory {
 
-    ForwardChannel create(
+    ForwardChannel<ByteBuf> create(
             final UpstreamCertificateSupplier certSupplier,
             final Consumer<ByteBuf> upstreamSink,
             final Runnable downstreamClosedCallback

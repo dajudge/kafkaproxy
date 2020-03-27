@@ -96,7 +96,7 @@ public class ProxyChannel {
                                 }
                                 LOG.trace("Upstream channel closed.");
                             };
-                            final ForwardChannel forwardChannel = forwardChannelFactory.create(
+                            final ForwardChannel<ByteBuf> forwardChannel = forwardChannelFactory.create(
                                     certSupplier,
                                     upstreamSink,
                                     downstreamClosedCallback
