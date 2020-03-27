@@ -34,7 +34,7 @@ final class Util {
             justification = "False positive" // see https://sourceforge.net/p/findbugs/bugs/1169/
     )
     static String toString(final FileResource res) {
-        try (final InputStream is = res.open()) {
+        try (final InputStream is = res.get()) {
             final ByteArrayOutputStream os = new ByteArrayOutputStream();
             int read;
             final byte[] buffer = new byte[1024];

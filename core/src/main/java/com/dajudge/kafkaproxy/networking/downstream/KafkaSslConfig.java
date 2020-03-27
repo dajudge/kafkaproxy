@@ -18,16 +18,18 @@
 package com.dajudge.kafkaproxy.networking.downstream;
 
 import com.dajudge.kafkaproxy.ca.NullProxyClientCertificateAuthorityFactory;
-import com.dajudge.kafkaproxy.config.FileResource;
+
+import java.io.InputStream;
+import java.util.function.Supplier;
 
 public class KafkaSslConfig {
     private final boolean enabled;
-    private final FileResource trustStore;
+    private final Supplier<InputStream> trustStore;
     private final String trustStorePassword;
     private final boolean hostnameVerificationEnabled;
     private final String certificateFactory;
     private final ClientCertificateStrategy clientCertificateStrategy;
-    private final FileResource keyStore;
+    private final Supplier<InputStream> keyStore;
     private final String keyStorePassword;
     private final String keyPassword;
 
@@ -45,12 +47,12 @@ public class KafkaSslConfig {
 
     public KafkaSslConfig(
             final boolean enabled,
-            final FileResource trustStore,
+            final Supplier<InputStream> trustStore,
             final String trustStorePassword,
             final boolean hostnameVerificationEnabled,
             final String certificateFactory,
             final ClientCertificateStrategy clientCertificateStrategy,
-            final FileResource keyStore,
+            final Supplier<InputStream> keyStore,
             final String keyStorePassword,
             final String keyPassword
     ) {
@@ -65,7 +67,7 @@ public class KafkaSslConfig {
         this.keyPassword = keyPassword;
     }
 
-    public FileResource getTrustStore() {
+    public Supplier<InputStream> getTrustStore() {
         return trustStore;
     }
 
@@ -89,7 +91,7 @@ public class KafkaSslConfig {
         return clientCertificateStrategy;
     }
 
-    public FileResource getKeyStore() {
+    public Supplier<InputStream> getKeyStore() {
         return keyStore;
     }
 

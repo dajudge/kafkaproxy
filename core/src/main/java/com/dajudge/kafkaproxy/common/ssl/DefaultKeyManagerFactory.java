@@ -17,8 +17,6 @@
 
 package com.dajudge.kafkaproxy.common.ssl;
 
-import com.dajudge.kafkaproxy.config.FileResource;
-
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import java.io.IOException;
@@ -28,14 +26,15 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.function.Supplier;
 
 public class DefaultKeyManagerFactory {
     public static KeyManager[] createKeyManagers(
-            final FileResource keyStore,
+            final Supplier<InputStream> keyStore,
             final char[] keyStorePassword,
             final char[] keyPassword
     ) {
-        try (final InputStream inputStream = keyStore.open()) {
+        try (final InputStream inputStream = keyStore.get()) {
             final KeyManagerFactory factory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
             final KeyStore keystore = KeyStore.getInstance("jks");
             keystore.load(inputStream, keyStorePassword);

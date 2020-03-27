@@ -79,7 +79,7 @@ public class CertificateAuthorityFactory implements ProxyClientCertificateAuthor
             final KeyStore keyStore = KeyStore.getInstance("jks");
             final String alias = config.getKeyAlias();
             final String issuerDn = config.getIssuerDn();
-            try (final InputStream data = keyStoreFile.open()) {
+            try (final InputStream data = keyStoreFile.get()) {
                 keyStore.load(data, config.getKeyStorePassword());
             }
             final PrivateKey caKeyPair = loadKey(keyStore, alias, config.getKeyPassword());

@@ -21,9 +21,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.function.Supplier;
 
-public interface FileResource {
-    InputStream open();
+public interface FileResource extends Supplier<InputStream> {
+    @Override
+    InputStream get();
 
     static FileResource fromFile(final File file) {
         return () -> {

@@ -22,7 +22,6 @@ import com.dajudge.kafkaproxy.ca.KeyStoreWrapper;
 import com.dajudge.kafkaproxy.ca.ProxyClientCertificateAuthorityFactory.CertificateAuthority;
 import com.dajudge.kafkaproxy.ca.UpstreamCertificateSupplier;
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
-import com.dajudge.kafkaproxy.config.FileResource;
 import com.dajudge.kafkaproxy.networking.upstream.ForwardChannel;
 import com.dajudge.kafkaproxy.networking.upstream.ForwardChannelFactory;
 import com.dajudge.kafkaproxy.protocol.KafkaMessageSplitter;
@@ -144,8 +143,7 @@ public class DownstreamChannelFactory implements ForwardChannelFactory {
     }
 
     private Supplier<KeyStoreWrapper> createKeyStoreSupplier(final KafkaSslConfig sslConfig) {
-        final FileResource fileResource = sslConfig.getKeyStore();
-        try (final InputStream is = fileResource.open()) {
+        try (final InputStream is = sslConfig.getKeyStore().get()) {
             final KeyStore keyStore = KeyStore.getInstance("jks");
             keyStore.load(is, sslConfig.getKeyStorePassword().toCharArray());
             final KeyStoreWrapper wrapper = new KeyStoreWrapper(keyStore, sslConfig.getKeyPassword());
