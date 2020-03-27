@@ -22,7 +22,7 @@ import com.dajudge.kafkaproxy.ca.NullProxyClientCertificateAuthorityFactory;
 import java.io.InputStream;
 import java.util.function.Supplier;
 
-public class KafkaSslConfig {
+public class DownstreamSslConfig {
     private final boolean enabled;
     private final Supplier<InputStream> trustStore;
     private final String trustStorePassword;
@@ -33,7 +33,7 @@ public class KafkaSslConfig {
     private final String keyStorePassword;
     private final String keyPassword;
 
-    public static final KafkaSslConfig DISABLED = new KafkaSslConfig(
+    public static final DownstreamSslConfig DISABLED = new DownstreamSslConfig(
             false,
             null,
             null,
@@ -45,7 +45,7 @@ public class KafkaSslConfig {
             null
     );
 
-    public KafkaSslConfig(
+    public DownstreamSslConfig(
             final boolean enabled,
             final Supplier<InputStream> trustStore,
             final String trustStorePassword,

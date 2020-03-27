@@ -42,7 +42,6 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static com.dajudge.kafkaproxy.ca.ProxyClientCertificateAuthorityFactoryRegistry.createCertificateFactory;
@@ -50,21 +49,21 @@ import static java.util.Arrays.asList;
 
 public class DownstreamChannelFactory implements ForwardChannelFactory {
     private final ProxyChannelManager proxyChannelManager;
-    private final String kafkaHost;
-    private final int kafkaPort;
+    private final String downstreamHostname;
+    private final int downstreamPort;
     private final ApplicationConfig appConfig;
     private final EventLoopGroup downstreamWorkerGroup;
 
     public DownstreamChannelFactory(
             final ProxyChannelManager proxyChannelManager,
-            final String kafkaHost,
-            final int kafkaPort,
+            final String downstreamHostname,
+            final int downstreamPort,
             final ApplicationConfig appConfig,
             final EventLoopGroup downstreamWorkerGroup
     ) {
         this.proxyChannelManager = proxyChannelManager;
-        this.kafkaHost = kafkaHost;
-        this.kafkaPort = kafkaPort;
+        this.downstreamHostname = downstreamHostname;
+        this.downstreamPort = downstreamPort;
         this.appConfig = appConfig;
         this.downstreamWorkerGroup = downstreamWorkerGroup;
     }
@@ -83,8 +82,8 @@ public class DownstreamChannelFactory implements ForwardChannelFactory {
         final KafkaMessageSplitter responseStreamSplitter = new KafkaMessageSplitter(responseProcessor);
         final Supplier<KeyStoreWrapper> clientKeystoreSupplier = createClientKeyStoreSupplier(certificateSupplier);
         final DownstreamClient downstreamClient = new DownstreamClient(
-                kafkaHost,
-                kafkaPort,
+                downstreamHostname,
+                downstreamPort,
                 appConfig,
                 responseStreamSplitter,
                 downstreamWorkerGroup,
@@ -100,7 +99,7 @@ public class DownstreamChannelFactory implements ForwardChannelFactory {
     private Supplier<KeyStoreWrapper> createClientKeyStoreSupplier(
             final UpstreamCertificateSupplier certificateSupplier
     ) {
-        final KafkaSslConfig sslConfig = appConfig.get(KafkaSslConfig.class);
+        final DownstreamSslConfig sslConfig = appConfig.get(DownstreamSslConfig.class);
         switch (sslConfig.getClientCertificateStrategy()) {
             case KEYSTORE:
                 return createKeyStoreSupplier(sslConfig);
@@ -126,7 +125,7 @@ public class DownstreamChannelFactory implements ForwardChannelFactory {
         };
     }
 
-    private Supplier<KeyStoreWrapper> createKeyStoreSupplier(final KafkaSslConfig sslConfig) {
+    private Supplier<KeyStoreWrapper> createKeyStoreSupplier(final DownstreamSslConfig sslConfig) {
         try (final InputStream is = sslConfig.getKeyStore().get()) {
             final KeyStore keyStore = KeyStore.getInstance("jks");
             keyStore.load(is, sslConfig.getKeyStorePassword().toCharArray());
@@ -138,7 +137,7 @@ public class DownstreamChannelFactory implements ForwardChannelFactory {
     }
 
     private Supplier<KeyStoreWrapper> createCaKeyStoreSupplier(
-            final KafkaSslConfig sslConfig,
+            final DownstreamSslConfig sslConfig,
             final UpstreamCertificateSupplier certificateSupplier) {
         final CertificateAuthority clientAuthority = createCertificateFactory(
                 sslConfig.getCertificateFactory(),

@@ -43,7 +43,7 @@ public class ClientSslHandlerFactory {
     private static final Logger LOG = LoggerFactory.getLogger(ClientSslHandlerFactory.class);
 
     public static ChannelHandler createHandler(
-            final KafkaSslConfig config,
+            final DownstreamSslConfig config,
             final String kafkaHostname,
             final int port,
             final Supplier<KeyStoreWrapper> clientKeyStoreSupplier
@@ -54,7 +54,7 @@ public class ClientSslHandlerFactory {
     }
 
     private static ChannelHandler createHandlerInternal(
-            final KafkaSslConfig config,
+            final DownstreamSslConfig config,
             final String kafkaHostname,
             final int port,
             final Supplier<KeyStoreWrapper> clientKeyStoreSupplier
@@ -89,10 +89,10 @@ public class ClientSslHandlerFactory {
         }
     }
 
-    private static List<X509TrustManager> createDefaultTrustManagers(final KafkaSslConfig kafkaSslConfig) {
+    private static List<X509TrustManager> createDefaultTrustManagers(final DownstreamSslConfig downstreamSslConfig) {
         return Stream.of((DefaultTrustManagerFactory.createTrustManagers(
-                kafkaSslConfig.getTrustStore(),
-                kafkaSslConfig.getTrustStorePassword().toCharArray()
+                downstreamSslConfig.getTrustStore(),
+                downstreamSslConfig.getTrustStorePassword().toCharArray()
         ))).map(it -> (X509TrustManager) it).collect(toList());
     }
 }

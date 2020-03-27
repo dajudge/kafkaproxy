@@ -46,7 +46,7 @@ public class DownstreamClient implements ForwardChannel<ByteBuf> {
             final EventLoopGroup workerGroup,
             final Supplier<KeyStoreWrapper> clientKeystoreSupplier
     ) {
-        final KafkaSslConfig sslConfig = appConfig.get(KafkaSslConfig.class);
+        final DownstreamSslConfig sslConfig = appConfig.get(DownstreamSslConfig.class);
 
         final ChannelHandler sslHandler = createHandler(
                 sslConfig,
