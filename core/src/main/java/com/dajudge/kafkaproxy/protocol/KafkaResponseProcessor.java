@@ -17,20 +17,26 @@
 
 package com.dajudge.kafkaproxy.protocol;
 
+import com.dajudge.kafkaproxy.networking.upstream.ForwardChannel;
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelFuture;
 
-import java.util.function.Consumer;
-
-public class KafkaResponseProcessor {
-    private final Consumer<ByteBuf> sink;
+public class KafkaResponseProcessor implements ForwardChannel<KafkaMessage> {
+    private final ForwardChannel<ByteBuf> sink;
     private final KafkaRequestStore requestStore;
 
-    public KafkaResponseProcessor(final Consumer<ByteBuf> sink, final KafkaRequestStore requestStore) {
+    public KafkaResponseProcessor(final ForwardChannel<ByteBuf> sink, final KafkaRequestStore requestStore) {
         this.sink = sink;
         this.requestStore = requestStore;
     }
 
-    public void onResponse(final KafkaMessage response) {
+    @Override
+    public void accept(final KafkaMessage response) {
         requestStore.process(response, sink);
+    }
+
+    @Override
+    public ChannelFuture close() {
+        return sink.close();
     }
 }

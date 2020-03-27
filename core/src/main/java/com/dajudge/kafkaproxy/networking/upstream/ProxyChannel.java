@@ -72,34 +72,14 @@ public class ProxyChannel {
                 public void initChannel(final SocketChannel ch) {
                     final ChannelPipeline pipeline = ch.pipeline();
                     LOG.trace("Incoming connection: {}", ch.remoteAddress());
-                    final Consumer<ByteBuf> upstreamSink = buffer -> {
-                        ch.writeAndFlush(buffer.copy()).addListener((ChannelFutureListener) future -> {
-                            buffer.release();
-                            if (!future.isSuccess()) {
-                                LOG.error("Failed to send {} bytes upstream.", buffer.readableBytes(), future.cause());
-                            } else {
-                                LOG.trace("Sent {} bytes upstream.", buffer.readableBytes());
-                            }
-                        });
-                    };
-
+                    final ForwardChannel<ByteBuf> upstreamSink = new SocketChannelSink(ch);
                     final ProxySslConfig proxySslConfig = appConfig.get(ProxySslConfig.class);
                     pipeline.addLast("ssl", ProxySslHandlerFactory.createHandler(proxySslConfig));
                     final Function<UpstreamCertificateSupplier, Consumer<ByteBuf>> downstreamFactory = certSupplier -> {
                         try {
-                            final Runnable downstreamClosedCallback = () -> {
-                                LOG.trace("Closing upstream channel.");
-                                try {
-                                    ch.close().sync();
-                                } catch (final InterruptedException e) {
-                                    LOG.warn("Cloud not close upstream channel.", e);
-                                }
-                                LOG.trace("Upstream channel closed.");
-                            };
                             final ForwardChannel<ByteBuf> forwardChannel = forwardChannelFactory.create(
                                     certSupplier,
-                                    upstreamSink,
-                                    downstreamClosedCallback
+                                    upstreamSink
                             );
                             ch.closeFuture().addListener((ChannelFutureListener) future -> forwardChannel.close());
                             return forwardChannel::accept;
@@ -133,5 +113,37 @@ public class ProxyChannel {
 
     public String getHost() {
         return hostname;
+    }
+
+    private static class SocketChannelSink implements ForwardChannel<ByteBuf> {
+        private final SocketChannel ch;
+
+        public SocketChannelSink(final SocketChannel ch) {
+            this.ch = ch;
+        }
+
+        @Override
+        public ChannelFuture close() {
+            LOG.trace("Closing upstream channel.");
+            return ch.close().addListener((ChannelFutureListener) future -> {
+                if (future.isSuccess()) {
+                    LOG.trace("Upstream channel closed.");
+                } else {
+                    LOG.warn("Cloud not close upstream channel.", future.cause());
+                }
+            });
+        }
+
+        @Override
+        public void accept(final ByteBuf buffer) {
+            ch.writeAndFlush(buffer.copy()).addListener((ChannelFutureListener) future -> {
+                buffer.release();
+                if (!future.isSuccess()) {
+                    LOG.error("Failed to send {} bytes upstream.", buffer.readableBytes(), future.cause());
+                } else {
+                    LOG.trace("Sent {} bytes upstream.", buffer.readableBytes());
+                }
+            });
+        }
     }
 }

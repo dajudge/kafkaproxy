@@ -17,26 +17,32 @@
 
 package com.dajudge.kafkaproxy.protocol;
 
+import com.dajudge.kafkaproxy.networking.upstream.ForwardChannel;
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelFuture;
 import org.apache.kafka.common.requests.RequestHeader;
 
-import java.util.function.Consumer;
-
-public class KafkaRequestProcessor {
-    private final Consumer<ByteBuf> requestSink;
+public class KafkaRequestProcessor implements ForwardChannel<KafkaMessage> {
+    private final ForwardChannel<ByteBuf> requestSink;
     private final KafkaRequestStore kafkaRequestStore;
 
-    public KafkaRequestProcessor(final Consumer<ByteBuf> requestSink, final KafkaRequestStore kafkaRequestStore) {
+    public KafkaRequestProcessor(final ForwardChannel<ByteBuf> requestSink, final KafkaRequestStore kafkaRequestStore) {
         this.requestSink = requestSink;
         this.kafkaRequestStore = kafkaRequestStore;
     }
 
-    public void onRequest(final KafkaMessage request) {
+    @Override
+    public void accept(final KafkaMessage request) {
         try {
             kafkaRequestStore.add(RequestHeader.parse(request.payload().nioBuffer()));
             requestSink.accept(request.serialize());
         } finally {
             request.release();
         }
+    }
+
+    @Override
+    public ChannelFuture close() {
+        return requestSink.close();
     }
 }

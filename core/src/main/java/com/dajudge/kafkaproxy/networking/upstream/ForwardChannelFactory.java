@@ -20,13 +20,10 @@ package com.dajudge.kafkaproxy.networking.upstream;
 import com.dajudge.kafkaproxy.ca.UpstreamCertificateSupplier;
 import io.netty.buffer.ByteBuf;
 
-import java.util.function.Consumer;
-
 public interface ForwardChannelFactory {
 
     ForwardChannel<ByteBuf> create(
             final UpstreamCertificateSupplier certSupplier,
-            final Consumer<ByteBuf> upstreamSink,
-            final Runnable downstreamClosedCallback
+            final ForwardChannel<ByteBuf> upstreamSink
     );
 }

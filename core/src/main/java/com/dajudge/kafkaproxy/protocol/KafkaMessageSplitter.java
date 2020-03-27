@@ -17,22 +17,23 @@
 
 package com.dajudge.kafkaproxy.protocol;
 
+import com.dajudge.kafkaproxy.networking.upstream.ForwardChannel;
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.function.Consumer;
-
-public class KafkaMessageSplitter {
+public class KafkaMessageSplitter implements ForwardChannel<ByteBuf> {
     private static final Logger LOG = LoggerFactory.getLogger(KafkaMessageSplitter.class);
-    private final Consumer<KafkaMessage> requestSink;
+    private final ForwardChannel<KafkaMessage> requestSink;
     private KafkaMessage currentRequest = new KafkaMessage();
 
-    public KafkaMessageSplitter(final Consumer<KafkaMessage> requestSink) {
+    public KafkaMessageSplitter(final ForwardChannel<KafkaMessage> requestSink) {
         this.requestSink = requestSink;
     }
 
-    public void onBytesReceived(final ByteBuf remainingBytes) {
+    @Override
+    public void accept(final ByteBuf remainingBytes) {
         LOG.trace("Processing {} available bytes.", remainingBytes.readableBytes());
         while (remainingBytes.readableBytes() > 0) {
             LOG.trace("Processing {} bytes remaining.", remainingBytes.readableBytes());
@@ -42,5 +43,10 @@ public class KafkaMessageSplitter {
                 currentRequest = new KafkaMessage();
             }
         }
+    }
+
+    @Override
+    public ChannelFuture close() {
+        return requestSink.close();
     }
 }

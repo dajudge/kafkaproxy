@@ -19,6 +19,7 @@ package com.dajudge.kafkaproxy.networking.downstream;
 
 import com.dajudge.kafkaproxy.ca.KeyStoreWrapper;
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
+import com.dajudge.kafkaproxy.networking.upstream.ForwardChannel;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
@@ -27,14 +28,13 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static com.dajudge.kafkaproxy.networking.downstream.ClientSslHandlerFactory.createHandler;
 import static io.netty.channel.ChannelOption.SO_KEEPALIVE;
 
 
-public class DownstreamClient {
+public class DownstreamClient implements ForwardChannel<ByteBuf> {
     private static final Logger LOG = LoggerFactory.getLogger(DownstreamClient.class);
     private final Channel channel;
 
@@ -42,8 +42,7 @@ public class DownstreamClient {
             final String host,
             final int port,
             final ApplicationConfig appConfig,
-            final Consumer<ByteBuf> messageSink,
-            final Runnable closeCallback,
+            final ForwardChannel<ByteBuf> messageSink,
             final EventLoopGroup workerGroup,
             final Supplier<KeyStoreWrapper> clientKeystoreSupplier
     ) {
@@ -72,7 +71,7 @@ public class DownstreamClient {
             LOG.trace("Downstream channel established: {}: {}", host, port);
             channel.closeFuture().addListener(future -> {
                 LOG.trace("Downstream channel closed: {}:{}", host, port);
-                closeCallback.run();
+                messageSink.close();
             });
             LOG.trace("Downstream connection established to {}:{}", host, port);
         } catch (final InterruptedException e) {
@@ -85,7 +84,8 @@ public class DownstreamClient {
         return channel.close();
     }
 
-    public void send(final ByteBuf buffer) {
+    @Override
+    public void accept(final ByteBuf buffer) {
         LOG.trace("Sending {} bytes downstream.", buffer.readableBytes());
         channel.writeAndFlush(buffer).addListener((ChannelFutureListener) future -> {
             if (!future.isSuccess()) {

@@ -33,7 +33,6 @@ import com.dajudge.kafkaproxy.protocol.rewrite.FindCoordinatorRewriter;
 import com.dajudge.kafkaproxy.protocol.rewrite.MetadataRewriter;
 import com.dajudge.kafkaproxy.protocol.rewrite.ResponseRewriter;
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.EventLoopGroup;
 
 import javax.net.ssl.SSLPeerUnverifiedException;
@@ -73,8 +72,7 @@ public class DownstreamChannelFactory implements ForwardChannelFactory {
     @Override
     public ForwardChannel<ByteBuf> create(
             final UpstreamCertificateSupplier certificateSupplier,
-            final Consumer<ByteBuf> upstreamSink,
-            final Runnable downstreamClosedCallback
+            final ForwardChannel<ByteBuf> upstreamSink
     ) {
         final ResponseRewriter rewriter = new CompositeRewriter(asList(
                 new MetadataRewriter(proxyChannelManager),
@@ -82,35 +80,21 @@ public class DownstreamChannelFactory implements ForwardChannelFactory {
         ));
         final KafkaRequestStore requestStore = new KafkaRequestStore(rewriter);
         final KafkaResponseProcessor responseProcessor = new KafkaResponseProcessor(upstreamSink, requestStore);
-        final KafkaMessageSplitter responseStreamSplitter = new KafkaMessageSplitter(
-                responseProcessor::onResponse
-        );
+        final KafkaMessageSplitter responseStreamSplitter = new KafkaMessageSplitter(responseProcessor);
         final Supplier<KeyStoreWrapper> clientKeystoreSupplier = createClientKeyStoreSupplier(certificateSupplier);
         final DownstreamClient downstreamClient = new DownstreamClient(
                 kafkaHost,
                 kafkaPort,
                 appConfig,
-                responseStreamSplitter::onBytesReceived,
-                downstreamClosedCallback,
+                responseStreamSplitter,
                 downstreamWorkerGroup,
                 clientKeystoreSupplier
         );
         final KafkaRequestProcessor requestProcessor = new KafkaRequestProcessor(
-                downstreamClient::send,
+                downstreamClient,
                 requestStore
         );
-        final KafkaMessageSplitter splitter = new KafkaMessageSplitter(requestProcessor::onRequest);
-        return new ForwardChannel<ByteBuf>() {
-            @Override
-            public ChannelFuture close() {
-                return downstreamClient.close();
-            }
-
-            @Override
-            public void accept(final ByteBuf byteBuf) {
-                splitter.onBytesReceived(byteBuf);
-            }
-        };
+        return new KafkaMessageSplitter(requestProcessor);
     }
 
     private Supplier<KeyStoreWrapper> createClientKeyStoreSupplier(
