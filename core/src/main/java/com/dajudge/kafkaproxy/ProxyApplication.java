@@ -20,7 +20,10 @@ package com.dajudge.kafkaproxy;
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
 import com.dajudge.kafkaproxy.config.Environment;
 import com.dajudge.kafkaproxy.config.broker.BrokerConfig;
+import com.dajudge.kafkaproxy.networking.ProxyChannelFactory;
+import com.dajudge.kafkaproxy.networking.downstream.DownstreamSslConfig;
 import com.dajudge.kafkaproxy.networking.upstream.ProxyChannel;
+import com.dajudge.kafkaproxy.networking.upstream.UpstreamSslConfig;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,15 +56,20 @@ public class ProxyApplication {
         final NioEventLoopGroup upstreamWorkerGroup = new NioEventLoopGroup();
         final NioEventLoopGroup downstreamWorkerGroup = new NioEventLoopGroup();
         final BrokerMapper brokerMappingStrategy = new BrokerMapper(appConfig.get(BrokerConfig.class));
-        final KafkaProxyChannelFactory channelFactory = new KafkaProxyChannelFactory(
-                appConfig,
-                brokerMappingStrategy,
+        final ProxyChannelFactory proxyChannelFactory = new ProxyChannelFactory(
                 downstreamWorkerGroup,
                 serverWorkerGroup,
-                upstreamWorkerGroup
+                upstreamWorkerGroup,
+                appConfig.get(UpstreamSslConfig.class),
+                appConfig.get(DownstreamSslConfig.class),
+                new ClientCertificateAuthorityImpl(appConfig)
         );
-        final ProxyChannelManager proxyChannelManager = new ProxyChannelManager(channelFactory);
-        final BrokerMapping boostrapMapping = channelFactory.bootstrap(proxyChannelManager);
+        final KafkaProxyChannelFactory kafkaProxyChannelFactory = new KafkaProxyChannelFactory(
+                brokerMappingStrategy,
+                proxyChannelFactory
+        );
+        final ProxyChannelManager proxyChannelManager = new ProxyChannelManager(kafkaProxyChannelFactory);
+        final BrokerMapping boostrapMapping = kafkaProxyChannelFactory.bootstrap(proxyChannelManager);
         LOG.info("Bootstrap broker mapping: {}", boostrapMapping);
         shutdownRunnable = () -> {
             proxyChannelManager.proxies().stream()
