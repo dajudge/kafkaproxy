@@ -20,6 +20,7 @@ package com.dajudge.kafkaproxy.networking.downstream;
 import com.dajudge.kafkaproxy.ca.KeyStoreWrapper;
 import com.dajudge.kafkaproxy.common.ssl.DefaultTrustManagerFactory;
 import com.dajudge.kafkaproxy.common.ssl.NullChannelHandler;
+import com.dajudge.kafkaproxy.networking.Endpoint;
 import com.dajudge.kafkaproxy.networking.trustmanager.HostCheckingTrustManager;
 import com.dajudge.kafkaproxy.networking.trustmanager.HostnameCheck;
 import com.dajudge.kafkaproxy.networking.trustmanager.HttpClientHostnameCheck;
@@ -44,27 +45,25 @@ public class ClientSslHandlerFactory {
 
     public static ChannelHandler createHandler(
             final DownstreamSslConfig config,
-            final String kafkaHostname,
-            final int port,
+            final Endpoint endpoint,
             final Supplier<KeyStoreWrapper> clientKeyStoreSupplier
     ) {
         return config.isEnabled()
-                ? createHandlerInternal(config, kafkaHostname, port, clientKeyStoreSupplier)
+                ? createHandlerInternal(config, endpoint, clientKeyStoreSupplier)
                 : new NullChannelHandler();
     }
 
     private static ChannelHandler createHandlerInternal(
             final DownstreamSslConfig config,
-            final String kafkaHostname,
-            final int port,
+            final Endpoint endpoint,
             final Supplier<KeyStoreWrapper> clientKeyStoreSupplier
     ) {
         try {
-            LOG.info("Creating client SSL handler for {}:{}", kafkaHostname, port);
+            LOG.info("Creating client SSL handler for {}", endpoint);
             final SSLContext clientContext = SSLContext.getInstance("TLS");
             final KeyStoreWrapper keyStore = clientKeyStoreSupplier.get();
             final HostnameCheck hostnameCheck = config.isHostnameVerificationEnabled()
-                    ? new HttpClientHostnameCheck(kafkaHostname)
+                    ? new HttpClientHostnameCheck(endpoint.getHost())
                     : HostnameCheck.NULL_VERIFIER;
             final TrustManager[] trustManagers = {
                     new HostCheckingTrustManager(createDefaultTrustManagers(config), hostnameCheck)
@@ -77,7 +76,7 @@ public class ClientSslHandlerFactory {
             }
             final KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
             clientContext.init(keyManagers, trustManagers, null);
-            final SSLEngine engine = clientContext.createSSLEngine(kafkaHostname, port);
+            final SSLEngine engine = clientContext.createSSLEngine(endpoint.getHost(), endpoint.getPort());
             engine.setUseClientMode(true);
             return new SslHandler(engine);
         } catch (final NoSuchAlgorithmException

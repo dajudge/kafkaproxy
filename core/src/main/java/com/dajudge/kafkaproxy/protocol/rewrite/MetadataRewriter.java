@@ -18,8 +18,8 @@
 package com.dajudge.kafkaproxy.protocol.rewrite;
 
 import com.dajudge.kafkaproxy.ProxyChannelManager;
-import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
-import com.dajudge.kafkaproxy.brokermap.BrokerMapping.Endpoint;
+import com.dajudge.kafkaproxy.BrokerMapping;
+import com.dajudge.kafkaproxy.networking.Endpoint;
 import org.apache.kafka.common.message.MetadataResponseData;
 import org.apache.kafka.common.protocol.ApiKeys;
 import org.apache.kafka.common.requests.MetadataResponse;

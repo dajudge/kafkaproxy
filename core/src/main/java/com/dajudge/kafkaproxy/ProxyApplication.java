@@ -17,7 +17,6 @@
 
 package com.dajudge.kafkaproxy;
 
-import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
 import com.dajudge.kafkaproxy.config.Environment;
 import com.dajudge.kafkaproxy.config.broker.BrokerConfig;

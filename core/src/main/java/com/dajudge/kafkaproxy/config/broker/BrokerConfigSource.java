@@ -17,7 +17,7 @@
 
 package com.dajudge.kafkaproxy.config.broker;
 
-import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
+import com.dajudge.kafkaproxy.networking.Endpoint;
 import com.dajudge.kafkaproxy.config.ConfigSource;
 import com.dajudge.kafkaproxy.config.Environment;
 
@@ -39,9 +39,9 @@ public class BrokerConfigSource implements ConfigSource<BrokerConfig> {
         );
     }
 
-    private BrokerMapping.Endpoint getBootstrapBrokers(final Environment environment) {
+    private Endpoint getBootstrapBrokers(final Environment environment) {
         final String bootstrapServer = environment.requiredString("KAFKAPROXY_BOOTSTRAP_SERVER");
         final String[] bootstrapServerParts = bootstrapServer.split(":");
-        return new BrokerMapping.Endpoint(bootstrapServerParts[0], parseUnsignedInt(bootstrapServerParts[1]));
+        return new Endpoint(bootstrapServerParts[0], parseUnsignedInt(bootstrapServerParts[1]));
     }
 }

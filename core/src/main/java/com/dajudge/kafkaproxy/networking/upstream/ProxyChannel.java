@@ -17,6 +17,7 @@
 
 package com.dajudge.kafkaproxy.networking.upstream;
 
+import com.dajudge.kafkaproxy.networking.Endpoint;
 import com.dajudge.kafkaproxy.networking.FilterFactory;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
@@ -33,9 +34,8 @@ import static com.dajudge.kafkaproxy.networking.upstream.ProxySslHandlerFactory.
 
 public class ProxyChannel {
     private static final Logger LOG = LoggerFactory.getLogger(ProxyChannel.class);
-    private final String hostname;
     private boolean initialized = false;
-    private final int port;
+    private final Endpoint endpoint;
     private final UpstreamSslConfig sslConfig;
     private final NioEventLoopGroup bossGroup;
     private final NioEventLoopGroup upstreamWorkerGroup;
@@ -45,8 +45,7 @@ public class ProxyChannel {
     private FilterFactory<ByteBuf> downstreamTransformFactory;
 
     public ProxyChannel(
-            final String hostname,
-            final int port,
+            final Endpoint endpoint,
             final UpstreamSslConfig sslConfig,
             final NioEventLoopGroup bossGroup,
             final NioEventLoopGroup upstreamWorkerGroup,
@@ -54,8 +53,7 @@ public class ProxyChannel {
             final FilterFactory<ByteBuf> upstreamFilterFactory,
             final FilterFactory<ByteBuf> downstreamFilterFactory
     ) {
-        this.hostname = hostname;
-        this.port = port;
+        this.endpoint = endpoint;
         this.sslConfig = sslConfig;
         this.bossGroup = bossGroup;
         this.upstreamWorkerGroup = upstreamWorkerGroup;
@@ -69,7 +67,7 @@ public class ProxyChannel {
             return;
         }
         initialized = true;
-        LOG.info("Starting proxy channel {}:{}", hostname, port);
+        LOG.info("Starting proxy channel {}", endpoint);
         try {
             channel = new ServerBootstrap()
                     .group(bossGroup, upstreamWorkerGroup)
@@ -77,7 +75,7 @@ public class ProxyChannel {
                     .childHandler(createProxyInitializer(sslConfig))
                     .option(ChannelOption.SO_BACKLOG, 128)
                     .childOption(ChannelOption.SO_KEEPALIVE, true)
-                    .bind(port).sync().channel();
+                    .bind(endpoint.getPort()).sync().channel();
         } catch (final InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -120,7 +118,7 @@ public class ProxyChannel {
     }
 
     public String getHost() {
-        return hostname;
+        return endpoint.getHost();
     }
 
     private static class SocketChannelSink implements ForwardChannel<ByteBuf> {

@@ -18,6 +18,7 @@
 package com.dajudge.kafkaproxy.networking.downstream;
 
 import com.dajudge.kafkaproxy.ca.UpstreamCertificateSupplier;
+import com.dajudge.kafkaproxy.networking.Endpoint;
 import com.dajudge.kafkaproxy.networking.FilterFactory;
 import com.dajudge.kafkaproxy.networking.upstream.DownstreamSinkFactory;
 import com.dajudge.kafkaproxy.networking.upstream.ForwardChannel;
@@ -25,21 +26,18 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.EventLoopGroup;
 
 public class DownstreamChannelFactory implements DownstreamSinkFactory {
-    private final String downstreamHostname;
-    private final int downstreamPort;
+    private final Endpoint endpoint;
     private final DownstreamSslConfig sslConfig;
     private final EventLoopGroup downstreamWorkerGroup;
     private final ClientCertificateAuthority clientCertificateAuthority;
 
     public DownstreamChannelFactory(
-            final String downstreamHostname,
-            final int downstreamPort,
+            final Endpoint endpoint,
             final DownstreamSslConfig sslConfig,
             final EventLoopGroup downstreamWorkerGroup,
             final ClientCertificateAuthority clientCertificateAuthority
     ) {
-        this.downstreamHostname = downstreamHostname;
-        this.downstreamPort = downstreamPort;
+        this.endpoint = endpoint;
         this.sslConfig = sslConfig;
         this.downstreamWorkerGroup = downstreamWorkerGroup;
         this.clientCertificateAuthority = clientCertificateAuthority;
@@ -53,8 +51,7 @@ public class DownstreamChannelFactory implements DownstreamSinkFactory {
             final FilterFactory<ByteBuf> downstreamFilterFactory
     ) {
         return downstreamFilterFactory.apply(new DownstreamClient(
-                downstreamHostname,
-                downstreamPort,
+                endpoint,
                 sslConfig,
                 upstreamFilterFactory.apply(upstreamSink),
                 downstreamWorkerGroup,

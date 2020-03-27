@@ -17,7 +17,7 @@
 
 package com.dajudge.kafkaproxy;
 
-import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
+import com.dajudge.kafkaproxy.networking.Endpoint;
 import com.dajudge.kafkaproxy.networking.upstream.ProxyChannel;
 
 import java.util.Collection;
@@ -38,15 +38,15 @@ public class ProxyChannelManager {
         return channels.values();
     }
 
-    public synchronized BrokerMapping getByBrokerEndpoint(final BrokerMapping.Endpoint brokerEndpoint) {
+    public synchronized BrokerMapping getByBrokerEndpoint(final Endpoint brokerEndpoint) {
         final ProxyChannel channel = channels.computeIfAbsent(keyOf(brokerEndpoint), k ->
                 channelFactory.create(this, brokerEndpoint)
         );
         channel.start();
-        return new BrokerMapping(brokerEndpoint, new BrokerMapping.Endpoint(channel.getHost(), channel.getPort()));
+        return new BrokerMapping(brokerEndpoint, new Endpoint(channel.getHost(), channel.getPort()));
     }
 
-    private String keyOf(final BrokerMapping.Endpoint brokerEndpoint) {
+    private String keyOf(final Endpoint brokerEndpoint) {
         return brokerEndpoint.getHost() + ":" + brokerEndpoint.getPort();
     }
 

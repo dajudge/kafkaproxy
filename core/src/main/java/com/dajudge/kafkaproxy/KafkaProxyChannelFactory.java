@@ -17,9 +17,8 @@
 
 package com.dajudge.kafkaproxy;
 
-import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
-import com.dajudge.kafkaproxy.brokermap.BrokerMapping.Endpoint;
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
+import com.dajudge.kafkaproxy.networking.Endpoint;
 import com.dajudge.kafkaproxy.networking.FilterFactory;
 import com.dajudge.kafkaproxy.networking.downstream.DownstreamChannelFactory;
 import com.dajudge.kafkaproxy.networking.downstream.DownstreamSslConfig;
@@ -79,16 +78,16 @@ public class KafkaProxyChannelFactory {
                 new KafkaMessageSplitter(new KafkaResponseProcessor(upstream, requestStore));
         final FilterFactory<ByteBuf> downstreamFilterFactory = downstream ->
                 new KafkaMessageSplitter(new KafkaRequestProcessor(downstream, requestStore));
+        final Endpoint downstreamEndpoint = brokerToProxy.getBroker();
+        final Endpoint upstreamEndpoint = brokerToProxy.getProxy();
         final DownstreamSinkFactory downstreamSinkFactory = new DownstreamChannelFactory(
-                brokerToProxy.getBroker().getHost(),
-                brokerToProxy.getBroker().getPort(),
+                downstreamEndpoint,
                 appConfig.get(DownstreamSslConfig.class),
                 downstreamWorkerGroup,
                 clientCertificateAuthority
         );
         final ProxyChannel proxyChannel = new ProxyChannel(
-                brokerToProxy.getProxy().getHost(),
-                brokerToProxy.getProxy().getPort(),
+                upstreamEndpoint,
                 appConfig.get(UpstreamSslConfig.class),
                 serverWorkerGroup,
                 upstreamWorkerGroup,
@@ -96,18 +95,11 @@ public class KafkaProxyChannelFactory {
                 upstreamFilterFactory,
                 downstreamFilterFactory
         );
-        LOG.info(
-                "Proxying {}:{} as {}:{}",
-                brokerToProxy.getBroker().getHost(),
-                brokerToProxy.getBroker().getPort(),
-                brokerToProxy.getProxy().getHost(),
-                brokerToProxy.getProxy().getPort()
-        );
+        LOG.info("Proxying {} as {}", downstreamEndpoint, upstreamEndpoint);
         return proxyChannel;
     }
 
     public BrokerMapping bootstrap(final ProxyChannelManager manager) {
         return manager.getByBrokerEndpoint(brokerMapper.getBootstrapBroker());
     }
-
 }

@@ -18,6 +18,7 @@
 package com.dajudge.kafkaproxy.networking.downstream;
 
 import com.dajudge.kafkaproxy.ca.KeyStoreWrapper;
+import com.dajudge.kafkaproxy.networking.Endpoint;
 import com.dajudge.kafkaproxy.networking.upstream.ForwardChannel;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
@@ -38,19 +39,13 @@ public class DownstreamClient implements ForwardChannel<ByteBuf> {
     private final Channel channel;
 
     public DownstreamClient(
-            final String host,
-            final int port,
+            final Endpoint endpoint,
             final DownstreamSslConfig sslConfig,
             final ForwardChannel<ByteBuf> messageSink,
             final EventLoopGroup workerGroup,
             final Supplier<KeyStoreWrapper> clientKeystoreSupplier
     ) {
-        final ChannelHandler sslHandler = createHandler(
-                sslConfig,
-                host,
-                port,
-                clientKeystoreSupplier
-        );
+        final ChannelHandler sslHandler = createHandler(sslConfig, endpoint, clientKeystoreSupplier);
         try {
             channel = new Bootstrap()
                     .group(workerGroup)
@@ -64,15 +59,15 @@ public class DownstreamClient implements ForwardChannel<ByteBuf> {
                             pipeline.addLast(new ProxyClientHandler(messageSink));
                         }
                     })
-                    .connect(host, port).sync().channel();
-            LOG.trace("Downstream channel established: {}: {}", host, port);
+                    .connect(endpoint.getHost(), endpoint.getPort()).sync().channel();
+            LOG.trace("Downstream channel established: {}", endpoint);
             channel.closeFuture().addListener(future -> {
-                LOG.trace("Downstream channel closed: {}:{}", host, port);
+                LOG.trace("Downstream channel closed: {}", endpoint);
                 messageSink.close();
             });
-            LOG.trace("Downstream connection established to {}:{}", host, port);
+            LOG.trace("Downstream connection established to {}", endpoint);
         } catch (final InterruptedException e) {
-            LOG.debug("Failed to establish downstream connection to {}:{}", host, port, e);
+            LOG.debug("Failed to establish downstream connection to {}", endpoint, e);
             throw new RuntimeException(e);
         }
     }
