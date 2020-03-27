@@ -17,7 +17,6 @@
 
 package com.dajudge.kafkaproxy.networking.upstream;
 
-import com.dajudge.kafkaproxy.ca.UpstreamCertificateSupplier;
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
@@ -29,8 +28,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
-import java.util.function.Consumer;
-import java.util.function.Function;
+
+import static com.dajudge.kafkaproxy.networking.upstream.ProxySslHandlerFactory.createSslHandler;
 
 public class ProxyChannel {
     private static final Logger LOG = LoggerFactory.getLogger(ProxyChannel.class);
@@ -40,7 +39,7 @@ public class ProxyChannel {
     private final ApplicationConfig appConfig;
     private final NioEventLoopGroup bossGroup;
     private final NioEventLoopGroup upstreamWorkerGroup;
-    private final ForwardChannelFactory forwardChannelFactory;
+    private final DownstreamSinkFactory downstreamSinkFactory;
 
     private Channel channel;
 
@@ -50,14 +49,14 @@ public class ProxyChannel {
             final ApplicationConfig appConfig,
             final NioEventLoopGroup bossGroup,
             final NioEventLoopGroup upstreamWorkerGroup,
-            final ForwardChannelFactory forwardChannelFactory
+            final DownstreamSinkFactory downstreamSinkFactory
     ) {
         this.hostname = hostname;
         this.port = port;
         this.appConfig = appConfig;
         this.bossGroup = bossGroup;
         this.upstreamWorkerGroup = upstreamWorkerGroup;
-        this.forwardChannelFactory = forwardChannelFactory;
+        this.downstreamSinkFactory = downstreamSinkFactory;
     }
 
     public void start() {
@@ -67,40 +66,39 @@ public class ProxyChannel {
         initialized = true;
         LOG.info("Starting proxy channel {}:{}", hostname, port);
         try {
-            final ChannelInitializer<SocketChannel> childHandler = new ChannelInitializer<SocketChannel>() {
-                @Override
-                public void initChannel(final SocketChannel ch) {
-                    final ChannelPipeline pipeline = ch.pipeline();
-                    LOG.trace("Incoming connection: {}", ch.remoteAddress());
-                    final ForwardChannel<ByteBuf> upstreamSink = new SocketChannelSink(ch);
-                    final ProxySslConfig proxySslConfig = appConfig.get(ProxySslConfig.class);
-                    pipeline.addLast("ssl", ProxySslHandlerFactory.createHandler(proxySslConfig));
-                    final Function<UpstreamCertificateSupplier, Consumer<ByteBuf>> downstreamFactory = certSupplier -> {
-                        try {
-                            final ForwardChannel<ByteBuf> forwardChannel = forwardChannelFactory.create(
-                                    certSupplier,
-                                    upstreamSink
-                            );
-                            ch.closeFuture().addListener((ChannelFutureListener) future -> forwardChannel.close());
-                            return forwardChannel::accept;
-                        } catch (final RuntimeException e) {
-                            LOG.error("Failed to create downstream channel", e);
-                            throw e;
-                        }
-                    };
-                    pipeline.addLast(new ProxyServerHandler(downstreamFactory));
-                }
-            };
             channel = new ServerBootstrap()
                     .group(bossGroup, upstreamWorkerGroup)
                     .channel(NioServerSocketChannel.class)
-                    .childHandler(childHandler)
+                    .childHandler(createProxyInitializer(appConfig.get(ProxySslConfig.class)))
                     .option(ChannelOption.SO_BACKLOG, 128)
                     .childOption(ChannelOption.SO_KEEPALIVE, true)
                     .bind(port).sync().channel();
         } catch (final InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private ChannelInitializer<SocketChannel> createProxyInitializer(final ProxySslConfig proxySslConfig) {
+        return new ChannelInitializer<SocketChannel>() {
+            @Override
+            public void initChannel(final SocketChannel ch) {
+                final ChannelPipeline pipeline = ch.pipeline();
+                LOG.trace("Incoming connection: {}", ch.remoteAddress());
+                pipeline.addLast("ssl", createSslHandler(proxySslConfig));
+                pipeline.addLast(createDownstreamHandler(new SocketChannelSink(ch)));
+            }
+        };
+    }
+
+    private ForwardingInboundHandler createDownstreamHandler(final ForwardChannel<ByteBuf> upstreamSink) {
+        return new ForwardingInboundHandler(certSupplier -> {
+            try {
+                return downstreamSinkFactory.create(certSupplier, upstreamSink);
+            } catch (final RuntimeException e) {
+                LOG.error("Failed to create downstream channel", e);
+                throw e;
+            }
+        });
     }
 
     public ChannelFuture close() {

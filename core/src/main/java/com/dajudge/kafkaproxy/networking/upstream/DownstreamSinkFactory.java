@@ -20,7 +20,7 @@ package com.dajudge.kafkaproxy.networking.upstream;
 import com.dajudge.kafkaproxy.ca.UpstreamCertificateSupplier;
 import io.netty.buffer.ByteBuf;
 
-public interface ForwardChannelFactory {
+public interface DownstreamSinkFactory {
 
     ForwardChannel<ByteBuf> create(
             final UpstreamCertificateSupplier certSupplier,

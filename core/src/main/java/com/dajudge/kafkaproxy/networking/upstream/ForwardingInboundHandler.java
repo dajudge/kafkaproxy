@@ -30,16 +30,35 @@ import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
-    private static final Logger LOG = LoggerFactory.getLogger(ProxyServerHandler.class);
-    private final Function<UpstreamCertificateSupplier, Consumer<ByteBuf>> sinkFactory;
-    private Consumer<ByteBuf> sink;
+public class ForwardingInboundHandler extends ChannelInboundHandlerAdapter {
+    private static final Logger LOG = LoggerFactory.getLogger(ForwardingInboundHandler.class);
+    private final Function<UpstreamCertificateSupplier, ForwardChannel<ByteBuf>> sinkFactory;
+    private ForwardChannel<ByteBuf> sink;
 
-    public ProxyServerHandler(final Function<UpstreamCertificateSupplier, Consumer<ByteBuf>> sinkFactory) {
+    public ForwardingInboundHandler(final Function<UpstreamCertificateSupplier, ForwardChannel<ByteBuf>> sinkFactory) {
         this.sinkFactory = sinkFactory;
+    }
+
+    @Override
+    public void channelRegistered(final ChannelHandlerContext ctx) throws Exception {
+        final UpstreamCertificateSupplier certSupplier = () -> {
+            final ChannelHandler sslHandler = ctx.channel().pipeline().get("ssl");
+            if (sslHandler instanceof SslHandler) {
+                final SSLSession session = ((SslHandler) sslHandler).engine().getSession();
+                final Certificate[] clientCerts = session.getPeerCertificates();
+                return (X509Certificate) clientCerts[0];
+            } else {
+                throw new SSLPeerUnverifiedException("Upstream SSL not enabled");
+            }
+        };
+        sink = sinkFactory.apply(certSupplier);
+    }
+
+    @Override
+    public void channelUnregistered(final ChannelHandlerContext ctx) {
+        sink.close();
     }
 
     @Override
@@ -47,27 +66,10 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
         final ByteBuf buffer = ((ByteBuf) msg);
         LOG.trace("Received {} bytes from upstream.", buffer.readableBytes());
         try {
-            getOrCreateSink(ctx).accept(buffer);
+            sink.accept(buffer);
         } finally {
             buffer.release();
         }
-    }
-
-    private synchronized Consumer<ByteBuf> getOrCreateSink(final ChannelHandlerContext ctx) {
-        if (sink == null) {
-            final UpstreamCertificateSupplier certSupplier = () -> {
-                final ChannelHandler sslHandler = ctx.channel().pipeline().get("ssl");
-                if (sslHandler instanceof SslHandler) {
-                    final SSLSession session = ((SslHandler) sslHandler).engine().getSession();
-                    final Certificate[] clientCerts = session.getPeerCertificates();
-                    return (X509Certificate) clientCerts[0];
-                } else {
-                    throw new SSLPeerUnverifiedException("Upstream SSL not enabled");
-                }
-            };
-            sink = sinkFactory.apply(certSupplier);
-        }
-        return sink;
     }
 
     @Override

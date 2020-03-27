@@ -23,7 +23,7 @@ import com.dajudge.kafkaproxy.ca.ProxyClientCertificateAuthorityFactory.Certific
 import com.dajudge.kafkaproxy.ca.UpstreamCertificateSupplier;
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
 import com.dajudge.kafkaproxy.networking.upstream.ForwardChannel;
-import com.dajudge.kafkaproxy.networking.upstream.ForwardChannelFactory;
+import com.dajudge.kafkaproxy.networking.upstream.DownstreamSinkFactory;
 import com.dajudge.kafkaproxy.protocol.KafkaMessageSplitter;
 import com.dajudge.kafkaproxy.protocol.KafkaRequestProcessor;
 import com.dajudge.kafkaproxy.protocol.KafkaRequestStore;
@@ -47,7 +47,7 @@ import java.util.function.Supplier;
 import static com.dajudge.kafkaproxy.ca.ProxyClientCertificateAuthorityFactoryRegistry.createCertificateFactory;
 import static java.util.Arrays.asList;
 
-public class DownstreamChannelFactory implements ForwardChannelFactory {
+public class DownstreamChannelFactory implements DownstreamSinkFactory {
     private final ProxyChannelManager proxyChannelManager;
     private final String downstreamHostname;
     private final int downstreamPort;

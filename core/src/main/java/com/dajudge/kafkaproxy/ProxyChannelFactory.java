@@ -21,7 +21,7 @@ import com.dajudge.kafkaproxy.brokermap.BrokerMapping;
 import com.dajudge.kafkaproxy.brokermap.BrokerMapping.Endpoint;
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
 import com.dajudge.kafkaproxy.networking.downstream.DownstreamChannelFactory;
-import com.dajudge.kafkaproxy.networking.upstream.ForwardChannelFactory;
+import com.dajudge.kafkaproxy.networking.upstream.DownstreamSinkFactory;
 import com.dajudge.kafkaproxy.networking.upstream.ProxyChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.slf4j.Logger;
@@ -54,7 +54,7 @@ public class ProxyChannelFactory {
         if (brokerToProxy == null) {
             throw new IllegalArgumentException("No proxy configuration provided for " + endpoint);
         }
-        final ForwardChannelFactory forwardChannelFactory = new DownstreamChannelFactory(
+        final DownstreamSinkFactory downstreamSinkFactory = new DownstreamChannelFactory(
                 manager,
                 brokerToProxy.getBroker().getHost(),
                 brokerToProxy.getBroker().getPort(),
@@ -67,7 +67,7 @@ public class ProxyChannelFactory {
                 appConfig,
                 serverWorkerGroup,
                 upstreamWorkerGroup,
-                forwardChannelFactory
+                downstreamSinkFactory
         );
         LOG.info(
                 "Proxying {}:{} as {}:{}",
