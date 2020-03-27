@@ -18,6 +18,7 @@
 package com.dajudge.kafkaproxy.networking.upstream;
 
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
+import com.dajudge.kafkaproxy.networking.FilterFactory;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
@@ -40,8 +41,9 @@ public class ProxyChannel {
     private final NioEventLoopGroup bossGroup;
     private final NioEventLoopGroup upstreamWorkerGroup;
     private final DownstreamSinkFactory downstreamSinkFactory;
-
     private Channel channel;
+    private FilterFactory<ByteBuf> upstreamTransformFactory;
+    private FilterFactory<ByteBuf> downstreamTransformFactory;
 
     public ProxyChannel(
             final String hostname,
@@ -49,7 +51,9 @@ public class ProxyChannel {
             final ApplicationConfig appConfig,
             final NioEventLoopGroup bossGroup,
             final NioEventLoopGroup upstreamWorkerGroup,
-            final DownstreamSinkFactory downstreamSinkFactory
+            final DownstreamSinkFactory downstreamSinkFactory,
+            final FilterFactory<ByteBuf> upstreamFilterFactory,
+            final FilterFactory<ByteBuf> downstreamFilterFactory
     ) {
         this.hostname = hostname;
         this.port = port;
@@ -57,6 +61,8 @@ public class ProxyChannel {
         this.bossGroup = bossGroup;
         this.upstreamWorkerGroup = upstreamWorkerGroup;
         this.downstreamSinkFactory = downstreamSinkFactory;
+        this.upstreamTransformFactory = upstreamFilterFactory;
+        this.downstreamTransformFactory = downstreamFilterFactory;
     }
 
     public void start() {
@@ -93,7 +99,12 @@ public class ProxyChannel {
     private ForwardingInboundHandler createDownstreamHandler(final ForwardChannel<ByteBuf> upstreamSink) {
         return new ForwardingInboundHandler(certSupplier -> {
             try {
-                return downstreamSinkFactory.create(certSupplier, upstreamSink);
+                return downstreamSinkFactory.create(
+                        certSupplier,
+                        upstreamSink,
+                        upstreamTransformFactory,
+                        downstreamTransformFactory
+                );
             } catch (final RuntimeException e) {
                 LOG.error("Failed to create downstream channel", e);
                 throw e;

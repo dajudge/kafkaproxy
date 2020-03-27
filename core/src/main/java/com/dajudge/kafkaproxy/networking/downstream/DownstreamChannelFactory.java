@@ -17,21 +17,13 @@
 
 package com.dajudge.kafkaproxy.networking.downstream;
 
-import com.dajudge.kafkaproxy.ProxyChannelManager;
 import com.dajudge.kafkaproxy.ca.KeyStoreWrapper;
 import com.dajudge.kafkaproxy.ca.ProxyClientCertificateAuthorityFactory.CertificateAuthority;
 import com.dajudge.kafkaproxy.ca.UpstreamCertificateSupplier;
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
-import com.dajudge.kafkaproxy.networking.upstream.ForwardChannel;
+import com.dajudge.kafkaproxy.networking.FilterFactory;
 import com.dajudge.kafkaproxy.networking.upstream.DownstreamSinkFactory;
-import com.dajudge.kafkaproxy.protocol.KafkaMessageSplitter;
-import com.dajudge.kafkaproxy.protocol.KafkaRequestProcessor;
-import com.dajudge.kafkaproxy.protocol.KafkaRequestStore;
-import com.dajudge.kafkaproxy.protocol.KafkaResponseProcessor;
-import com.dajudge.kafkaproxy.protocol.rewrite.CompositeRewriter;
-import com.dajudge.kafkaproxy.protocol.rewrite.FindCoordinatorRewriter;
-import com.dajudge.kafkaproxy.protocol.rewrite.MetadataRewriter;
-import com.dajudge.kafkaproxy.protocol.rewrite.ResponseRewriter;
+import com.dajudge.kafkaproxy.networking.upstream.ForwardChannel;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.EventLoopGroup;
 
@@ -45,23 +37,19 @@ import java.security.cert.CertificateException;
 import java.util.function.Supplier;
 
 import static com.dajudge.kafkaproxy.ca.ProxyClientCertificateAuthorityFactoryRegistry.createCertificateFactory;
-import static java.util.Arrays.asList;
 
 public class DownstreamChannelFactory implements DownstreamSinkFactory {
-    private final ProxyChannelManager proxyChannelManager;
     private final String downstreamHostname;
     private final int downstreamPort;
     private final ApplicationConfig appConfig;
     private final EventLoopGroup downstreamWorkerGroup;
 
     public DownstreamChannelFactory(
-            final ProxyChannelManager proxyChannelManager,
             final String downstreamHostname,
             final int downstreamPort,
             final ApplicationConfig appConfig,
             final EventLoopGroup downstreamWorkerGroup
     ) {
-        this.proxyChannelManager = proxyChannelManager;
         this.downstreamHostname = downstreamHostname;
         this.downstreamPort = downstreamPort;
         this.appConfig = appConfig;
@@ -71,29 +59,18 @@ public class DownstreamChannelFactory implements DownstreamSinkFactory {
     @Override
     public ForwardChannel<ByteBuf> create(
             final UpstreamCertificateSupplier certificateSupplier,
-            final ForwardChannel<ByteBuf> upstreamSink
+            final ForwardChannel<ByteBuf> upstreamSink,
+            final FilterFactory<ByteBuf> upstreamFilterFactory,
+            final FilterFactory<ByteBuf> downstreamFilterFactory
     ) {
-        final ResponseRewriter rewriter = new CompositeRewriter(asList(
-                new MetadataRewriter(proxyChannelManager),
-                new FindCoordinatorRewriter(proxyChannelManager)
-        ));
-        final KafkaRequestStore requestStore = new KafkaRequestStore(rewriter);
-        final KafkaResponseProcessor responseProcessor = new KafkaResponseProcessor(upstreamSink, requestStore);
-        final KafkaMessageSplitter responseStreamSplitter = new KafkaMessageSplitter(responseProcessor);
-        final Supplier<KeyStoreWrapper> clientKeystoreSupplier = createClientKeyStoreSupplier(certificateSupplier);
-        final DownstreamClient downstreamClient = new DownstreamClient(
+        return downstreamFilterFactory.apply(new DownstreamClient(
                 downstreamHostname,
                 downstreamPort,
                 appConfig,
-                responseStreamSplitter,
+                upstreamFilterFactory.apply(upstreamSink),
                 downstreamWorkerGroup,
-                clientKeystoreSupplier
-        );
-        final KafkaRequestProcessor requestProcessor = new KafkaRequestProcessor(
-                downstreamClient,
-                requestStore
-        );
-        return new KafkaMessageSplitter(requestProcessor);
+                createClientKeyStoreSupplier(certificateSupplier)
+        ));
     }
 
     private Supplier<KeyStoreWrapper> createClientKeyStoreSupplier(

@@ -18,12 +18,14 @@
 package com.dajudge.kafkaproxy.networking.upstream;
 
 import com.dajudge.kafkaproxy.ca.UpstreamCertificateSupplier;
+import com.dajudge.kafkaproxy.networking.FilterFactory;
 import io.netty.buffer.ByteBuf;
 
 public interface DownstreamSinkFactory {
-
     ForwardChannel<ByteBuf> create(
-            final UpstreamCertificateSupplier certSupplier,
-            final ForwardChannel<ByteBuf> upstreamSink
+            UpstreamCertificateSupplier certificateSupplier,
+            ForwardChannel<ByteBuf> upstreamSink,
+            FilterFactory<ByteBuf> upstreamFilterFactory,
+            FilterFactory<ByteBuf> downstreamFilterFactory
     );
 }
