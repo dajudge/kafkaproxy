@@ -20,8 +20,8 @@ package com.dajudge.kafkaproxy.networking.upstream;
 import java.io.InputStream;
 import java.util.function.Supplier;
 
-public class ProxySslConfig {
-    public static final ProxySslConfig DISABLED = new ProxySslConfig(
+public class UpstreamSslConfig {
+    public static final UpstreamSslConfig DISABLED = new UpstreamSslConfig(
             false,
             null,
             null,
@@ -39,7 +39,7 @@ public class ProxySslConfig {
     private final String keyPassword;
     private final boolean clientAuthRequired;
 
-    public ProxySslConfig(
+    public UpstreamSslConfig(
             final boolean enabled,
             final Supplier<InputStream> trustStore,
             final String trustStorePassword,

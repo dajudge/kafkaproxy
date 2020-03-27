@@ -26,10 +26,10 @@ import java.util.Map;
 
 public class ProxyChannelManager {
     private final Map<String, ProxyChannel> channels = new HashMap<>();
-    private final ProxyChannelFactory channelFactory;
+    private final KafkaProxyChannelFactory channelFactory;
 
     public ProxyChannelManager(
-            final ProxyChannelFactory channelFactory
+            final KafkaProxyChannelFactory channelFactory
     ) {
         this.channelFactory = channelFactory;
     }

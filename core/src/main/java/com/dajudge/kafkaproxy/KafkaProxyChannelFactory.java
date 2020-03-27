@@ -22,8 +22,10 @@ import com.dajudge.kafkaproxy.brokermap.BrokerMapping.Endpoint;
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
 import com.dajudge.kafkaproxy.networking.FilterFactory;
 import com.dajudge.kafkaproxy.networking.downstream.DownstreamChannelFactory;
+import com.dajudge.kafkaproxy.networking.downstream.DownstreamSslConfig;
 import com.dajudge.kafkaproxy.networking.upstream.DownstreamSinkFactory;
 import com.dajudge.kafkaproxy.networking.upstream.ProxyChannel;
+import com.dajudge.kafkaproxy.networking.upstream.UpstreamSslConfig;
 import com.dajudge.kafkaproxy.protocol.KafkaMessageSplitter;
 import com.dajudge.kafkaproxy.protocol.KafkaRequestProcessor;
 import com.dajudge.kafkaproxy.protocol.KafkaRequestStore;
@@ -39,15 +41,16 @@ import org.slf4j.LoggerFactory;
 
 import static java.util.Arrays.asList;
 
-public class ProxyChannelFactory {
-    private static final Logger LOG = LoggerFactory.getLogger(ProxyChannelFactory.class);
+public class KafkaProxyChannelFactory {
+    private static final Logger LOG = LoggerFactory.getLogger(KafkaProxyChannelFactory.class);
     private final ApplicationConfig appConfig;
     private final BrokerMapper brokerMapper;
     private final NioEventLoopGroup downstreamWorkerGroup;
     private final NioEventLoopGroup serverWorkerGroup;
     private final NioEventLoopGroup upstreamWorkerGroup;
+    private final ClientCertificateAuthorityImpl clientCertificateAuthority;
 
-    public ProxyChannelFactory(
+    public KafkaProxyChannelFactory(
             final ApplicationConfig appConfig,
             final BrokerMapper brokerMapper,
             final NioEventLoopGroup downstreamWorkerGroup,
@@ -59,6 +62,7 @@ public class ProxyChannelFactory {
         this.downstreamWorkerGroup = downstreamWorkerGroup;
         this.serverWorkerGroup = serverWorkerGroup;
         this.upstreamWorkerGroup = upstreamWorkerGroup;
+        this.clientCertificateAuthority = new ClientCertificateAuthorityImpl(appConfig);
     }
 
     public ProxyChannel create(final ProxyChannelManager manager, final Endpoint endpoint) {
@@ -78,13 +82,14 @@ public class ProxyChannelFactory {
         final DownstreamSinkFactory downstreamSinkFactory = new DownstreamChannelFactory(
                 brokerToProxy.getBroker().getHost(),
                 brokerToProxy.getBroker().getPort(),
-                appConfig,
-                downstreamWorkerGroup
+                appConfig.get(DownstreamSslConfig.class),
+                downstreamWorkerGroup,
+                clientCertificateAuthority
         );
         final ProxyChannel proxyChannel = new ProxyChannel(
                 brokerToProxy.getProxy().getHost(),
                 brokerToProxy.getProxy().getPort(),
-                appConfig,
+                appConfig.get(UpstreamSslConfig.class),
                 serverWorkerGroup,
                 upstreamWorkerGroup,
                 downstreamSinkFactory,

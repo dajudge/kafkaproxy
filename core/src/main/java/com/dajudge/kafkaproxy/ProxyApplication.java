@@ -54,7 +54,7 @@ public class ProxyApplication {
         final NioEventLoopGroup upstreamWorkerGroup = new NioEventLoopGroup();
         final NioEventLoopGroup downstreamWorkerGroup = new NioEventLoopGroup();
         final BrokerMapper brokerMappingStrategy = new BrokerMapper(appConfig.get(BrokerConfig.class));
-        final ProxyChannelFactory channelFactory = new ProxyChannelFactory(
+        final KafkaProxyChannelFactory channelFactory = new KafkaProxyChannelFactory(
                 appConfig,
                 brokerMappingStrategy,
                 downstreamWorkerGroup,

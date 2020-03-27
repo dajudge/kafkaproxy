@@ -18,7 +18,6 @@
 package com.dajudge.kafkaproxy.networking.downstream;
 
 import com.dajudge.kafkaproxy.ca.KeyStoreWrapper;
-import com.dajudge.kafkaproxy.config.ApplicationConfig;
 import com.dajudge.kafkaproxy.networking.upstream.ForwardChannel;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
@@ -41,13 +40,11 @@ public class DownstreamClient implements ForwardChannel<ByteBuf> {
     public DownstreamClient(
             final String host,
             final int port,
-            final ApplicationConfig appConfig,
+            final DownstreamSslConfig sslConfig,
             final ForwardChannel<ByteBuf> messageSink,
             final EventLoopGroup workerGroup,
             final Supplier<KeyStoreWrapper> clientKeystoreSupplier
     ) {
-        final DownstreamSslConfig sslConfig = appConfig.get(DownstreamSslConfig.class);
-
         final ChannelHandler sslHandler = createHandler(
                 sslConfig,
                 host,

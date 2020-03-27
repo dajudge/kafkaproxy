@@ -17,7 +17,6 @@
 
 package com.dajudge.kafkaproxy.networking.upstream;
 
-import com.dajudge.kafkaproxy.config.ApplicationConfig;
 import com.dajudge.kafkaproxy.networking.FilterFactory;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
@@ -37,7 +36,7 @@ public class ProxyChannel {
     private final String hostname;
     private boolean initialized = false;
     private final int port;
-    private final ApplicationConfig appConfig;
+    private final UpstreamSslConfig sslConfig;
     private final NioEventLoopGroup bossGroup;
     private final NioEventLoopGroup upstreamWorkerGroup;
     private final DownstreamSinkFactory downstreamSinkFactory;
@@ -48,7 +47,7 @@ public class ProxyChannel {
     public ProxyChannel(
             final String hostname,
             final int port,
-            final ApplicationConfig appConfig,
+            final UpstreamSslConfig sslConfig,
             final NioEventLoopGroup bossGroup,
             final NioEventLoopGroup upstreamWorkerGroup,
             final DownstreamSinkFactory downstreamSinkFactory,
@@ -57,7 +56,7 @@ public class ProxyChannel {
     ) {
         this.hostname = hostname;
         this.port = port;
-        this.appConfig = appConfig;
+        this.sslConfig = sslConfig;
         this.bossGroup = bossGroup;
         this.upstreamWorkerGroup = upstreamWorkerGroup;
         this.downstreamSinkFactory = downstreamSinkFactory;
@@ -75,7 +74,7 @@ public class ProxyChannel {
             channel = new ServerBootstrap()
                     .group(bossGroup, upstreamWorkerGroup)
                     .channel(NioServerSocketChannel.class)
-                    .childHandler(createProxyInitializer(appConfig.get(ProxySslConfig.class)))
+                    .childHandler(createProxyInitializer(sslConfig))
                     .option(ChannelOption.SO_BACKLOG, 128)
                     .childOption(ChannelOption.SO_KEEPALIVE, true)
                     .bind(port).sync().channel();
@@ -84,13 +83,13 @@ public class ProxyChannel {
         }
     }
 
-    private ChannelInitializer<SocketChannel> createProxyInitializer(final ProxySslConfig proxySslConfig) {
+    private ChannelInitializer<SocketChannel> createProxyInitializer(final UpstreamSslConfig upstreamSslConfig) {
         return new ChannelInitializer<SocketChannel>() {
             @Override
             public void initChannel(final SocketChannel ch) {
                 final ChannelPipeline pipeline = ch.pipeline();
                 LOG.trace("Incoming connection: {}", ch.remoteAddress());
-                pipeline.addLast("ssl", createSslHandler(proxySslConfig));
+                pipeline.addLast("ssl", createSslHandler(upstreamSslConfig));
                 pipeline.addLast(createDownstreamHandler(new SocketChannelSink(ch)));
             }
         };

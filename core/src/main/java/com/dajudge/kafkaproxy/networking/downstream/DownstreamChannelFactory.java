@@ -17,43 +17,32 @@
 
 package com.dajudge.kafkaproxy.networking.downstream;
 
-import com.dajudge.kafkaproxy.ca.KeyStoreWrapper;
-import com.dajudge.kafkaproxy.ca.ProxyClientCertificateAuthorityFactory.CertificateAuthority;
 import com.dajudge.kafkaproxy.ca.UpstreamCertificateSupplier;
-import com.dajudge.kafkaproxy.config.ApplicationConfig;
 import com.dajudge.kafkaproxy.networking.FilterFactory;
 import com.dajudge.kafkaproxy.networking.upstream.DownstreamSinkFactory;
 import com.dajudge.kafkaproxy.networking.upstream.ForwardChannel;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.EventLoopGroup;
 
-import javax.net.ssl.SSLPeerUnverifiedException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.util.function.Supplier;
-
-import static com.dajudge.kafkaproxy.ca.ProxyClientCertificateAuthorityFactoryRegistry.createCertificateFactory;
-
 public class DownstreamChannelFactory implements DownstreamSinkFactory {
     private final String downstreamHostname;
     private final int downstreamPort;
-    private final ApplicationConfig appConfig;
+    private final DownstreamSslConfig sslConfig;
     private final EventLoopGroup downstreamWorkerGroup;
+    private final ClientCertificateAuthority clientCertificateAuthority;
 
     public DownstreamChannelFactory(
             final String downstreamHostname,
             final int downstreamPort,
-            final ApplicationConfig appConfig,
-            final EventLoopGroup downstreamWorkerGroup
+            final DownstreamSslConfig sslConfig,
+            final EventLoopGroup downstreamWorkerGroup,
+            final ClientCertificateAuthority clientCertificateAuthority
     ) {
         this.downstreamHostname = downstreamHostname;
         this.downstreamPort = downstreamPort;
-        this.appConfig = appConfig;
+        this.sslConfig = sslConfig;
         this.downstreamWorkerGroup = downstreamWorkerGroup;
+        this.clientCertificateAuthority = clientCertificateAuthority;
     }
 
     @Override
@@ -66,66 +55,10 @@ public class DownstreamChannelFactory implements DownstreamSinkFactory {
         return downstreamFilterFactory.apply(new DownstreamClient(
                 downstreamHostname,
                 downstreamPort,
-                appConfig,
+                sslConfig,
                 upstreamFilterFactory.apply(upstreamSink),
                 downstreamWorkerGroup,
-                createClientKeyStoreSupplier(certificateSupplier)
+                clientCertificateAuthority.apply(certificateSupplier)
         ));
-    }
-
-    private Supplier<KeyStoreWrapper> createClientKeyStoreSupplier(
-            final UpstreamCertificateSupplier certificateSupplier
-    ) {
-        final DownstreamSslConfig sslConfig = appConfig.get(DownstreamSslConfig.class);
-        switch (sslConfig.getClientCertificateStrategy()) {
-            case KEYSTORE:
-                return createKeyStoreSupplier(sslConfig);
-            case CA:
-                return createCaKeyStoreSupplier(sslConfig, certificateSupplier);
-            case NONE:
-                return emptyKeyStoreSupplier();
-            default:
-                throw new IllegalArgumentException("Unhandled client certificate strategy: "
-                        + sslConfig.getClientCertificateStrategy());
-        }
-    }
-
-    private Supplier<KeyStoreWrapper> emptyKeyStoreSupplier() {
-        return () -> {
-            try {
-                final KeyStore keyStore = KeyStore.getInstance("jks");
-                keyStore.load(null, null);
-                return new KeyStoreWrapper(keyStore, "noPassword");
-            } catch (final KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
-                throw new RuntimeException("Failed to create empty key store", e);
-            }
-        };
-    }
-
-    private Supplier<KeyStoreWrapper> createKeyStoreSupplier(final DownstreamSslConfig sslConfig) {
-        try (final InputStream is = sslConfig.getKeyStore().get()) {
-            final KeyStore keyStore = KeyStore.getInstance("jks");
-            keyStore.load(is, sslConfig.getKeyStorePassword().toCharArray());
-            final KeyStoreWrapper wrapper = new KeyStoreWrapper(keyStore, sslConfig.getKeyPassword());
-            return () -> wrapper;
-        } catch (final IOException | KeyStoreException | NoSuchAlgorithmException | CertificateException e) {
-            throw new RuntimeException("Failed to load client key store", e);
-        }
-    }
-
-    private Supplier<KeyStoreWrapper> createCaKeyStoreSupplier(
-            final DownstreamSslConfig sslConfig,
-            final UpstreamCertificateSupplier certificateSupplier) {
-        final CertificateAuthority clientAuthority = createCertificateFactory(
-                sslConfig.getCertificateFactory(),
-                appConfig
-        );
-        return () -> {
-            try {
-                return clientAuthority.createClientCertificate(certificateSupplier);
-            } catch (final SSLPeerUnverifiedException e) {
-                throw new RuntimeException("Client did not provide certificate", e);
-            }
-        };
     }
 }

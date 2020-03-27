@@ -36,11 +36,11 @@ import static com.dajudge.kafkaproxy.common.ssl.DefaultTrustManagerFactory.creat
 public class ProxySslHandlerFactory {
     private static final Logger LOG = LoggerFactory.getLogger(ProxySslHandlerFactory.class);
 
-    public static ChannelHandler createSslHandler(final ProxySslConfig config) {
+    public static ChannelHandler createSslHandler(final UpstreamSslConfig config) {
         return config.isEnabled() ? createHandlerInternal(config) : new NullChannelHandler();
     }
 
-    private static ChannelHandler createHandlerInternal(final ProxySslConfig config) {
+    private static ChannelHandler createHandlerInternal(final UpstreamSslConfig config) {
         LOG.info("Creating proxy channel SSL handler");
         try {
             final SSLContext clientContext = SSLContext.getInstance("TLS");
