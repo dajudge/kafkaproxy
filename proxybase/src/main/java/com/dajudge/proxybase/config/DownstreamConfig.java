@@ -20,20 +20,20 @@ package com.dajudge.proxybase.config;
 import java.io.InputStream;
 import java.util.function.Supplier;
 
-public class DownstreamSslConfig {
+public class DownstreamConfig {
     private final boolean enabled;
     private final Supplier<InputStream> trustStore;
     private final String trustStorePassword;
     private final boolean hostnameVerificationEnabled;
 
-    public static final DownstreamSslConfig DISABLED = new DownstreamSslConfig(
+    public static final DownstreamConfig DISABLED = new DownstreamConfig(
             false,
             null,
             null,
             false
     );
 
-    public DownstreamSslConfig(
+    public DownstreamConfig(
             final boolean enabled,
             final Supplier<InputStream> trustStore,
             final String trustStorePassword,

@@ -18,8 +18,9 @@
 package com.dajudge.kafkaproxy;
 
 import com.dajudge.kafkaproxy.config.RealEnvironment;
+import com.dajudge.proxybase.ProxyApplication;
 
-import static com.dajudge.kafkaproxy.ProxyApplication.create;
+import static com.dajudge.kafkaproxy.KafkaProxyApplication.create;
 
 public class Startup {
     public static void main(final String argv[]) {

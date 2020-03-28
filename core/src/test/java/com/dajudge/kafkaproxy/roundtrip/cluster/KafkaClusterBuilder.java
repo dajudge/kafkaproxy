@@ -17,7 +17,8 @@
 
 package com.dajudge.kafkaproxy.roundtrip.cluster;
 
-import com.dajudge.kafkaproxy.ProxyApplication;
+import com.dajudge.kafkaproxy.KafkaProxyApplication;
+import com.dajudge.proxybase.ProxyApplication;
 import com.dajudge.kafkaproxy.roundtrip.client.ClientFactory;
 import com.dajudge.kafkaproxy.roundtrip.cluster.container.KafkaContainer;
 import com.dajudge.kafkaproxy.roundtrip.cluster.container.ZookeeperContainer;
@@ -111,7 +112,7 @@ public class KafkaClusterBuilder {
         final StringBuilder buffer = new StringBuilder();
         env.dump(line -> buffer.append(line + "\n"));
         LOG.info("ENV:\n{}", indent(4, buffer.toString()));
-        return ProxyApplication.create(env).start();
+        return KafkaProxyApplication.create(env).start();
     }
 
     private KafkaCluster buildKafkaCluster() {

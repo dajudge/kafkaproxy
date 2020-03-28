@@ -17,9 +17,9 @@
 
 package com.dajudge.kafkaproxy.config;
 
-import com.dajudge.proxybase.config.UpstreamSslConfig;
+import com.dajudge.proxybase.config.UpstreamConfig;
 
-public class ProxySslConfigSource implements ConfigSource<UpstreamSslConfig> {
+public class ProxySslConfigSource implements ConfigSource<UpstreamConfig> {
     private static final String PREFIX_CLIENT_SSL = PREFIX + "CLIENT_SSL_";
     private static final String PROP_CLIENT_SSL_ENABLED = PREFIX_CLIENT_SSL + "ENABLED";
     private static final String PROP_CLIENT_SSL_AUTH_REQUIRED = PREFIX_CLIENT_SSL + "AUTH_REQUIRED";
@@ -32,17 +32,17 @@ public class ProxySslConfigSource implements ConfigSource<UpstreamSslConfig> {
     private static final boolean DEFAULT_CLIENT_AUTH_REQUIRED = false;
 
     @Override
-    public Class<UpstreamSslConfig> getConfigClass() {
-        return UpstreamSslConfig.class;
+    public Class<UpstreamConfig> getConfigClass() {
+        return UpstreamConfig.class;
     }
 
     @Override
-    public UpstreamSslConfig parse(final Environment environment) {
+    public UpstreamConfig parse(final Environment environment) {
         final boolean enabled = environment.requiredBoolean(PROP_CLIENT_SSL_ENABLED, DEFAULT_CLIENT_SSL_ENABLED);
         if (!enabled) {
-            return UpstreamSslConfig.DISABLED;
+            return UpstreamConfig.DISABLED;
         }
-        return new UpstreamSslConfig(
+        return new UpstreamConfig(
                 true,
                 environment.optionalFile(PROP_CLIENT_SSL_TRUSTSTORE_LOCATION).orElse(null),
                 environment.optionalString(PROP_CLIENT_SSL_TRUSTSTORE_PASSWORD).orElse(null),

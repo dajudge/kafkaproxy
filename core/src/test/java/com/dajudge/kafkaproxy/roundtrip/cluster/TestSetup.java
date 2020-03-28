@@ -17,7 +17,7 @@
 
 package com.dajudge.kafkaproxy.roundtrip.cluster;
 
-import com.dajudge.kafkaproxy.ProxyApplication;
+import com.dajudge.proxybase.ProxyApplication;
 import com.dajudge.kafkaproxy.roundtrip.client.ClientFactory;
 
 public class TestSetup implements AutoCloseable {

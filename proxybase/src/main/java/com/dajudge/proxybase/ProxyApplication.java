@@ -15,33 +15,34 @@
  *
  */
 
-package com.dajudge.kafkaproxy;
+package com.dajudge.proxybase;
 
-import com.dajudge.kafkaproxy.ca.CertificateAuthorityFactory;
-import com.dajudge.kafkaproxy.config.ApplicationConfig;
-import com.dajudge.kafkaproxy.config.BrokerConfigSource;
-import com.dajudge.kafkaproxy.config.Environment;
-import com.dajudge.kafkaproxy.config.KafkaSslConfigSource;
-import com.dajudge.proxybase.ProxyChannel;
-import com.dajudge.proxybase.ProxyChannelFactory;
-import com.dajudge.proxybase.config.UpstreamSslConfig;
+import com.dajudge.proxybase.ca.CertificateAuthority;
+import com.dajudge.proxybase.config.DownstreamConfig;
+import com.dajudge.proxybase.config.UpstreamConfig;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
+
 import static java.util.stream.Collectors.toList;
 
-public class ProxyApplication {
+public abstract class ProxyApplication {
     private static final Logger LOG = LoggerFactory.getLogger(ProxyApplication.class);
-    private final Environment environment;
+    private final UpstreamConfig upstreamConfig;
+    private final DownstreamConfig downstreamConfig;
+    private final CertificateAuthority certificateAuthority;
     private Runnable shutdownRunnable;
 
-    private ProxyApplication(final Environment environment) {
-        this.environment = environment;
-    }
-
-    public static ProxyApplication create(final Environment environment) {
-        return new ProxyApplication(environment);
+    protected ProxyApplication(
+            final UpstreamConfig upstreamConfig,
+            final DownstreamConfig downstreamConfig,
+            final CertificateAuthority certificateAuthority
+    ) {
+        this.upstreamConfig = upstreamConfig;
+        this.downstreamConfig = downstreamConfig;
+        this.certificateAuthority = certificateAuthority;
     }
 
     public void shutdown() {
@@ -52,28 +53,20 @@ public class ProxyApplication {
     }
 
     public ProxyApplication start() {
-        final ApplicationConfig appConfig = new ApplicationConfig(environment);
         final NioEventLoopGroup serverWorkerGroup = new NioEventLoopGroup();
         final NioEventLoopGroup upstreamWorkerGroup = new NioEventLoopGroup();
         final NioEventLoopGroup downstreamWorkerGroup = new NioEventLoopGroup();
-        final BrokerMapper brokerMappingStrategy = new BrokerMapper(appConfig.get(BrokerConfigSource.BrokerConfig.class));
         final ProxyChannelFactory proxyChannelFactory = new ProxyChannelFactory(
                 downstreamWorkerGroup,
                 serverWorkerGroup,
                 upstreamWorkerGroup,
-                appConfig.get(UpstreamSslConfig.class),
-                appConfig.get(KafkaSslConfigSource.KafkaSslConfig.class).getDownstreamSslConfig(),
-                CertificateAuthorityFactory.create(appConfig)
+                upstreamConfig,
+                downstreamConfig,
+                certificateAuthority
         );
-        final KafkaProxyChannelFactory kafkaProxyChannelFactory = new KafkaProxyChannelFactory(
-                brokerMappingStrategy,
-                proxyChannelFactory
-        );
-        final KafkaProxyChannelManager proxyChannelManager = new KafkaProxyChannelManager(kafkaProxyChannelFactory);
-        final BrokerMapping boostrapMapping = kafkaProxyChannelFactory.bootstrap(proxyChannelManager);
-        LOG.info("Bootstrap broker mapping: {}", boostrapMapping);
+        final Collection<ProxyChannel> proxyChannels = initializeProxyChannels(proxyChannelFactory);
         shutdownRunnable = () -> {
-            proxyChannelManager.proxies().stream()
+            proxyChannels.stream()
                     .map(ProxyChannel::close)
                     .collect(toList())
                     .forEach(future -> {
@@ -89,4 +82,8 @@ public class ProxyApplication {
         };
         return this;
     }
+
+    protected abstract Collection<ProxyChannel> initializeProxyChannels(
+            final ProxyChannelFactory proxyChannelFactory
+    );
 }

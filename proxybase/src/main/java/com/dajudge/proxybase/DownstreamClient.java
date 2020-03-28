@@ -18,7 +18,7 @@
 package com.dajudge.proxybase;
 
 import com.dajudge.proxybase.ca.KeyStoreWrapper;
-import com.dajudge.proxybase.config.DownstreamSslConfig;
+import com.dajudge.proxybase.config.DownstreamConfig;
 import com.dajudge.proxybase.config.Endpoint;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
@@ -38,7 +38,7 @@ class DownstreamClient implements Sink<ByteBuf> {
 
     DownstreamClient(
             final Endpoint endpoint,
-            final DownstreamSslConfig sslConfig,
+            final DownstreamConfig sslConfig,
             final Sink<ByteBuf> messageSink,
             final EventLoopGroup workerGroup,
             final KeyStoreWrapper keyStore

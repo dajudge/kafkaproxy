@@ -18,7 +18,7 @@
 package com.dajudge.kafkaproxy.ca;
 
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
-import com.dajudge.kafkaproxy.config.KafkaSslConfigSource;
+import com.dajudge.kafkaproxy.config.KafkaBrokerConfigSource;
 import com.dajudge.proxybase.ca.CertificateAuthority;
 import com.dajudge.proxybase.ca.ClientCertCertificateAuthority;
 import com.dajudge.proxybase.ca.NullCertificateAuthority;
@@ -30,8 +30,8 @@ public interface CertificateAuthorityFactory {
 
     CertificateAuthority createFactory(ApplicationConfig config);
 
-    static CertificateAuthority create(final ApplicationConfig appConfig) {
-        final KafkaSslConfigSource.KafkaSslConfig sslConfig = appConfig.get(KafkaSslConfigSource.KafkaSslConfig.class);
+    static CertificateAuthority createCertificateAuthority(final ApplicationConfig appConfig) {
+        final KafkaBrokerConfigSource.KafkaBrokerConfig sslConfig = appConfig.get(KafkaBrokerConfigSource.KafkaBrokerConfig.class);
         switch (sslConfig.getClientCertificateStrategy()) {
             case KEYSTORE:
                 return new ClientCertCertificateAuthority(sslConfig.getClientCertificateConfig());

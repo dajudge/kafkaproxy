@@ -18,9 +18,9 @@
 package com.dajudge.proxybase;
 
 import com.dajudge.proxybase.ca.CertificateAuthority;
-import com.dajudge.proxybase.config.DownstreamSslConfig;
+import com.dajudge.proxybase.config.DownstreamConfig;
 import com.dajudge.proxybase.config.Endpoint;
-import com.dajudge.proxybase.config.UpstreamSslConfig;
+import com.dajudge.proxybase.config.UpstreamConfig;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.slf4j.Logger;
@@ -31,23 +31,23 @@ public class ProxyChannelFactory {
     private final NioEventLoopGroup downstreamWorkerGroup;
     private final NioEventLoopGroup serverWorkerGroup;
     private final NioEventLoopGroup upstreamWorkerGroup;
-    private final UpstreamSslConfig upstreamSslConfig;
-    private final DownstreamSslConfig downstreamSslConfig;
+    private final UpstreamConfig upstreamConfig;
+    private final DownstreamConfig downstreamConfig;
     private final CertificateAuthority certificateAuthority;
 
-    public ProxyChannelFactory(
+    ProxyChannelFactory(
             final NioEventLoopGroup downstreamWorkerGroup,
             final NioEventLoopGroup serverWorkerGroup,
             final NioEventLoopGroup upstreamWorkerGroup,
-            final UpstreamSslConfig upstreamSslConfig,
-            final DownstreamSslConfig downstreamSslConfig,
+            final UpstreamConfig upstreamConfig,
+            final DownstreamConfig downstreamConfig,
             final CertificateAuthority certificateAuthority
     ) {
         this.downstreamWorkerGroup = downstreamWorkerGroup;
         this.serverWorkerGroup = serverWorkerGroup;
         this.upstreamWorkerGroup = upstreamWorkerGroup;
-        this.upstreamSslConfig = upstreamSslConfig;
-        this.downstreamSslConfig = downstreamSslConfig;
+        this.upstreamConfig = upstreamConfig;
+        this.downstreamConfig = downstreamConfig;
         this.certificateAuthority = certificateAuthority;
     }
 
@@ -59,12 +59,12 @@ public class ProxyChannelFactory {
     ) {
         final DownstreamChannelFactory downstreamSinkFactory = new DownstreamChannelFactory(
                 downstreamEndpoint,
-                downstreamSslConfig,
+                downstreamConfig,
                 downstreamWorkerGroup
         );
         final ProxyChannel proxyChannel = new ProxyChannel(
                 upstreamEndpoint,
-                upstreamSslConfig,
+                upstreamConfig,
                 serverWorkerGroup,
                 upstreamWorkerGroup,
                 downstreamSinkFactory,

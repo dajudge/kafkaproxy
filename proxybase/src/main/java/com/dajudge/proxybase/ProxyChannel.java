@@ -21,7 +21,7 @@ import com.dajudge.proxybase.ca.CertificateAuthority;
 import com.dajudge.proxybase.ca.KeyStoreWrapper;
 import com.dajudge.proxybase.ca.UpstreamCertificateSupplier;
 import com.dajudge.proxybase.config.Endpoint;
-import com.dajudge.proxybase.config.UpstreamSslConfig;
+import com.dajudge.proxybase.config.UpstreamConfig;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
@@ -40,7 +40,7 @@ public class ProxyChannel {
     private static final Logger LOG = LoggerFactory.getLogger(ProxyChannel.class);
     private boolean initialized = false;
     private final Endpoint endpoint;
-    private final UpstreamSslConfig sslConfig;
+    private final UpstreamConfig sslConfig;
     private final NioEventLoopGroup bossGroup;
     private final NioEventLoopGroup upstreamWorkerGroup;
     private final DownstreamChannelFactory downstreamSinkFactory;
@@ -51,7 +51,7 @@ public class ProxyChannel {
 
     ProxyChannel(
             final Endpoint endpoint,
-            final UpstreamSslConfig sslConfig,
+            final UpstreamConfig sslConfig,
             final NioEventLoopGroup bossGroup,
             final NioEventLoopGroup upstreamWorkerGroup,
             final DownstreamChannelFactory downstreamSinkFactory,
@@ -91,14 +91,14 @@ public class ProxyChannel {
     }
 
     private ChannelInitializer<SocketChannel> createProxyInitializer(
-            final UpstreamSslConfig upstreamSslConfig
+            final UpstreamConfig upstreamConfig
     ) {
         return new ChannelInitializer<SocketChannel>() {
             @Override
             public void initChannel(final SocketChannel ch) {
                 final ChannelPipeline pipeline = ch.pipeline();
                 LOG.trace("Incoming connection: {}", ch.remoteAddress());
-                pipeline.addLast("ssl", createSslHandler(upstreamSslConfig));
+                pipeline.addLast("ssl", createSslHandler(upstreamConfig));
                 pipeline.addLast(createDownstreamHandler(new SocketChannelSink(ch)));
             }
         };

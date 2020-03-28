@@ -20,8 +20,8 @@ package com.dajudge.proxybase.config;
 import java.io.InputStream;
 import java.util.function.Supplier;
 
-public class UpstreamSslConfig {
-    public static final UpstreamSslConfig DISABLED = new UpstreamSslConfig(
+public class UpstreamConfig {
+    public static final UpstreamConfig DISABLED = new UpstreamConfig(
             false,
             null,
             null,
@@ -39,7 +39,7 @@ public class UpstreamSslConfig {
     private final String keyPassword;
     private final boolean clientAuthRequired;
 
-    public UpstreamSslConfig(
+    public UpstreamConfig(
             final boolean enabled,
             final Supplier<InputStream> trustStore,
             final String trustStorePassword,

@@ -18,19 +18,19 @@
 package com.dajudge.proxybase;
 
 import com.dajudge.proxybase.ca.KeyStoreWrapper;
-import com.dajudge.proxybase.config.DownstreamSslConfig;
+import com.dajudge.proxybase.config.DownstreamConfig;
 import com.dajudge.proxybase.config.Endpoint;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.EventLoopGroup;
 
 class DownstreamChannelFactory {
     private final Endpoint endpoint;
-    private final DownstreamSslConfig sslConfig;
+    private final DownstreamConfig sslConfig;
     private final EventLoopGroup downstreamWorkerGroup;
 
     DownstreamChannelFactory(
             final Endpoint endpoint,
-            final DownstreamSslConfig sslConfig,
+            final DownstreamConfig sslConfig,
             final EventLoopGroup downstreamWorkerGroup
     ) {
         this.endpoint = endpoint;

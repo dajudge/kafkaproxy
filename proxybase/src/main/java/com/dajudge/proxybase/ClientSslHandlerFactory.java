@@ -18,7 +18,7 @@
 package com.dajudge.proxybase;
 
 import com.dajudge.proxybase.ca.KeyStoreWrapper;
-import com.dajudge.proxybase.config.DownstreamSslConfig;
+import com.dajudge.proxybase.config.DownstreamConfig;
 import com.dajudge.proxybase.config.Endpoint;
 import io.netty.channel.ChannelHandler;
 import io.netty.handler.ssl.SslHandler;
@@ -31,7 +31,6 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
@@ -40,7 +39,7 @@ class ClientSslHandlerFactory {
     private static final Logger LOG = LoggerFactory.getLogger(ClientSslHandlerFactory.class);
 
     static ChannelHandler createHandler(
-            final DownstreamSslConfig config,
+            final DownstreamConfig config,
             final Endpoint endpoint,
             final KeyStoreWrapper keyStore
     ) {
@@ -50,7 +49,7 @@ class ClientSslHandlerFactory {
     }
 
     private static ChannelHandler createHandlerInternal(
-            final DownstreamSslConfig config,
+            final DownstreamConfig config,
             final Endpoint endpoint,
             final KeyStoreWrapper keyStore
     ) {
@@ -83,10 +82,10 @@ class ClientSslHandlerFactory {
         }
     }
 
-    private static List<X509TrustManager> createDefaultTrustManagers(final DownstreamSslConfig downstreamSslConfig) {
+    private static List<X509TrustManager> createDefaultTrustManagers(final DownstreamConfig downstreamConfig) {
         return Stream.of((DefaultTrustManagerFactory.createTrustManagers(
-                downstreamSslConfig.getTrustStore(),
-                downstreamSslConfig.getTrustStorePassword().toCharArray()
+                downstreamConfig.getTrustStore(),
+                downstreamConfig.getTrustStorePassword().toCharArray()
         ))).map(it -> (X509TrustManager) it).collect(toList());
     }
 }

@@ -17,7 +17,7 @@
 
 package com.dajudge.proxybase;
 
-import com.dajudge.proxybase.config.UpstreamSslConfig;
+import com.dajudge.proxybase.config.UpstreamConfig;
 import io.netty.channel.ChannelHandler;
 import io.netty.handler.ssl.SslHandler;
 import org.slf4j.Logger;
@@ -36,13 +36,13 @@ import static com.dajudge.proxybase.DefaultTrustManagerFactory.createTrustManage
 class ProxySslHandlerFactory {
     private static final Logger LOG = LoggerFactory.getLogger(ProxySslHandlerFactory.class);
 
-    static ChannelHandler createSslHandler(final UpstreamSslConfig config) {
+    static ChannelHandler createSslHandler(final UpstreamConfig config) {
         return config.isEnabled()
                 ? createHandlerInternal(config)
                 : new NullChannelHandler();
     }
 
-    private static ChannelHandler createHandlerInternal(final UpstreamSslConfig config) {
+    private static ChannelHandler createHandlerInternal(final UpstreamConfig config) {
         LOG.info("Creating proxy channel SSL handler");
         try {
             final SSLContext clientContext = SSLContext.getInstance("TLS");
