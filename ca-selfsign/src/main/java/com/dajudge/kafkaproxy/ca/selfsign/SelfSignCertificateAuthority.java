@@ -85,7 +85,8 @@ public class SelfSignCertificateAuthority implements CertificateAuthority {
                     algorithm,
                     keyPair.getPublic(),
                     client.getNotBefore(),
-                    client.getNotAfter()
+                    client.getNotAfter(),
+                    false
             );
             keystore.setKeyEntry("key", keyPair.getPrivate(), keyPassword.toCharArray(), new Certificate[]{cert});
             return keystore;

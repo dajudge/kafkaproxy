@@ -1,8 +1,19 @@
-apply plugin: "java"
+plugins {
+    id 'java'
+    id 'io.quarkus' version "1.2.0.Final"
+}
 
 dependencies {
     implementation project(":ca-selfsign")
     implementation project(":core")
     implementation project(":proxybase")
-    runtimeOnly 'ch.qos.logback:logback-classic:1.2.3'
+
+    implementation enforcedPlatform("io.quarkus:quarkus-universe-bom:1.2.0.Final") {
+        exclude group: 'org.apache.kafka', module: 'kafka-clients'
+    }
+    implementation 'io.quarkus:quarkus-resteasy'
+    implementation 'io.quarkus:quarkus-resteasy-jackson'
+
+    // Force override to latest kafka client
+    implementation 'org.apache.kafka:kafka-clients:2.4.0'
 }

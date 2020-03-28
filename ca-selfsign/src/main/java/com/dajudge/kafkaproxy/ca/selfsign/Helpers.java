@@ -17,8 +17,10 @@
 
 package com.dajudge.kafkaproxy.ca.selfsign;
 
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
+import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.Certificate;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.cert.X509CertificateHolder;
@@ -66,10 +68,11 @@ public final class Helpers {
             final String dn,
             final KeyPair pair,
             final int days,
-            final String algorithm
+            final String algorithm,
+            final boolean isTrustAnchor
     ) {
         final PublicKey publicKey = pair.getPublic();
-        return sign(dn, dn, pair.getPrivate(), days, algorithm, publicKey);
+        return sign(dn, dn, pair.getPrivate(), days, algorithm, publicKey, isTrustAnchor);
     }
 
     public static X509Certificate sign(
@@ -78,11 +81,12 @@ public final class Helpers {
             final PrivateKey signingKey,
             final int days,
             final String algorithm,
-            final PublicKey publicKey
+            final PublicKey publicKey,
+            final boolean isTrustAnchor
     ) {
         final Date notBefore = new Date(currentTimeMillis());
         final Date notAfter = new Date(currentTimeMillis() + (long) days * 365 * 24 * 60 * 60 * 1000);
-        return sign(ownerDn, issuerDn, signingKey, algorithm, publicKey, notBefore, notAfter);
+        return sign(ownerDn, issuerDn, signingKey, algorithm, publicKey, notBefore, notAfter, isTrustAnchor);
     }
 
     public static X509Certificate sign(
@@ -92,7 +96,8 @@ public final class Helpers {
             final String algorithm,
             final PublicKey publicKey,
             final Date notBefore,
-            final Date notAfter
+            final Date notAfter,
+            final boolean isTrustAnchor
     ) {
         try {
             final AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder()
@@ -108,7 +113,9 @@ public final class Helpers {
                     new X500Name(ownerDn),
                     SubjectPublicKeyInfo.getInstance(publicKey.getEncoded())
             );
-
+            if (isTrustAnchor) {
+                certGenerator.addExtension(new ASN1ObjectIdentifier("2.5.29.19"), false, new BasicConstraints(true));
+            }
             final ContentSigner sigGen = new BcRSAContentSignerBuilder(sigAlgId, digAlgId)
                     .build(PrivateKeyFactory.createKey(signingKey.getEncoded()));
 

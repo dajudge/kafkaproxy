@@ -20,13 +20,3 @@ dependencies {
     testCompileOnly 'com.google.code.findbugs:annotations:3.0.1'
     testRuntimeOnly 'ch.qos.logback:logback-classic:1.2.3'
 }
-
-jar {
-    manifest {
-        attributes(
-                'Class-Path': configurations.runtimeClasspath.files.collect { it.getName() }.join(' '),
-                "Implementation-Title": project.name,
-                "Main-Class": "com.dajudge.kafkaproxy.Startup"
-        )
-    }
-}

@@ -19,13 +19,23 @@ package com.dajudge.kafkaproxy;
 
 import com.dajudge.kafkaproxy.config.RealEnvironment;
 import com.dajudge.proxybase.ProxyApplication;
+import io.quarkus.runtime.ShutdownEvent;
+import io.quarkus.runtime.StartupEvent;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
 
 import static com.dajudge.kafkaproxy.KafkaProxyApplication.create;
 
+@ApplicationScoped
 public class Startup {
-    public static void main(final String argv[]) {
-        final ProxyApplication startup = create(new RealEnvironment());
-        Runtime.getRuntime().addShutdownHook(new Thread(startup::shutdown));
-        startup.start();
+    private final ProxyApplication application = create(new RealEnvironment());
+
+    void onStart(@Observes StartupEvent ev) {
+        application.start();
+    }
+
+    void onStop(@Observes ShutdownEvent ev) {
+        application.shutdown();
     }
 }

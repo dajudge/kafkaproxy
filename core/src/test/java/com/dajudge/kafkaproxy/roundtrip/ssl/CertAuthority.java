@@ -33,7 +33,7 @@ public class CertAuthority {
 
     public CertAuthority(final String dn) {
         keyPair = keyPair();
-        cert = Helpers.selfSignedCert(dn, keyPair, 10, "SHA256withRSA");
+        cert = Helpers.selfSignedCert(dn, keyPair, 10, "SHA256withRSA", true);
     }
 
     public KeyStoreWrapper createSignedKeyPair(final String dn) {
@@ -44,7 +44,8 @@ public class CertAuthority {
                 keyPair.getPrivate(),
                 10,
                 "SHA256withRSA",
-                newKeyPair.getPublic()
+                newKeyPair.getPublic(),
+                false
         );
         final String keyStorePassword = randomIdentifier();
         final String keyPassword = randomIdentifier();

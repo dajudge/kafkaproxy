@@ -19,14 +19,19 @@ task clean(type: Delete) {
     delete "${project.buildDir}"
 }
 
-task copyJars(type: Copy) {
+task copyLibs(type: Copy) {
     group "build"
-    [":app", ":ca-selfsign"].each {
-        dependsOn project(it).tasks.withType(Jar)
-        from project(it).tasks.withType(Jar)
-        from project(it).configurations.runtimeClasspath
-    }
+    from new File(project(":app").buildDir, "lib")
+    into "$dockerBuildDir/lib"
+    dependsOn project(":app").tasks.findByName("build")
+}
+
+task copyApp(type: Copy) {
+    group "build"
+    from project(":app").buildDir
+    include "*-runner.jar"
     into dockerBuildDir
+    dependsOn copyLibs
 }
 
 task copyDockerSources(type: Copy) {
@@ -37,7 +42,7 @@ task copyDockerSources(type: Copy) {
 
 task buildAppImage(type: DockerBuildImage) {
     group "build"
-    dependsOn copyJars, copyDockerSources
+    dependsOn copyApp, copyDockerSources
     inputDir = dockerBuildDir
     tags.addAll(tagsToBuild)
 }
