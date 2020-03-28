@@ -17,10 +17,10 @@
 
 package com.dajudge.kafkaproxy.ca.selfsign;
 
-import com.dajudge.kafkaproxy.ca.KeyStoreWrapper;
-import com.dajudge.kafkaproxy.ca.ProxyClientCertificateAuthorityFactory;
-import com.dajudge.kafkaproxy.config.ApplicationConfig;
-import com.dajudge.kafkaproxy.config.FileResource;
+import com.dajudge.proxybase.ca.CertificateAuthority;
+import com.dajudge.proxybase.ca.ClientCertificateAuthorityFactory;
+import com.dajudge.proxybase.ca.ConfigProvider;
+import com.dajudge.proxybase.ca.KeyStoreWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,9 +30,11 @@ import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.UUID;
+import java.util.function.Supplier;
 
-public class CertificateAuthorityFactory implements ProxyClientCertificateAuthorityFactory {
+import static java.util.UUID.randomUUID;
+
+public class CertificateAuthorityFactory implements ClientCertificateAuthorityFactory {
     private static final Logger LOG = LoggerFactory.getLogger(CertificateAuthorityFactory.class);
 
     private static KeyStore createProxyCertificate(
@@ -70,12 +72,12 @@ public class CertificateAuthorityFactory implements ProxyClientCertificateAuthor
 
     @Override
     public CertificateAuthority createFactory(
-            final ApplicationConfig appConfig
+            final ConfigProvider configProvider
     ) {
         try {
-            final SelfSignConfig config = appConfig.get(SelfSignConfig.class);
+            final SelfSignConfig config = configProvider.getConfig(SelfSignConfig.class);
             final String algorithm = config.getSignatureAlgorithm();
-            final FileResource keyStoreFile = config.getKeyStore();
+            final Supplier<InputStream> keyStoreFile = config.getKeyStore();
             final KeyStore keyStore = KeyStore.getInstance("jks");
             final String alias = config.getKeyAlias();
             final String issuerDn = config.getIssuerDn();
@@ -84,9 +86,11 @@ public class CertificateAuthorityFactory implements ProxyClientCertificateAuthor
             }
             final PrivateKey caKeyPair = loadKey(keyStore, alias, config.getKeyPassword());
             return client -> {
-                final String keyPassword = UUID.randomUUID().toString();
-                final KeyStore clientKeyStore = createProxyCertificate(issuerDn, client.get(), algorithm, caKeyPair, keyPassword);
-                return new KeyStoreWrapper(keyStore, keyPassword);
+                final String keyPassword = randomUUID().toString();
+                return new KeyStoreWrapper(
+                        createProxyCertificate(issuerDn, client.get(), algorithm, caKeyPair, keyPassword),
+                        keyPassword
+                );
             };
         } catch (final KeyStoreException | IOException | CertificateException | NoSuchAlgorithmException e) {
             throw new IllegalArgumentException("Failed to initialize self-signing proxy client-certificate factory", e);

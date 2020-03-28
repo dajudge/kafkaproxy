@@ -17,7 +17,7 @@
 
 package com.dajudge.kafkaproxy;
 
-import com.dajudge.kafkaproxy.networking.Endpoint;
+import com.dajudge.proxybase.config.Endpoint;
 
 public class BrokerMapping {
     private final Endpoint broker;

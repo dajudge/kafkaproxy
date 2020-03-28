@@ -17,12 +17,12 @@
 
 package com.dajudge.kafkaproxy.config.kafkassl;
 
+import com.dajudge.kafkaproxy.ca.ClientCertificateStrategy;
 import com.dajudge.kafkaproxy.config.ConfigSource;
 import com.dajudge.kafkaproxy.config.Environment;
-import com.dajudge.kafkaproxy.networking.downstream.ClientCertificateStrategy;
-import com.dajudge.kafkaproxy.networking.downstream.DownstreamSslConfig;
+import com.dajudge.proxybase.config.DownstreamSslConfig;
 
-public class KafkaSslConfigSource implements ConfigSource<DownstreamSslConfig> {
+public class KafkaSslConfigSource implements ConfigSource<KafkaSslConfig> {
     private static final String KAFKA_SSL_PREFIX = PREFIX + "KAFKA_SSL_";
     private static final String ENV_KAFKA_SSL_ENABLED = KAFKA_SSL_PREFIX + "ENABLED";
     private static final String ENV_KAFKA_SSL_TRUSTSTORE_LOCATION = KAFKA_SSL_PREFIX + "TRUSTSTORE_LOCATION";
@@ -38,25 +38,28 @@ public class KafkaSslConfigSource implements ConfigSource<DownstreamSslConfig> {
     private static final String DEFAULT_CERTIFICATE_FACTORY = "null";
 
     @Override
-    public Class<DownstreamSslConfig> getConfigClass() {
-        return DownstreamSslConfig.class;
+    public Class<KafkaSslConfig> getConfigClass() {
+        return KafkaSslConfig.class;
     }
 
     @Override
-    public DownstreamSslConfig parse(final Environment environment) {
+    public KafkaSslConfig parse(final Environment environment) {
         if (!environment.requiredBoolean(ENV_KAFKA_SSL_ENABLED, DEFAULT_KAFKA_SSL_ENABLED)) {
-            return DownstreamSslConfig.DISABLED;
+            return KafkaSslConfig.DISABLED;
         }
-        return new DownstreamSslConfig(
+        final DownstreamSslConfig downstreamSslConfig = new DownstreamSslConfig(
                 environment.requiredBoolean(ENV_KAFKA_SSL_ENABLED, DEFAULT_KAFKA_SSL_ENABLED),
                 environment.optionalFile(ENV_KAFKA_SSL_TRUSTSTORE_LOCATION).orElse(null),
                 environment.optionalString(ENV_KAFKA_SSL_TRUSTSTORE_PASSWORD).orElse(null),
                 environment.requiredBoolean(ENV_KAFKA_SSL_VERIFY_HOSTNAME, DEFAULT_KAFKA_SSL_VERIFY_HOSTNAME),
-                environment.requiredString(ENV_KAFKA_SSL_CERTIFICATE_FACTORY, DEFAULT_CERTIFICATE_FACTORY),
-                ClientCertificateStrategy.valueOf(environment.requiredString(ENV_KAFKA_CLIENT_CERT_STRATEGY, "NONE")),
                 environment.optionalFile(ENV_KAFKA_SSL_KEYSTORE_LOCATION).orElse(null),
                 environment.optionalString(ENV_KAFKA_SSL_KEYSTORE_PASSWORD).orElse(null),
                 environment.optionalString(ENV_KAFKA_SSL_KEY_PASSWORD).orElse(null)
+        );
+        return new KafkaSslConfig(
+                downstreamSslConfig,
+                environment.requiredString(ENV_KAFKA_SSL_CERTIFICATE_FACTORY, DEFAULT_CERTIFICATE_FACTORY),
+                ClientCertificateStrategy.valueOf(environment.requiredString(ENV_KAFKA_CLIENT_CERT_STRATEGY, "NONE"))
         );
     }
 }

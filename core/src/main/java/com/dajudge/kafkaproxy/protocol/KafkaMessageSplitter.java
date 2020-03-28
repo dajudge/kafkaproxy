@@ -17,18 +17,18 @@
 
 package com.dajudge.kafkaproxy.protocol;
 
-import com.dajudge.kafkaproxy.networking.upstream.ForwardChannel;
+import com.dajudge.proxybase.Sink;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class KafkaMessageSplitter implements ForwardChannel<ByteBuf> {
+public class KafkaMessageSplitter implements Sink<ByteBuf> {
     private static final Logger LOG = LoggerFactory.getLogger(KafkaMessageSplitter.class);
-    private final ForwardChannel<KafkaMessage> requestSink;
+    private final Sink<KafkaMessage> requestSink;
     private KafkaMessage currentRequest = new KafkaMessage();
 
-    public KafkaMessageSplitter(final ForwardChannel<KafkaMessage> requestSink) {
+    public KafkaMessageSplitter(final Sink<KafkaMessage> requestSink) {
         this.requestSink = requestSink;
     }
 

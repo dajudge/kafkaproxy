@@ -1,7 +1,7 @@
 apply plugin: "java"
 
 dependencies {
-    implementation project(":ca-api")
+    implementation project(":proxybase")
 
     // We use the transport objects from the kafka client library
     implementation 'org.apache.kafka:kafka-clients:2.4.0'
@@ -11,10 +11,6 @@ dependencies {
     implementation 'org.yaml:snakeyaml:1.25'
     // Used for TLS hostname verification
     implementation 'org.apache.httpcomponents.client5:httpclient5:5.0-beta6'
-    // Used for certificate signing
-    implementation 'org.bouncycastle:bcpkix-jdk15on:1.64'
-    // The logging implementation
-    runtimeOnly 'ch.qos.logback:logback-classic:1.2.3'
     // The logging API
     implementation 'org.slf4j:slf4j-api:1.7.28'
 
@@ -22,6 +18,7 @@ dependencies {
     testImplementation 'junit:junit:4.11'
     testImplementation project(":ca-selfsign")
     testCompileOnly 'com.google.code.findbugs:annotations:3.0.1'
+    testRuntimeOnly 'ch.qos.logback:logback-classic:1.2.3'
 }
 
 jar {

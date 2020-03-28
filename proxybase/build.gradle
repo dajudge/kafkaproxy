@@ -1,0 +1,10 @@
+apply plugin: "java"
+
+dependencies {
+    // Netty is our network layer
+    implementation 'io.netty:netty-all:4.1.42.Final'
+    // Used for TLS hostname verification
+    implementation 'org.apache.httpcomponents.client5:httpclient5:5.0-beta6'
+    // The logging API
+    implementation 'org.slf4j:slf4j-api:1.7.28'
+}

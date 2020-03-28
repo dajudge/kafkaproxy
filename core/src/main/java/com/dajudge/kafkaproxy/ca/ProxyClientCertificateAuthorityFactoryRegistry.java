@@ -17,8 +17,9 @@
 
 package com.dajudge.kafkaproxy.ca;
 
-import com.dajudge.kafkaproxy.ca.ProxyClientCertificateAuthorityFactory.CertificateAuthority;
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
+import com.dajudge.proxybase.ca.CertificateAuthority;
+import com.dajudge.proxybase.ca.ClientCertificateAuthorityFactory;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -29,22 +30,22 @@ import static java.util.function.Function.identity;
 import static java.util.stream.StreamSupport.stream;
 
 public class ProxyClientCertificateAuthorityFactoryRegistry {
-    private static final Map<String, ProxyClientCertificateAuthorityFactory> FACTORIES = collectFactories();
+    private static final Map<String, ClientCertificateAuthorityFactory> FACTORIES = collectFactories();
 
     public static CertificateAuthority createCertificateFactory(
             final String name,
             final ApplicationConfig config
     ) {
-        final ProxyClientCertificateAuthorityFactory factory = FACTORIES.get(name);
+        final ClientCertificateAuthorityFactory factory = FACTORIES.get(name);
         return ofNullable(factory)
                 .orElseThrow(() -> new IllegalArgumentException("No such proxy client-certificate factory: " + name))
-                .createFactory(config);
+                .createFactory(config::get);
     }
 
-    private static Map<String, ProxyClientCertificateAuthorityFactory> collectFactories() {
-        return stream(load(ProxyClientCertificateAuthorityFactory.class).spliterator(), false)
+    private static Map<String, ClientCertificateAuthorityFactory> collectFactories() {
+        return stream(load(ClientCertificateAuthorityFactory.class).spliterator(), false)
                 .collect(Collectors.toMap(
-                        ProxyClientCertificateAuthorityFactory::getName,
+                        ClientCertificateAuthorityFactory::getName,
                         identity()
                 ));
     }

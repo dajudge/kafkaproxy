@@ -19,7 +19,7 @@ package com.dajudge.kafkaproxy.config.proxyssl;
 
 import com.dajudge.kafkaproxy.config.ConfigSource;
 import com.dajudge.kafkaproxy.config.Environment;
-import com.dajudge.kafkaproxy.networking.upstream.UpstreamSslConfig;
+import com.dajudge.proxybase.config.UpstreamSslConfig;
 
 public class ProxySslConfigSource implements ConfigSource<UpstreamSslConfig> {
     private static final String PREFIX_CLIENT_SSL = PREFIX + "CLIENT_SSL_";

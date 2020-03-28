@@ -17,8 +17,8 @@
 
 package com.dajudge.kafkaproxy;
 
-import com.dajudge.kafkaproxy.networking.Endpoint;
-import com.dajudge.kafkaproxy.networking.upstream.ProxyChannel;
+import com.dajudge.proxybase.config.Endpoint;
+import com.dajudge.proxybase.ProxyChannel;
 
 import java.util.Collection;
 import java.util.HashMap;

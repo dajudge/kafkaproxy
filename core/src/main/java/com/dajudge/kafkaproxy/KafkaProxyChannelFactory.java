@@ -17,10 +17,10 @@
 
 package com.dajudge.kafkaproxy;
 
-import com.dajudge.kafkaproxy.networking.Endpoint;
-import com.dajudge.kafkaproxy.networking.FilterFactory;
-import com.dajudge.kafkaproxy.networking.ProxyChannelFactory;
-import com.dajudge.kafkaproxy.networking.upstream.ProxyChannel;
+import com.dajudge.proxybase.config.Endpoint;
+import com.dajudge.proxybase.FilterFactory;
+import com.dajudge.proxybase.ProxyChannelFactory;
+import com.dajudge.proxybase.ProxyChannel;
 import com.dajudge.kafkaproxy.protocol.KafkaMessageSplitter;
 import com.dajudge.kafkaproxy.protocol.KafkaRequestProcessor;
 import com.dajudge.kafkaproxy.protocol.KafkaRequestStore;
@@ -60,10 +60,8 @@ public class KafkaProxyChannelFactory {
         final FilterFactory<ByteBuf> downstreamFilterFactory = downstream ->
                 new KafkaMessageSplitter(new KafkaRequestProcessor(downstream, requestStore));
         return proxyChannelFactory.createProxyChannel(
-                upstreamFilterFactory,
-                downstreamFilterFactory,
-                brokerToProxy.getBroker(),
-                brokerToProxy.getProxy()
+                brokerToProxy.getProxy(), brokerToProxy.getBroker(), upstreamFilterFactory,
+                downstreamFilterFactory
         );
     }
 

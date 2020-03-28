@@ -17,19 +17,20 @@
 
 package com.dajudge.kafkaproxy.ca.selfsign;
 
-import com.dajudge.kafkaproxy.config.FileResource;
+import java.io.InputStream;
+import java.util.function.Supplier;
 
 public class SelfSignConfig {
     private final String keyPassword;
     private final String keyAlias;
     private final String issuerDn;
     private final String signatureAlgorithm;
-    private final FileResource keyStore;
+    private final Supplier<InputStream> keyStore;
     private final String keyStorePassword;
 
     public SelfSignConfig(
             final String issuerDn,
-            final FileResource keyStore,
+            final Supplier<InputStream> keyStore,
             final String keyStorePassword,
             final String keyAlias,
             final String keyPassword,
@@ -48,7 +49,7 @@ public class SelfSignConfig {
         return signatureAlgorithm;
     }
 
-    public FileResource getKeyStore() {
+    public Supplier<InputStream> getKeyStore() {
         return keyStore;
     }
 

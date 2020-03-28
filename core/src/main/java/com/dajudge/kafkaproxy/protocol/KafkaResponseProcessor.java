@@ -17,15 +17,15 @@
 
 package com.dajudge.kafkaproxy.protocol;
 
-import com.dajudge.kafkaproxy.networking.upstream.ForwardChannel;
+import com.dajudge.proxybase.Sink;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
 
-public class KafkaResponseProcessor implements ForwardChannel<KafkaMessage> {
-    private final ForwardChannel<ByteBuf> sink;
+public class KafkaResponseProcessor implements Sink<KafkaMessage> {
+    private final Sink<ByteBuf> sink;
     private final KafkaRequestStore requestStore;
 
-    public KafkaResponseProcessor(final ForwardChannel<ByteBuf> sink, final KafkaRequestStore requestStore) {
+    public KafkaResponseProcessor(final Sink<ByteBuf> sink, final KafkaRequestStore requestStore) {
         this.sink = sink;
         this.requestStore = requestStore;
     }

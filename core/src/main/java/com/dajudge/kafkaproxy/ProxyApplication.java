@@ -17,13 +17,15 @@
 
 package com.dajudge.kafkaproxy;
 
+import com.dajudge.kafkaproxy.ca.ClientCertificateAuthorityImpl;
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
 import com.dajudge.kafkaproxy.config.Environment;
 import com.dajudge.kafkaproxy.config.broker.BrokerConfig;
-import com.dajudge.kafkaproxy.networking.ProxyChannelFactory;
-import com.dajudge.kafkaproxy.networking.downstream.DownstreamSslConfig;
-import com.dajudge.kafkaproxy.networking.upstream.ProxyChannel;
-import com.dajudge.kafkaproxy.networking.upstream.UpstreamSslConfig;
+import com.dajudge.kafkaproxy.config.kafkassl.KafkaSslConfig;
+import com.dajudge.proxybase.ProxyChannelFactory;
+import com.dajudge.proxybase.config.DownstreamSslConfig;
+import com.dajudge.proxybase.ProxyChannel;
+import com.dajudge.proxybase.config.UpstreamSslConfig;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +63,7 @@ public class ProxyApplication {
                 serverWorkerGroup,
                 upstreamWorkerGroup,
                 appConfig.get(UpstreamSslConfig.class),
-                appConfig.get(DownstreamSslConfig.class),
+                appConfig.get(KafkaSslConfig.class).getDownstreamSslConfig(),
                 new ClientCertificateAuthorityImpl(appConfig)
         );
         final KafkaProxyChannelFactory kafkaProxyChannelFactory = new KafkaProxyChannelFactory(

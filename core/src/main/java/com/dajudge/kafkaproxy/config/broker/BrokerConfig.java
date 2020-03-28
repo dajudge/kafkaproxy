@@ -17,7 +17,7 @@
 
 package com.dajudge.kafkaproxy.config.broker;
 
-import com.dajudge.kafkaproxy.networking.Endpoint;
+import com.dajudge.proxybase.config.Endpoint;
 
 public class BrokerConfig {
     private final Endpoint bootstrapBroker;

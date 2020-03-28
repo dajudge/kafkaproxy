@@ -18,7 +18,7 @@
 package com.dajudge.kafkaproxy;
 
 import com.dajudge.kafkaproxy.config.broker.BrokerConfig;
-import com.dajudge.kafkaproxy.networking.Endpoint;
+import com.dajudge.proxybase.config.Endpoint;
 
 import java.util.HashMap;
 import java.util.Map;

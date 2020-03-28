@@ -19,7 +19,7 @@ package com.dajudge.kafkaproxy.protocol.rewrite;
 
 import com.dajudge.kafkaproxy.ProxyChannelManager;
 import com.dajudge.kafkaproxy.BrokerMapping;
-import com.dajudge.kafkaproxy.networking.Endpoint;
+import com.dajudge.proxybase.config.Endpoint;
 import org.apache.kafka.common.message.FindCoordinatorResponseData;
 import org.apache.kafka.common.protocol.ApiKeys;
 import org.apache.kafka.common.requests.FindCoordinatorResponse;
