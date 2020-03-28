@@ -1,3 +1,3 @@
-com.dajudge.kafkaproxy.config.broker.BrokerConfigSource
-com.dajudge.kafkaproxy.config.kafkassl.KafkaSslConfigSource
-com.dajudge.kafkaproxy.config.proxyssl.ProxySslConfigSource
+com.dajudge.kafkaproxy.config.BrokerConfigSource
+com.dajudge.kafkaproxy.config.KafkaSslConfigSource
+com.dajudge.kafkaproxy.config.ProxySslConfigSource

@@ -42,22 +42,21 @@ class ClientSslHandlerFactory {
     static ChannelHandler createHandler(
             final DownstreamSslConfig config,
             final Endpoint endpoint,
-            final Supplier<KeyStoreWrapper> clientKeyStoreSupplier
+            final KeyStoreWrapper keyStore
     ) {
         return config.isEnabled()
-                ? createHandlerInternal(config, endpoint, clientKeyStoreSupplier)
+                ? createHandlerInternal(config, endpoint, keyStore)
                 : new NullChannelHandler();
     }
 
     private static ChannelHandler createHandlerInternal(
             final DownstreamSslConfig config,
             final Endpoint endpoint,
-            final Supplier<KeyStoreWrapper> clientKeyStoreSupplier
+            final KeyStoreWrapper keyStore
     ) {
         try {
             LOG.info("Creating client SSL handler for {}", endpoint);
             final SSLContext clientContext = SSLContext.getInstance("TLS");
-            final KeyStoreWrapper keyStore = clientKeyStoreSupplier.get();
             final HostnameCheck hostnameCheck = config.isHostnameVerificationEnabled()
                     ? new HttpClientHostnameCheck(endpoint.getHost())
                     : HostnameCheck.NULL_VERIFIER;

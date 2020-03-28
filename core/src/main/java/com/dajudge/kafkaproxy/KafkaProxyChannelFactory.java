@@ -45,7 +45,7 @@ public class KafkaProxyChannelFactory {
         this.proxyChannelFactory = proxyChannelFactory;
     }
 
-    public ProxyChannel create(final ProxyChannelManager manager, final Endpoint endpoint) {
+    public ProxyChannel create(final KafkaProxyChannelManager manager, final Endpoint endpoint) {
         final BrokerMapping brokerToProxy = brokerMapper.getBrokerMapping(endpoint);
         if (brokerToProxy == null) {
             throw new IllegalArgumentException("No proxy configuration provided for " + endpoint);
@@ -65,7 +65,7 @@ public class KafkaProxyChannelFactory {
         );
     }
 
-    public BrokerMapping bootstrap(final ProxyChannelManager manager) {
+    public BrokerMapping bootstrap(final KafkaProxyChannelManager manager) {
         return manager.getByBrokerEndpoint(brokerMapper.getBootstrapBroker());
     }
 }

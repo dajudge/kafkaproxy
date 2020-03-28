@@ -28,8 +28,6 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.function.Supplier;
-
 import static com.dajudge.proxybase.ClientSslHandlerFactory.createHandler;
 import static io.netty.channel.ChannelOption.SO_KEEPALIVE;
 
@@ -43,9 +41,9 @@ class DownstreamClient implements Sink<ByteBuf> {
             final DownstreamSslConfig sslConfig,
             final Sink<ByteBuf> messageSink,
             final EventLoopGroup workerGroup,
-            final Supplier<KeyStoreWrapper> clientKeystoreSupplier
+            final KeyStoreWrapper keyStore
     ) {
-        final ChannelHandler sslHandler = createHandler(sslConfig, endpoint, clientKeystoreSupplier);
+        final ChannelHandler sslHandler = createHandler(sslConfig, endpoint, keyStore);
         try {
             channel = new Bootstrap()
                     .group(workerGroup)

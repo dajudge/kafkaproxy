@@ -17,6 +17,7 @@
 
 package com.dajudge.proxybase;
 
+import com.dajudge.proxybase.ca.CertificateAuthority;
 import com.dajudge.proxybase.config.DownstreamSslConfig;
 import com.dajudge.proxybase.config.Endpoint;
 import com.dajudge.proxybase.config.UpstreamSslConfig;
@@ -32,7 +33,7 @@ public class ProxyChannelFactory {
     private final NioEventLoopGroup upstreamWorkerGroup;
     private final UpstreamSslConfig upstreamSslConfig;
     private final DownstreamSslConfig downstreamSslConfig;
-    private final ClientCertificateAuthority clientCertificateAuthority;
+    private final CertificateAuthority certificateAuthority;
 
     public ProxyChannelFactory(
             final NioEventLoopGroup downstreamWorkerGroup,
@@ -40,14 +41,14 @@ public class ProxyChannelFactory {
             final NioEventLoopGroup upstreamWorkerGroup,
             final UpstreamSslConfig upstreamSslConfig,
             final DownstreamSslConfig downstreamSslConfig,
-            final ClientCertificateAuthority clientCertificateAuthority
+            final CertificateAuthority certificateAuthority
     ) {
         this.downstreamWorkerGroup = downstreamWorkerGroup;
         this.serverWorkerGroup = serverWorkerGroup;
         this.upstreamWorkerGroup = upstreamWorkerGroup;
         this.upstreamSslConfig = upstreamSslConfig;
         this.downstreamSslConfig = downstreamSslConfig;
-        this.clientCertificateAuthority = clientCertificateAuthority;
+        this.certificateAuthority = certificateAuthority;
     }
 
     public ProxyChannel createProxyChannel(
@@ -59,8 +60,7 @@ public class ProxyChannelFactory {
         final DownstreamChannelFactory downstreamSinkFactory = new DownstreamChannelFactory(
                 downstreamEndpoint,
                 downstreamSslConfig,
-                downstreamWorkerGroup,
-                clientCertificateAuthority
+                downstreamWorkerGroup
         );
         final ProxyChannel proxyChannel = new ProxyChannel(
                 upstreamEndpoint,
@@ -68,6 +68,7 @@ public class ProxyChannelFactory {
                 serverWorkerGroup,
                 upstreamWorkerGroup,
                 downstreamSinkFactory,
+                certificateAuthority,
                 upstreamFilterFactory,
                 downstreamFilterFactory
         );

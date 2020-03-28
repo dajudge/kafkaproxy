@@ -17,6 +17,9 @@
 
 package com.dajudge.proxybase;
 
+import com.dajudge.proxybase.ca.CertificateAuthority;
+import com.dajudge.proxybase.ca.KeyStoreWrapper;
+import com.dajudge.proxybase.ca.UpstreamCertificateSupplier;
 import com.dajudge.proxybase.config.Endpoint;
 import com.dajudge.proxybase.config.UpstreamSslConfig;
 import io.netty.bootstrap.ServerBootstrap;
@@ -28,6 +31,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLPeerUnverifiedException;
 import java.net.InetSocketAddress;
 
 import static com.dajudge.proxybase.ProxySslHandlerFactory.createSslHandler;
@@ -40,6 +44,7 @@ public class ProxyChannel {
     private final NioEventLoopGroup bossGroup;
     private final NioEventLoopGroup upstreamWorkerGroup;
     private final DownstreamChannelFactory downstreamSinkFactory;
+    private final CertificateAuthority certificateAuthority;
     private Channel channel;
     private FilterFactory<ByteBuf> upstreamTransformFactory;
     private FilterFactory<ByteBuf> downstreamTransformFactory;
@@ -50,6 +55,7 @@ public class ProxyChannel {
             final NioEventLoopGroup bossGroup,
             final NioEventLoopGroup upstreamWorkerGroup,
             final DownstreamChannelFactory downstreamSinkFactory,
+            final CertificateAuthority certificateAuthority,
             final FilterFactory<ByteBuf> upstreamFilterFactory,
             final FilterFactory<ByteBuf> downstreamFilterFactory
     ) {
@@ -58,6 +64,7 @@ public class ProxyChannel {
         this.bossGroup = bossGroup;
         this.upstreamWorkerGroup = upstreamWorkerGroup;
         this.downstreamSinkFactory = downstreamSinkFactory;
+        this.certificateAuthority = certificateAuthority;
         this.upstreamTransformFactory = upstreamFilterFactory;
         this.downstreamTransformFactory = downstreamFilterFactory;
     }
@@ -83,7 +90,9 @@ public class ProxyChannel {
         }
     }
 
-    private ChannelInitializer<SocketChannel> createProxyInitializer(final UpstreamSslConfig upstreamSslConfig) {
+    private ChannelInitializer<SocketChannel> createProxyInitializer(
+            final UpstreamSslConfig upstreamSslConfig
+    ) {
         return new ChannelInitializer<SocketChannel>() {
             @Override
             public void initChannel(final SocketChannel ch) {
@@ -99,16 +108,24 @@ public class ProxyChannel {
         return new ForwardingInboundHandler(certSupplier -> {
             try {
                 return downstreamSinkFactory.create(
-                        certSupplier,
                         upstreamSink,
                         upstreamTransformFactory,
-                        downstreamTransformFactory
+                        downstreamTransformFactory,
+                        getClientKeystore(certSupplier)
                 );
             } catch (final RuntimeException e) {
                 LOG.error("Failed to create downstream channel", e);
                 throw e;
             }
         });
+    }
+
+    private KeyStoreWrapper getClientKeystore(final UpstreamCertificateSupplier certSupplier) {
+        try {
+            return certificateAuthority.createClientCertificate(certSupplier);
+        } catch (final SSLPeerUnverifiedException e) {
+            throw new RuntimeException("Client did not provide valid certificate", e);
+        }
     }
 
     public ChannelFuture close() {

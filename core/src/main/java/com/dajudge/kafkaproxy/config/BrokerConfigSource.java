@@ -15,15 +15,13 @@
  *
  */
 
-package com.dajudge.kafkaproxy.config.broker;
+package com.dajudge.kafkaproxy.config;
 
 import com.dajudge.proxybase.config.Endpoint;
-import com.dajudge.kafkaproxy.config.ConfigSource;
-import com.dajudge.kafkaproxy.config.Environment;
 
 import static java.lang.Integer.parseUnsignedInt;
 
-public class BrokerConfigSource implements ConfigSource<BrokerConfig> {
+public class BrokerConfigSource implements ConfigSource<BrokerConfigSource.BrokerConfig> {
 
     @Override
     public Class<BrokerConfig> getConfigClass() {
@@ -43,5 +41,29 @@ public class BrokerConfigSource implements ConfigSource<BrokerConfig> {
         final String bootstrapServer = environment.requiredString("KAFKAPROXY_BOOTSTRAP_SERVER");
         final String[] bootstrapServerParts = bootstrapServer.split(":");
         return new Endpoint(bootstrapServerParts[0], parseUnsignedInt(bootstrapServerParts[1]));
+    }
+
+    public static class BrokerConfig {
+        private final Endpoint bootstrapBroker;
+        private final String proxyHostname;
+        private final int proxyBasePort;
+
+        public BrokerConfig(final Endpoint bootstrapBroker, final String proxyHostname, final int proxyBasePort) {
+            this.bootstrapBroker = bootstrapBroker;
+            this.proxyHostname = proxyHostname;
+            this.proxyBasePort = proxyBasePort;
+        }
+
+        public Endpoint getBootstrapBroker() {
+            return bootstrapBroker;
+        }
+
+        public String getProxyHostname() {
+            return proxyHostname;
+        }
+
+        public int getProxyBasePort() {
+            return proxyBasePort;
+        }
     }
 }

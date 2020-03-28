@@ -17,7 +17,7 @@
 
 package com.dajudge.kafkaproxy;
 
-import com.dajudge.kafkaproxy.config.broker.BrokerConfig;
+import com.dajudge.kafkaproxy.config.BrokerConfigSource;
 import com.dajudge.proxybase.config.Endpoint;
 
 import java.util.HashMap;
@@ -29,7 +29,7 @@ public class BrokerMapper {
     private final Endpoint bootstrapBroker;
     private int nextBrokerPort;
 
-    public BrokerMapper(final BrokerConfig brokerConfig) {
+    public BrokerMapper(final BrokerConfigSource.BrokerConfig brokerConfig) {
         nextBrokerPort = brokerConfig.getProxyBasePort();
         proxyHostname = brokerConfig.getProxyHostname();
         bootstrapBroker = brokerConfig.getBootstrapBroker();

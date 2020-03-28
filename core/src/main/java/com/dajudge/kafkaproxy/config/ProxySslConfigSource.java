@@ -15,10 +15,8 @@
  *
  */
 
-package com.dajudge.kafkaproxy.config.proxyssl;
+package com.dajudge.kafkaproxy.config;
 
-import com.dajudge.kafkaproxy.config.ConfigSource;
-import com.dajudge.kafkaproxy.config.Environment;
 import com.dajudge.proxybase.config.UpstreamSslConfig;
 
 public class ProxySslConfigSource implements ConfigSource<UpstreamSslConfig> {

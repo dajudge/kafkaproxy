@@ -17,14 +17,13 @@
 
 package com.dajudge.kafkaproxy;
 
-import com.dajudge.kafkaproxy.ca.ClientCertificateAuthorityImpl;
+import com.dajudge.kafkaproxy.ca.CertificateAuthorityFactory;
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
+import com.dajudge.kafkaproxy.config.BrokerConfigSource;
 import com.dajudge.kafkaproxy.config.Environment;
-import com.dajudge.kafkaproxy.config.broker.BrokerConfig;
-import com.dajudge.kafkaproxy.config.kafkassl.KafkaSslConfig;
-import com.dajudge.proxybase.ProxyChannelFactory;
-import com.dajudge.proxybase.config.DownstreamSslConfig;
+import com.dajudge.kafkaproxy.config.KafkaSslConfigSource;
 import com.dajudge.proxybase.ProxyChannel;
+import com.dajudge.proxybase.ProxyChannelFactory;
 import com.dajudge.proxybase.config.UpstreamSslConfig;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.slf4j.Logger;
@@ -57,20 +56,20 @@ public class ProxyApplication {
         final NioEventLoopGroup serverWorkerGroup = new NioEventLoopGroup();
         final NioEventLoopGroup upstreamWorkerGroup = new NioEventLoopGroup();
         final NioEventLoopGroup downstreamWorkerGroup = new NioEventLoopGroup();
-        final BrokerMapper brokerMappingStrategy = new BrokerMapper(appConfig.get(BrokerConfig.class));
+        final BrokerMapper brokerMappingStrategy = new BrokerMapper(appConfig.get(BrokerConfigSource.BrokerConfig.class));
         final ProxyChannelFactory proxyChannelFactory = new ProxyChannelFactory(
                 downstreamWorkerGroup,
                 serverWorkerGroup,
                 upstreamWorkerGroup,
                 appConfig.get(UpstreamSslConfig.class),
-                appConfig.get(KafkaSslConfig.class).getDownstreamSslConfig(),
-                new ClientCertificateAuthorityImpl(appConfig)
+                appConfig.get(KafkaSslConfigSource.KafkaSslConfig.class).getDownstreamSslConfig(),
+                CertificateAuthorityFactory.create(appConfig)
         );
         final KafkaProxyChannelFactory kafkaProxyChannelFactory = new KafkaProxyChannelFactory(
                 brokerMappingStrategy,
                 proxyChannelFactory
         );
-        final ProxyChannelManager proxyChannelManager = new ProxyChannelManager(kafkaProxyChannelFactory);
+        final KafkaProxyChannelManager proxyChannelManager = new KafkaProxyChannelManager(kafkaProxyChannelFactory);
         final BrokerMapping boostrapMapping = kafkaProxyChannelFactory.bootstrap(proxyChannelManager);
         LOG.info("Bootstrap broker mapping: {}", boostrapMapping);
         shutdownRunnable = () -> {

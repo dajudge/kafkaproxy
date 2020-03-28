@@ -18,12 +18,12 @@
 package com.dajudge.kafkaproxy.ca.selfsign;
 
 import com.dajudge.proxybase.ca.CertificateAuthority;
-import com.dajudge.proxybase.ca.ClientCertificateAuthorityFactory;
-import com.dajudge.proxybase.ca.ConfigProvider;
 import com.dajudge.proxybase.ca.KeyStoreWrapper;
+import com.dajudge.proxybase.ca.UpstreamCertificateSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLPeerUnverifiedException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.*;
@@ -34,8 +34,37 @@ import java.util.function.Supplier;
 
 import static java.util.UUID.randomUUID;
 
-public class CertificateAuthorityFactory implements ClientCertificateAuthorityFactory {
-    private static final Logger LOG = LoggerFactory.getLogger(CertificateAuthorityFactory.class);
+public class SelfSignCertificateAuthority implements CertificateAuthority {
+    private static final Logger LOG = LoggerFactory.getLogger(SelfSignCertificateAuthority.class);
+
+    private final String algorithm;
+    private final String issuerDn;
+    private final PrivateKey caKeyPair;
+
+    public SelfSignCertificateAuthority(
+            final SelfSignConfig config
+    ) throws KeyStoreException, IOException, CertificateException, NoSuchAlgorithmException {
+        this.algorithm = config.getSignatureAlgorithm();
+        final Supplier<InputStream> keyStoreFile = config.getKeyStore();
+        final KeyStore keyStore = KeyStore.getInstance("jks");
+        final String alias = config.getKeyAlias();
+        this.issuerDn = config.getIssuerDn();
+        try (final InputStream data = keyStoreFile.get()) {
+            keyStore.load(data, config.getKeyStorePassword());
+        }
+        this.caKeyPair = loadKey(keyStore, alias, config.getKeyPassword());
+    }
+
+    @Override
+    public KeyStoreWrapper createClientCertificate(
+            final UpstreamCertificateSupplier certificateSupplier
+    ) throws SSLPeerUnverifiedException {
+        final String keyPassword = randomUUID().toString();
+        return new KeyStoreWrapper(
+                createProxyCertificate(issuerDn, certificateSupplier.get(), algorithm, caKeyPair, keyPassword),
+                keyPassword
+        );
+    }
 
     private static KeyStore createProxyCertificate(
             final String issuerDn,
@@ -65,39 +94,7 @@ public class CertificateAuthorityFactory implements ClientCertificateAuthorityFa
         }
     }
 
-    @Override
-    public String getName() {
-        return "selfsign";
-    }
-
-    @Override
-    public CertificateAuthority createFactory(
-            final ConfigProvider configProvider
-    ) {
-        try {
-            final SelfSignConfig config = configProvider.getConfig(SelfSignConfig.class);
-            final String algorithm = config.getSignatureAlgorithm();
-            final Supplier<InputStream> keyStoreFile = config.getKeyStore();
-            final KeyStore keyStore = KeyStore.getInstance("jks");
-            final String alias = config.getKeyAlias();
-            final String issuerDn = config.getIssuerDn();
-            try (final InputStream data = keyStoreFile.get()) {
-                keyStore.load(data, config.getKeyStorePassword());
-            }
-            final PrivateKey caKeyPair = loadKey(keyStore, alias, config.getKeyPassword());
-            return client -> {
-                final String keyPassword = randomUUID().toString();
-                return new KeyStoreWrapper(
-                        createProxyCertificate(issuerDn, client.get(), algorithm, caKeyPair, keyPassword),
-                        keyPassword
-                );
-            };
-        } catch (final KeyStoreException | IOException | CertificateException | NoSuchAlgorithmException e) {
-            throw new IllegalArgumentException("Failed to initialize self-signing proxy client-certificate factory", e);
-        }
-    }
-
-    private PrivateKey loadKey(final KeyStore keyStore, final String alias, final char[] keyPassword) {
+    private static PrivateKey loadKey(final KeyStore keyStore, final String alias, final char[] keyPassword) {
         try {
             return (PrivateKey) keyStore.getKey(alias, keyPassword);
         } catch (final UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException e) {

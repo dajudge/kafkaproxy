@@ -28,15 +28,6 @@ public class BrokerMapping {
         this.proxy = proxy;
     }
 
-    public BrokerMapping(
-            final String brokerHost,
-            final int brokerPort,
-            final String proxyHost,
-            final int proxyPort
-    ) {
-        this(new Endpoint(brokerHost, brokerPort), new Endpoint(proxyHost, proxyPort));
-    }
-
     public Endpoint getBroker() {
         return broker;
     }

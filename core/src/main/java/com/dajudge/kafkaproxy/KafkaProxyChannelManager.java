@@ -24,11 +24,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ProxyChannelManager {
+public class KafkaProxyChannelManager {
     private final Map<String, ProxyChannel> channels = new HashMap<>();
     private final KafkaProxyChannelFactory channelFactory;
 
-    public ProxyChannelManager(
+    public KafkaProxyChannelManager(
             final KafkaProxyChannelFactory channelFactory
     ) {
         this.channelFactory = channelFactory;

@@ -17,7 +17,7 @@
 
 package com.dajudge.kafkaproxy.protocol.rewrite;
 
-import com.dajudge.kafkaproxy.ProxyChannelManager;
+import com.dajudge.kafkaproxy.KafkaProxyChannelManager;
 import com.dajudge.kafkaproxy.BrokerMapping;
 import com.dajudge.proxybase.config.Endpoint;
 import org.apache.kafka.common.message.MetadataResponseData;
@@ -31,9 +31,9 @@ import java.lang.reflect.Field;
 
 public class MetadataRewriter extends BaseReflectingRewriter<MetadataResponse> {
     private static final Logger LOG = LoggerFactory.getLogger(MetadataRewriter.class);
-    private final ProxyChannelManager proxyChannelManager;
+    private final KafkaProxyChannelManager proxyChannelManager;
 
-    public MetadataRewriter(final ProxyChannelManager proxyChannelManager) {
+    public MetadataRewriter(final KafkaProxyChannelManager proxyChannelManager) {
         this.proxyChannelManager = proxyChannelManager;
     }
 

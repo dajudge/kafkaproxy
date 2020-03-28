@@ -25,36 +25,24 @@ public class DownstreamSslConfig {
     private final Supplier<InputStream> trustStore;
     private final String trustStorePassword;
     private final boolean hostnameVerificationEnabled;
-    private final Supplier<InputStream> keyStore;
-    private final String keyStorePassword;
-    private final String keyPassword;
 
     public static final DownstreamSslConfig DISABLED = new DownstreamSslConfig(
             false,
             null,
             null,
-            false,
-            null,
-            null,
-            null
+            false
     );
 
     public DownstreamSslConfig(
             final boolean enabled,
             final Supplier<InputStream> trustStore,
             final String trustStorePassword,
-            final boolean hostnameVerificationEnabled,
-            final Supplier<InputStream> keyStore,
-            final String keyStorePassword,
-            final String keyPassword
+            final boolean hostnameVerificationEnabled
     ) {
         this.enabled = enabled;
         this.trustStore = trustStore;
         this.trustStorePassword = trustStorePassword;
         this.hostnameVerificationEnabled = hostnameVerificationEnabled;
-        this.keyStore = keyStore;
-        this.keyStorePassword = keyStorePassword;
-        this.keyPassword = keyPassword;
     }
 
     public Supplier<InputStream> getTrustStore() {
@@ -71,17 +59,5 @@ public class DownstreamSslConfig {
 
     public boolean isHostnameVerificationEnabled() {
         return hostnameVerificationEnabled;
-    }
-
-    public Supplier<InputStream> getKeyStore() {
-        return keyStore;
-    }
-
-    public String getKeyStorePassword() {
-        return keyStorePassword;
-    }
-
-    public String getKeyPassword() {
-        return keyPassword;
     }
 }

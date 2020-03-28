@@ -15,13 +15,22 @@
  *
  */
 
-package com.dajudge.proxybase;
+package com.dajudge.kafkaproxy.ca;
 
-import com.dajudge.proxybase.ca.KeyStoreWrapper;
-import com.dajudge.proxybase.ca.UpstreamCertificateSupplier;
+import com.dajudge.kafkaproxy.config.ApplicationConfig;
+import com.dajudge.proxybase.ca.CertificateAuthority;
+import com.dajudge.proxybase.ca.NullCertificateAuthority;
 
-import java.util.function.Function;
-import java.util.function.Supplier;
+public class NullCertificateAuthorityFactory implements CertificateAuthorityFactory {
+    public static final String NAME = "null";
 
-public interface ClientCertificateAuthority extends Function<UpstreamCertificateSupplier, Supplier<KeyStoreWrapper>> {
+    @Override
+    public String getName() {
+        return NAME;
+    }
+
+    @Override
+    public CertificateAuthority createFactory(final ApplicationConfig applicationConfig) {
+        return new NullCertificateAuthority();
+    }
 }

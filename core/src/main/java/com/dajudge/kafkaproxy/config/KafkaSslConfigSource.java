@@ -15,14 +15,14 @@
  *
  */
 
-package com.dajudge.kafkaproxy.config.kafkassl;
+package com.dajudge.kafkaproxy.config;
 
+import com.dajudge.proxybase.ca.ClientCertCertificateAuthority;
 import com.dajudge.kafkaproxy.ca.ClientCertificateStrategy;
-import com.dajudge.kafkaproxy.config.ConfigSource;
-import com.dajudge.kafkaproxy.config.Environment;
+import com.dajudge.kafkaproxy.ca.NullCertificateAuthorityFactory;
 import com.dajudge.proxybase.config.DownstreamSslConfig;
 
-public class KafkaSslConfigSource implements ConfigSource<KafkaSslConfig> {
+public class KafkaSslConfigSource implements ConfigSource<KafkaSslConfigSource.KafkaSslConfig> {
     private static final String KAFKA_SSL_PREFIX = PREFIX + "KAFKA_SSL_";
     private static final String ENV_KAFKA_SSL_ENABLED = KAFKA_SSL_PREFIX + "ENABLED";
     private static final String ENV_KAFKA_SSL_TRUSTSTORE_LOCATION = KAFKA_SSL_PREFIX + "TRUSTSTORE_LOCATION";
@@ -44,22 +44,69 @@ public class KafkaSslConfigSource implements ConfigSource<KafkaSslConfig> {
 
     @Override
     public KafkaSslConfig parse(final Environment environment) {
-        if (!environment.requiredBoolean(ENV_KAFKA_SSL_ENABLED, DEFAULT_KAFKA_SSL_ENABLED)) {
+        final boolean enabled = environment.requiredBoolean(ENV_KAFKA_SSL_ENABLED, DEFAULT_KAFKA_SSL_ENABLED);
+        if (!enabled) {
             return KafkaSslConfig.DISABLED;
         }
         final DownstreamSslConfig downstreamSslConfig = new DownstreamSslConfig(
-                environment.requiredBoolean(ENV_KAFKA_SSL_ENABLED, DEFAULT_KAFKA_SSL_ENABLED),
+                enabled,
                 environment.optionalFile(ENV_KAFKA_SSL_TRUSTSTORE_LOCATION).orElse(null),
                 environment.optionalString(ENV_KAFKA_SSL_TRUSTSTORE_PASSWORD).orElse(null),
-                environment.requiredBoolean(ENV_KAFKA_SSL_VERIFY_HOSTNAME, DEFAULT_KAFKA_SSL_VERIFY_HOSTNAME),
+                environment.requiredBoolean(ENV_KAFKA_SSL_VERIFY_HOSTNAME, DEFAULT_KAFKA_SSL_VERIFY_HOSTNAME)
+        );
+        final ClientCertCertificateAuthority.ClientCertificateConfig clientCertConfig = new ClientCertCertificateAuthority.ClientCertificateConfig(
                 environment.optionalFile(ENV_KAFKA_SSL_KEYSTORE_LOCATION).orElse(null),
                 environment.optionalString(ENV_KAFKA_SSL_KEYSTORE_PASSWORD).orElse(null),
                 environment.optionalString(ENV_KAFKA_SSL_KEY_PASSWORD).orElse(null)
         );
         return new KafkaSslConfig(
                 downstreamSslConfig,
+                clientCertConfig,
                 environment.requiredString(ENV_KAFKA_SSL_CERTIFICATE_FACTORY, DEFAULT_CERTIFICATE_FACTORY),
                 ClientCertificateStrategy.valueOf(environment.requiredString(ENV_KAFKA_CLIENT_CERT_STRATEGY, "NONE"))
         );
+    }
+
+    public static class KafkaSslConfig {
+        private final DownstreamSslConfig downstreamSslConfig;
+        private final ClientCertCertificateAuthority.ClientCertificateConfig clientCertificateConfig;
+        private final String certificateFactory;
+        private final ClientCertificateStrategy clientCertificateStrategy;
+
+        public static final KafkaSslConfig DISABLED = new KafkaSslConfig(
+                DownstreamSslConfig.DISABLED,
+                ClientCertCertificateAuthority.ClientCertificateConfig.DISABLED,
+                NullCertificateAuthorityFactory.NAME,
+                ClientCertificateStrategy.NONE
+        );
+
+        KafkaSslConfig(
+                final DownstreamSslConfig downstreamSslConfig,
+                final ClientCertCertificateAuthority.ClientCertificateConfig clientCertificateConfig,
+                final String certificateFactory,
+                final ClientCertificateStrategy clientCertificateStrategy
+        ) {
+            this.downstreamSslConfig = downstreamSslConfig;
+            this.clientCertificateConfig = clientCertificateConfig;
+            this.certificateFactory = certificateFactory;
+            this.clientCertificateStrategy = clientCertificateStrategy;
+        }
+
+        public DownstreamSslConfig getDownstreamSslConfig() {
+            return downstreamSslConfig;
+        }
+
+        public ClientCertCertificateAuthority.ClientCertificateConfig getClientCertificateConfig() {
+            return clientCertificateConfig;
+        }
+
+        public String getCertificateFactory() {
+            return certificateFactory;
+        }
+
+        public ClientCertificateStrategy getClientCertificateStrategy() {
+            return clientCertificateStrategy;
+        }
+
     }
 }

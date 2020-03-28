@@ -18,8 +18,6 @@
 package com.dajudge.kafkaproxy.config;
 
 import com.dajudge.kafkaproxy.ca.selfsign.SelfSignConfig;
-import com.dajudge.kafkaproxy.config.ConfigSource;
-import com.dajudge.kafkaproxy.config.Environment;
 
 public class SelfSignConfigSource implements ConfigSource<SelfSignConfig> {
     private static final String PREFIX = ConfigSource.PREFIX + "SELFSIGN_";

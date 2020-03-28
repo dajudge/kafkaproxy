@@ -17,7 +17,7 @@
 
 package com.dajudge.proxybase;
 
-import com.dajudge.proxybase.ca.UpstreamCertificateSupplier;
+import com.dajudge.proxybase.ca.KeyStoreWrapper;
 import com.dajudge.proxybase.config.DownstreamSslConfig;
 import com.dajudge.proxybase.config.Endpoint;
 import io.netty.buffer.ByteBuf;
@@ -27,32 +27,29 @@ class DownstreamChannelFactory {
     private final Endpoint endpoint;
     private final DownstreamSslConfig sslConfig;
     private final EventLoopGroup downstreamWorkerGroup;
-    private final ClientCertificateAuthority clientCertificateAuthority;
 
     DownstreamChannelFactory(
             final Endpoint endpoint,
             final DownstreamSslConfig sslConfig,
-            final EventLoopGroup downstreamWorkerGroup,
-            final ClientCertificateAuthority clientCertificateAuthority
+            final EventLoopGroup downstreamWorkerGroup
     ) {
         this.endpoint = endpoint;
         this.sslConfig = sslConfig;
         this.downstreamWorkerGroup = downstreamWorkerGroup;
-        this.clientCertificateAuthority = clientCertificateAuthority;
     }
 
     Sink<ByteBuf> create(
-            final UpstreamCertificateSupplier certificateSupplier,
             final Sink<ByteBuf> upstreamSink,
             final FilterFactory<ByteBuf> upstreamFilterFactory,
-            final FilterFactory<ByteBuf> downstreamFilterFactory
+            final FilterFactory<ByteBuf> downstreamFilterFactory,
+            final KeyStoreWrapper keyStoreWrapper
     ) {
         return downstreamFilterFactory.apply(new DownstreamClient(
                 endpoint,
                 sslConfig,
                 upstreamFilterFactory.apply(upstreamSink),
                 downstreamWorkerGroup,
-                clientCertificateAuthority.apply(certificateSupplier)
+                keyStoreWrapper
         ));
     }
 }
