@@ -21,7 +21,7 @@ kafkaproxy is built to be run in a container. The released versions are availabl
 The following configuration parameters are mandatory:
 * `KAFKAPROXY_HOSTNAME`: the hostname at which the proxy can be reached from the clients.
 * `KAFKAPROXY_BASE_PORT`: the first port to be used by kafkaproxy.
-* `KAFKAPROXY_BOOTSTRAP_SERVER`: the bootstrap server via which the kafka cluster can be contacted. This is usually a load balancer in front of the kafka cluster.
+* `KAFKAPROXY_BOOTSTRAP_SERVERS`: the bootstrap server via which the kafka cluster can be contacted. This is usually a load balancer in front of the kafka cluster.
 
 For example:
 ```
@@ -29,7 +29,7 @@ docker run \
     --net host \
     -e KAFKAPROXY_HOSTNAME=localhost \
     -e KAFKAPROXY_BASE_PORT=4000 \
-    -e KAFKAPROXY_BOOTSTRAP_SERVER=kafka:9092 \
+    -e KAFKAPROXY_BOOTSTRAP_SERVERS=kafka:9092 \
     -d dajudge/kafkaproxy:0.0.3
 ``` 
 *Note:* You will have to make the proxy ports defined in your broker map available from outside the container with `-p PORT:PORT` if you're not using `--net host`.
@@ -75,12 +75,12 @@ section describe the configuration options in detail.
 ## General configuration
 kafkaproxy requires some general information to start. 
 
-| Name                          | Default value | Destription
-| ----------------------------- | ------------- | -----------
-| `KAFKAPROXY_HOSTNAME`         |               | The hostname of the proxy as seen by the clients.
-| `KAFKAPROXY_BASE_PORT`        |               | The base of the ports to be used by the proxy. Each new required port is created by incrementing on top of the base port.
-| `KAFKAPROXY_BOOTSTRAP_SERVER` |               | The bootstrap endpoint of the kafka cluster. This is usually a load balancer in front of the kafka brokers.
-| `KAFKAPROXY_LOG_LEVEL`        | `INFO`        | The log level of the root logger. This must be a valid log level for [logback](http://logback.qos.ch/manual/configuration.html).
+| Name                           | Default value | Destription
+| ------------------------------ | ------------- | -----------
+| `KAFKAPROXY_HOSTNAME`          |               | The hostname of the proxy as seen by the clients.
+| `KAFKAPROXY_BASE_PORT`         |               | The base of the ports to be used by the proxy. Each new required port is created by incrementing on top of the base port.
+| `KAFKAPROXY_BOOTSTRAP_SERVERS` |               | The comma separated list of initially mapped endpoints. This is usually the list of bootstrap brokers or a load balancer in front of the kafka brokers.
+| `KAFKAPROXY_LOG_LEVEL`         | `INFO`        | The log level of the root logger. This must be a valid log level for [logback](http://logback.qos.ch/manual/configuration.html).
  
 ## Client SSL configuration
 The client SSL configuration determines how the Kafka clients have to connect to the kafkaproxy instances.

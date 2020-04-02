@@ -57,8 +57,8 @@ public class KafkaProxyApplication extends ProxyApplication {
                 proxyChannelFactory
         );
         final KafkaProxyChannelManager proxyChannelManager = new KafkaProxyChannelManager(kafkaProxyChannelFactory);
-        final BrokerMapping boostrapMapping = kafkaProxyChannelFactory.bootstrap(proxyChannelManager);
-        LOG.info("Bootstrap broker mapping: {}", boostrapMapping);
+        kafkaProxyChannelFactory.bootstrap(proxyChannelManager)
+                .forEach(bootstrapMapping -> LOG.info("Bootstrap broker mapping: {}", bootstrapMapping));
         return proxyChannelManager.proxies();
     }
 }
