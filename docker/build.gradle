@@ -17,21 +17,33 @@ if (!tagsToBuild.isEmpty()) {
 task clean(type: Delete) {
     group "build"
     delete "${project.buildDir}"
+    dependsOn project(":app").tasks.findByName("clean")
 }
 
 task copyLibs(type: Copy) {
     group "build"
     from new File(project(":app").buildDir, "lib")
     into "$dockerBuildDir/lib"
-    dependsOn project(":app").tasks.findByName("build")
 }
 
 task copyApp(type: Copy) {
     group "build"
     from project(":app").buildDir
+    include "*-runner"
+    into dockerBuildDir
+    def buildNative = project(":app").tasks.findByName("buildNative")
+    buildNative.mustRunAfter(clean)
+    dependsOn clean, buildNative
+}
+
+task copyAppJar(type: Copy) {
+    group "build"
+    from project(":app").buildDir
     include "*-runner.jar"
     into dockerBuildDir
-    dependsOn copyLibs
+    def quarkusBuild = project(":app").tasks.findByName("quarkusBuild")
+    quarkusBuild.mustRunAfter(clean)
+    dependsOn clean, quarkusBuild
 }
 
 task copyDockerSources(type: Copy) {
@@ -40,16 +52,26 @@ task copyDockerSources(type: Copy) {
     into dockerBuildDir
 }
 
-task buildAppImage(type: DockerBuildImage) {
+task buildNativeAppImage(type: DockerBuildImage) {
     group "build"
     dependsOn copyApp, copyDockerSources
     inputDir = dockerBuildDir
+    dockerFile = file("$dockerBuildDir/Dockerfile.linux.multistage")
     tags.addAll(tagsToBuild)
+    tags.add("dajudge/kafkaproxy:native")
+}
+
+task buildAppImage(type: DockerBuildImage) {
+    group "build"
+    dependsOn copyAppJar, copyLibs, copyDockerSources
+    inputDir = dockerBuildDir
+    tags.addAll(tagsToBuild)
+    tags.add("dajudge/kafkaproxy:graalvm")
 }
 
 task build {
     group "build"
-    dependsOn buildAppImage
+    dependsOn buildNativeAppImage
 }
 
 task publish {

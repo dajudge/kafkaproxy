@@ -4,3 +4,9 @@ out/
 .idea/
 .gradle/
 
+bin/
+pom.xml
+target/
+
+.*
+!.gitignore

@@ -39,27 +39,32 @@ If you have `docker-compose` installed you can try out kafkaproxy by using the d
 `example` directory. So clone the [kafkaproxy repo](https://github.com/dajudge/kafkaproxy) and run the following commands:
 
 **Step 1:** Start kafka, zookeeper and kafkaproxy.
+
 ```
 docker-compose -f example/docker-compose.yml up -d
 ```
 Kafka will take a couple of seconds to fully start and become available.
 
 **Step 2:** Create `my-test-topic`.
+
 ```
 docker run --rm --net host -i confluentinc/cp-zookeeper:5.2.1 kafka-topics --create --topic my-test-topic --bootstrap-server localhost:4000 --partitions 1 --replication-factor 1
 ```
 
 **Step 3:** Publish a message to `my-test-topic`.
+
 ```
 echo "Hello, kafkaproxy" | docker run --rm --net host -i confluentinc/cp-zookeeper:5.2.1 kafka-console-producer --broker-list localhost:4000 --topic my-test-topic
 ```
 
 **Step 4:** Consume to produced message from `my-test-topic`.
+
 ```
 docker run --rm --net host -it confluentinc/cp-zookeeper:5.2.1 kafka-console-consumer --bootstrap-server localhost:4000 --topic my-test-topic --from-beginning --max-messages 1
 ```
 
 **Cleanup:** Stop and remove the demonstration containers.
+
 ```
 docker-compose -f example/docker-compose.yml rm -sf
 ```
