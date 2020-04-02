@@ -25,15 +25,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
-import static java.util.Collections.synchronizedList;
+import static java.lang.String.format;
+import static java.util.Collections.synchronizedMap;
 
 public class KafkaRequestStore {
     private static final Logger LOG = LoggerFactory.getLogger(KafkaRequestStore.class);
-    private final List<RequestHeader> requests = synchronizedList(new ArrayList<>());
+    private final Map<Integer, RequestHeader> requests = synchronizedMap(new HashMap<>());
     private final ResponseRewriter rewriter;
 
     public KafkaRequestStore(final ResponseRewriter rewriter) {
@@ -42,16 +43,18 @@ public class KafkaRequestStore {
 
     void add(final RequestHeader requestHeader) {
         LOG.trace("Add client request: {}", requestHeader);
-        requests.add(requestHeader);
+        requests.put(requestHeader.correlationId(), requestHeader);
     }
 
     void process(final KafkaMessage response, final Consumer<ByteBuf> sink) {
         final ByteBuffer responseBuffer = response.payload().nioBuffer();
-        final RequestHeader requestHeader = requests.remove(0);
+        final int correlationId = responseBuffer.duplicate().getInt();
+        final RequestHeader requestHeader = requests.remove(correlationId);
+        if (requestHeader == null) {
+            throw new RuntimeException(format("Failed to correlate response correlation ID %d", correlationId));
+        }
         final short headerVersion = requestHeader.apiKey().responseHeaderVersion(requestHeader.apiVersion());
         final ResponseHeader responseHeader = ResponseHeader.parse(responseBuffer, headerVersion);
-        final int correlationId = responseHeader.correlationId();
-        LOG.trace("Mapped response with correlationId {} for {}", correlationId, requestHeader);
         sink.accept(rewriter.rewrite(requestHeader, responseHeader, responseBuffer).orElse(response.serialize()));
     }
 }
