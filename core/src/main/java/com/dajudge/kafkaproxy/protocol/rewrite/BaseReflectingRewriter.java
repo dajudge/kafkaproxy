@@ -37,7 +37,11 @@ public abstract class BaseReflectingRewriter<T extends AbstractResponse> impleme
 
     @SuppressWarnings("unchecked")
     @Override
-    public final Optional<ByteBuf> rewrite(final RequestHeader requestHeader, final ResponseHeader responseHeader, final ByteBuffer responseBuffer) {
+    public final Optional<ByteBuf> rewrite(
+            final RequestHeader requestHeader,
+            final ResponseHeader responseHeader,
+            final ByteBuffer responseBuffer
+    ) {
         if (!appliesTo(requestHeader)) {
             return Optional.empty();
         }
