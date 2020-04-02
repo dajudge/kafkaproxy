@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/ubi-minimal
+FROM ubuntu:eoan-20200313
 WORKDIR /work/
 COPY *-runner /work/application
 
