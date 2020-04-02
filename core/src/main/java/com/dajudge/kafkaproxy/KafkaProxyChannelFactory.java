@@ -17,10 +17,6 @@
 
 package com.dajudge.kafkaproxy;
 
-import com.dajudge.proxybase.config.Endpoint;
-import com.dajudge.proxybase.FilterFactory;
-import com.dajudge.proxybase.ProxyChannelFactory;
-import com.dajudge.proxybase.ProxyChannel;
 import com.dajudge.kafkaproxy.protocol.KafkaMessageSplitter;
 import com.dajudge.kafkaproxy.protocol.KafkaRequestProcessor;
 import com.dajudge.kafkaproxy.protocol.KafkaRequestStore;
@@ -29,9 +25,16 @@ import com.dajudge.kafkaproxy.protocol.rewrite.CompositeRewriter;
 import com.dajudge.kafkaproxy.protocol.rewrite.FindCoordinatorRewriter;
 import com.dajudge.kafkaproxy.protocol.rewrite.MetadataRewriter;
 import com.dajudge.kafkaproxy.protocol.rewrite.ResponseRewriter;
+import com.dajudge.proxybase.FilterFactory;
+import com.dajudge.proxybase.ProxyChannel;
+import com.dajudge.proxybase.ProxyChannelFactory;
+import com.dajudge.proxybase.config.Endpoint;
 import io.netty.buffer.ByteBuf;
 
+import java.util.List;
+
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 
 public class KafkaProxyChannelFactory {
     private final BrokerMapper brokerMapper;
@@ -65,7 +68,9 @@ public class KafkaProxyChannelFactory {
         );
     }
 
-    public BrokerMapping bootstrap(final KafkaProxyChannelManager manager) {
-        return manager.getByBrokerEndpoint(brokerMapper.getBootstrapBroker());
+    public List<BrokerMapping> bootstrap(final KafkaProxyChannelManager manager) {
+        return brokerMapper.getBootstrapBrokers().stream()
+                .map(manager::getByBrokerEndpoint)
+                .collect(toList());
     }
 }

@@ -89,7 +89,7 @@ public class KafkaClusterBuilder {
         final ServerSecurity proxySecurity = proxyComm.getServerSecurity("CN=localhost");
         final ClientSslConfig proxyClient = brokerSecurity.newClient("CN=proxy");
         final TestEnvironment env = new TestEnvironment()
-                .withEnv("KAFKAPROXY_BOOTSTRAP_SERVER", kafka.getBootstrapServerList().iterator().next())
+                .withEnv("KAFKAPROXY_BOOTSTRAP_SERVERS", kafka.getBootstrapServerList().iterator().next())
                 .withEnv("KAFKAPROXY_BASE_PORT", valueOf(bootstrapPort))
                 .withEnv("KAFKAPROXY_HOSTNAME", "localhost")
                 .withEnv("KAFKAPROXY_KAFKA_SSL_ENABLED", valueOf("SSL".equals(brokerSecurity.getProtocol())))

@@ -19,7 +19,11 @@ package com.dajudge.kafkaproxy.config;
 
 import com.dajudge.proxybase.config.Endpoint;
 
+import java.util.List;
+import java.util.stream.Stream;
+
 import static java.lang.Integer.parseUnsignedInt;
+import static java.util.stream.Collectors.toList;
 
 public class BrokerConfigSource implements ConfigSource<BrokerConfigSource.BrokerConfig> {
 
@@ -37,25 +41,34 @@ public class BrokerConfigSource implements ConfigSource<BrokerConfigSource.Broke
         );
     }
 
-    private Endpoint getBootstrapBrokers(final Environment environment) {
-        final String bootstrapServer = environment.requiredString("KAFKAPROXY_BOOTSTRAP_SERVER");
-        final String[] bootstrapServerParts = bootstrapServer.split(":");
-        return new Endpoint(bootstrapServerParts[0], parseUnsignedInt(bootstrapServerParts[1]));
+    private List<Endpoint> getBootstrapBrokers(final Environment environment) {
+        final String bootstrapServers = environment.requiredString("KAFKAPROXY_BOOTSTRAP_SERVERS");
+        return Stream.of(bootstrapServers.split(","))
+                .map(bootstrapServer -> {
+                    final String[] bootstrapServerParts = bootstrapServer.split(":");
+                    return new Endpoint(bootstrapServerParts[0], parseUnsignedInt(bootstrapServerParts[1]));
+                })
+                .collect(toList());
+
     }
 
     public static class BrokerConfig {
-        private final Endpoint bootstrapBroker;
+        private final List<Endpoint> bootstrapBrokers;
         private final String proxyHostname;
         private final int proxyBasePort;
 
-        public BrokerConfig(final Endpoint bootstrapBroker, final String proxyHostname, final int proxyBasePort) {
-            this.bootstrapBroker = bootstrapBroker;
+        public BrokerConfig(
+                final List<Endpoint> bootstrapBrokers,
+                final String proxyHostname,
+                final int proxyBasePort
+        ) {
+            this.bootstrapBrokers = bootstrapBrokers;
             this.proxyHostname = proxyHostname;
             this.proxyBasePort = proxyBasePort;
         }
 
-        public Endpoint getBootstrapBroker() {
-            return bootstrapBroker;
+        public List<Endpoint> getBootstrapBrokers() {
+            return bootstrapBrokers;
         }
 
         public String getProxyHostname() {

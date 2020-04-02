@@ -21,29 +21,30 @@ import com.dajudge.kafkaproxy.config.BrokerConfigSource;
 import com.dajudge.proxybase.config.Endpoint;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class BrokerMapper {
     private final Map<String, BrokerMapping> allMappings = new HashMap<>();
     private final String proxyHostname;
-    private final Endpoint bootstrapBroker;
+    private final List<Endpoint> bootstrapBrokers;
     private int nextBrokerPort;
 
     public BrokerMapper(final BrokerConfigSource.BrokerConfig brokerConfig) {
         nextBrokerPort = brokerConfig.getProxyBasePort();
         proxyHostname = brokerConfig.getProxyHostname();
-        bootstrapBroker = brokerConfig.getBootstrapBroker();
+        bootstrapBrokers = brokerConfig.getBootstrapBrokers();
     }
 
-    public BrokerMapping getBrokerMapping(final Endpoint brokerEndpoint) {
+    public synchronized BrokerMapping getBrokerMapping(final Endpoint brokerEndpoint) {
         return allMappings.computeIfAbsent(keyOf(brokerEndpoint), key -> new BrokerMapping(
                 brokerEndpoint,
                 new Endpoint(proxyHostname, nextBrokerPort++)
         ));
     }
 
-    public Endpoint getBootstrapBroker() {
-        return bootstrapBroker;
+    public List<Endpoint> getBootstrapBrokers() {
+        return bootstrapBrokers;
     }
 
     private String keyOf(final Endpoint host) {
