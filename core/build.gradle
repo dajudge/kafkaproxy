@@ -6,13 +6,13 @@ dependencies {
     // We use the transport objects from the kafka client library
     implementation 'org.apache.kafka:kafka-clients:2.4.1'
     // Netty is our network layer
-    implementation 'io.netty:netty-all:4.1.42.Final'
+    implementation 'io.netty:netty-all:4.1.45.Final'
     // For parsing configs
     implementation 'org.yaml:snakeyaml:1.25'
     // Used for TLS hostname verification
     implementation 'org.apache.httpcomponents.client5:httpclient5:5.0-beta6'
     // The logging API
-    implementation 'org.slf4j:slf4j-api:1.7.28'
+    implementation 'org.slf4j:slf4j-api:1.7.29'
 
     testImplementation 'org.testcontainers:kafka:1.12.3'
     testImplementation 'junit:junit:4.11'

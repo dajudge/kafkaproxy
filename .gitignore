@@ -4,3 +4,7 @@ out/
 .idea/
 .gradle/
 
+.settings/
+.classpath
+.project
+bin/

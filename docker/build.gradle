@@ -17,21 +17,15 @@ if (!tagsToBuild.isEmpty()) {
 task clean(type: Delete) {
     group "build"
     delete "${project.buildDir}"
-}
-
-task copyLibs(type: Copy) {
-    group "build"
-    from new File(project(":app").buildDir, "lib")
-    into "$dockerBuildDir/lib"
-    dependsOn project(":app").tasks.findByName("build")
+    dependsOn project(":app").tasks.findByName("clean")
 }
 
 task copyApp(type: Copy) {
     group "build"
     from project(":app").buildDir
-    include "*-runner.jar"
+    include "*-runner"
     into dockerBuildDir
-    dependsOn copyLibs
+    dependsOn project(":app").tasks.getByName("buildNative")
 }
 
 task copyDockerSources(type: Copy) {
