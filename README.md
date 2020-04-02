@@ -21,7 +21,7 @@ kafkaproxy is built to be run in a container. The released versions are availabl
 The following configuration parameters are mandatory:
 * `KAFKAPROXY_HOSTNAME`: the hostname at which the proxy can be reached from the clients.
 * `KAFKAPROXY_BASE_PORT`: the first port to be used by kafkaproxy.
-* `KAFKAPROXY_BOOTSTRAP_SERVERS`: the bootstrap server via which the kafka cluster can be contacted. This is usually a load balancer in front of the kafka cluster.
+* `KAFKAPROXY_BOOTSTRAP_SERVERS`: the comma separated list of initially mapped endpoints. This is usually the list of bootstrap brokers or a load balancer in front of the kafka brokers.
 
 For example:
 ```
@@ -32,7 +32,7 @@ docker run \
     -e KAFKAPROXY_BOOTSTRAP_SERVERS=kafka:9092 \
     -d dajudge/kafkaproxy:0.0.3
 ``` 
-*Note:* You will have to make the proxy ports defined in your broker map available from outside the container with `-p PORT:PORT` if you're not using `--net host`.
+*Note:* You will have to make the proxy ports (starting with `KAFKAPROXY_BASE_PORT` and incrementing from there) available from outside the container with `-p PORT:PORT` if you're not using `--net host`.
 
 ## Demonstration setup with `docker-compose`
 If you have `docker-compose` installed you can try out kafkaproxy by using the demonstration setup provided in the
