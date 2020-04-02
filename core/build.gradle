@@ -4,7 +4,7 @@ dependencies {
     implementation project(":proxybase")
 
     // We use the transport objects from the kafka client library
-    implementation 'org.apache.kafka:kafka-clients:2.4.0'
+    implementation 'org.apache.kafka:kafka-clients:2.4.1'
     // Netty is our network layer
     implementation 'io.netty:netty-all:4.1.42.Final'
     // For parsing configs
