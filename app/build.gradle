@@ -5,7 +5,13 @@ plugins {
 
 buildNative {
     enableHttpUrlHandler = true
+    enableHttpsUrlHandler = true
     autoServiceLoaderRegistration = true
+    additionalBuildArgs = [
+        "-H:+ReportUnsupportedElementsAtRuntime",
+        "-H:+TraceClassInitialization",
+        "--initialize-at-run-time=com.dajudge.kafkaproxy.ca.selfsign.Helpers"
+    ]
 }
 
 dependencies {
