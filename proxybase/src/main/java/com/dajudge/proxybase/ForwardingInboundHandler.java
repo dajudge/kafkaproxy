@@ -42,7 +42,7 @@ class ForwardingInboundHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void channelRegistered(final ChannelHandlerContext ctx) throws Exception {
+    public void channelRegistered(final ChannelHandlerContext ctx) {
         final UpstreamCertificateSupplier certSupplier = () -> {
             final ChannelHandler sslHandler = ctx.channel().pipeline().get("ssl");
             if (sslHandler instanceof SslHandler) {
