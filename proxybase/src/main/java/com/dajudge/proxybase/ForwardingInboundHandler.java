@@ -58,7 +58,9 @@ class ForwardingInboundHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelUnregistered(final ChannelHandlerContext ctx) {
-        sink.close();
+        if (sink != null) {
+            sink.close();
+        }
     }
 
     @Override
