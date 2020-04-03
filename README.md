@@ -75,12 +75,13 @@ section describe the configuration options in detail.
 ## General configuration
 kafkaproxy requires some general information to start. 
 
-| Name                           | Default value | Destription
-| ------------------------------ | ------------- | -----------
-| `KAFKAPROXY_HOSTNAME`          |               | The hostname of the proxy as seen by the clients.
-| `KAFKAPROXY_BASE_PORT`         |               | The base of the ports to be used by the proxy. Each new required port is created by incrementing on top of the base port.
-| `KAFKAPROXY_BOOTSTRAP_SERVERS` |               | The comma separated list of initially mapped endpoints. This is usually the list of bootstrap brokers or a load balancer in front of the kafka brokers.
-| `KAFKAPROXY_LOG_LEVEL`         | `INFO`        | The log level of the root logger. This must be a valid log level for [logback](http://logback.qos.ch/manual/configuration.html).
+| Name                               | Default value | Destription
+| ---------------------------------- | ------------- | -----------
+| `KAFKAPROXY_HOSTNAME`              |               | The hostname of the proxy as seen by the clients.
+| `KAFKAPROXY_BASE_PORT`             |               | The base of the ports to be used by the proxy. Each new required port is created by incrementing on top of the base port.
+| `KAFKAPROXY_BOOTSTRAP_SERVERS`     |               | The comma separated list of initially mapped endpoints. This is usually the list of bootstrap brokers or a load balancer in front of the kafka brokers.
+| `KAFKAPROXY_LOG_LEVEL`             | `INFO`        | The log level of the root logger. This must be a valid log level for [logback](http://logback.qos.ch/manual/configuration.html).
+| `KAFKAPROXY_ENABLE_JSON_LOGGING`   | `false`        | Enable/disable json logging feature (only available in quarkus app).
  
 ## Client SSL configuration
 The client SSL configuration determines how the Kafka clients have to connect to the kafkaproxy instances.
