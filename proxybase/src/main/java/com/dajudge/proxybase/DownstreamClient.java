@@ -37,6 +37,7 @@ class DownstreamClient implements Sink<ByteBuf> {
     private final Channel channel;
 
     DownstreamClient(
+            final String channelId,
             final Endpoint endpoint,
             final DownstreamConfig sslConfig,
             final Sink<ByteBuf> messageSink,
@@ -54,7 +55,7 @@ class DownstreamClient implements Sink<ByteBuf> {
                         public void initChannel(SocketChannel ch) {
                             final ChannelPipeline pipeline = ch.pipeline();
                             pipeline.addLast(sslHandler);
-                            pipeline.addLast(new ProxyClientHandler(messageSink));
+                            pipeline.addLast(new ProxyClientHandler(channelId, messageSink));
                         }
                     })
                     .connect(endpoint.getHost(), endpoint.getPort()).sync().channel();

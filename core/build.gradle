@@ -20,3 +20,9 @@ dependencies {
     testCompileOnly 'com.google.code.findbugs:annotations:3.0.1'
     testRuntimeOnly 'ch.qos.logback:logback-classic:1.2.3'
 }
+
+test {
+    testLogging {
+        showStandardStreams = true
+    }
+}

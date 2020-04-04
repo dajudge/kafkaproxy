@@ -17,7 +17,14 @@
 
 package com.dajudge.proxybase;
 
-import java.util.function.Function;
+import io.netty.buffer.ByteBuf;
 
-public interface FilterFactory<T> extends Function<Sink<T>, Sink<T>> {
+public interface FilterPairFactory<T> {
+    interface FilterPair<T> {
+        Sink<ByteBuf> downstreamFilter(Sink<ByteBuf> downstream);
+
+        Sink<ByteBuf> upstreamFilter(Sink<ByteBuf> upstream);
+    }
+
+    FilterPair<T> createFilterPair();
 }

@@ -39,15 +39,17 @@ class DownstreamChannelFactory {
     }
 
     Sink<ByteBuf> create(
+            final String channelId,
             final Sink<ByteBuf> upstreamSink,
-            final FilterFactory<ByteBuf> upstreamFilterFactory,
-            final FilterFactory<ByteBuf> downstreamFilterFactory,
+            final FilterPairFactory<ByteBuf> filterPairFactory,
             final KeyStoreWrapper keyStoreWrapper
     ) {
-        return downstreamFilterFactory.apply(new DownstreamClient(
+        final FilterPairFactory.FilterPair<ByteBuf> filterPair = filterPairFactory.createFilterPair();
+        return filterPair.downstreamFilter(new DownstreamClient(
+                channelId,
                 endpoint,
                 sslConfig,
-                upstreamFilterFactory.apply(upstreamSink),
+                filterPair.upstreamFilter(upstreamSink),
                 downstreamWorkerGroup,
                 keyStoreWrapper
         ));

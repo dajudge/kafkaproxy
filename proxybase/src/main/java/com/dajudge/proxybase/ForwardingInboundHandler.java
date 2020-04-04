@@ -32,12 +32,19 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.function.Function;
 
+import static com.dajudge.proxybase.LogHelper.withChannelId;
+
 class ForwardingInboundHandler extends ChannelInboundHandlerAdapter {
     private static final Logger LOG = LoggerFactory.getLogger(ForwardingInboundHandler.class);
+    private final String channelId;
     private final Function<UpstreamCertificateSupplier, Sink<ByteBuf>> sinkFactory;
     private Sink<ByteBuf> sink;
 
-    ForwardingInboundHandler(final Function<UpstreamCertificateSupplier, Sink<ByteBuf>> sinkFactory) {
+    ForwardingInboundHandler(
+            final String channelId,
+            final Function<UpstreamCertificateSupplier, Sink<ByteBuf>> sinkFactory
+    ) {
+        this.channelId = channelId;
         this.sinkFactory = sinkFactory;
     }
 
@@ -65,19 +72,29 @@ class ForwardingInboundHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(final ChannelHandlerContext ctx, final Object msg) {
-        final ByteBuf buffer = ((ByteBuf) msg);
-        LOG.trace("Received {} bytes from upstream.", buffer.readableBytes());
-        try {
-            sink.accept(buffer);
-        } finally {
-            buffer.release();
-        }
+        withChannelId(channelId, () -> {
+            final ByteBuf buffer = ((ByteBuf) msg);
+            LOG.trace("Received {} bytes from upstream.", buffer.readableBytes());
+            try {
+                sink.accept(buffer);
+            } catch (final ProxyInternalException e) {
+                LOG.error("Internal proxy error processing message from upstream. Killing channel.", e);
+                ctx.close();
+            } catch (final Exception e) {
+                LOG.debug("Exception prcessing message from upstream. Killing channel.", e);
+                ctx.close();
+            } finally {
+                buffer.release();
+            }
+        });
     }
 
     @Override
     public void exceptionCaught(final ChannelHandlerContext ctx, final Throwable cause) {
-        LOG.debug("Exception caught in upstream channel {}", ctx.channel().remoteAddress(), cause);
-        ctx.close();
+        withChannelId(channelId, () -> {
+            LOG.error("Internal proxy error processing message from upstream. Killing channel.", cause);
+            ctx.close();
+        });
     }
 
 }

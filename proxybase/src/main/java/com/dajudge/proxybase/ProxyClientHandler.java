@@ -27,21 +27,34 @@ import java.util.function.Consumer;
 
 class ProxyClientHandler extends ChannelInboundHandlerAdapter {
     private static final Logger LOG = LoggerFactory.getLogger(ProxyClientHandler.class);
+    private final String channelId;
     private final Consumer<ByteBuf> messageSink;
 
-    ProxyClientHandler(final Consumer<ByteBuf> messageSink) {
+    ProxyClientHandler(
+            final String channelId,
+            final Consumer<ByteBuf> messageSink
+    ) {
+        this.channelId = channelId;
         this.messageSink = messageSink;
     }
 
     @Override
     public void channelRead(final ChannelHandlerContext ctx, final Object msg) {
-        final ByteBuf m = (ByteBuf) msg;
-        LOG.trace("Received {} bytes from downstream.", m.readableBytes());
-        try {
-            messageSink.accept(m);
-        } finally {
-            m.release();
-        }
+        LogHelper.withChannelId(channelId, () -> {
+            final ByteBuf m = (ByteBuf) msg;
+            LOG.trace("Received {} bytes from downstream.", m.readableBytes());
+            try {
+                messageSink.accept(m);
+            } catch (final ProxyInternalException e) {
+                LOG.error("Internal proxy error processing message from downstream. Killing channel.", e);
+                ctx.close();
+            } catch (final Exception e) {
+                LOG.debug("Exception prcessing message from downstrean. Killing channel.", e);
+                ctx.close();
+            } finally {
+                m.release();
+            }
+        });
     }
 
     @Override
@@ -56,7 +69,9 @@ class ProxyClientHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(final ChannelHandlerContext ctx, final Throwable cause) {
-        LOG.debug("Exception caught in downstream channel {}", ctx.channel().remoteAddress(), cause);
-        ctx.close();
+        LogHelper.withChannelId(channelId, () -> {
+            LOG.debug("Uncaught exception processing message from downstream. Killing channel.", cause);
+            ctx.close();
+        });
     }
 }

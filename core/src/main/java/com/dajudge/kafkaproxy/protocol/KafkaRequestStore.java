@@ -18,6 +18,7 @@
 package com.dajudge.kafkaproxy.protocol;
 
 import com.dajudge.kafkaproxy.protocol.rewrite.ResponseRewriter;
+import com.dajudge.proxybase.ProxyInternalException;
 import io.netty.buffer.ByteBuf;
 import org.apache.kafka.common.requests.RequestHeader;
 import org.apache.kafka.common.requests.ResponseHeader;
@@ -42,19 +43,24 @@ public class KafkaRequestStore {
     }
 
     void add(final RequestHeader requestHeader) {
-        LOG.trace("Add client request: {}", requestHeader);
+        if (LOG.isErrorEnabled()) {
+            LOG.debug("Adding client request: {} (inflight {}) ", requestHeader, requests.keySet());
+        }
         requests.put(requestHeader.correlationId(), requestHeader);
     }
 
     void process(final KafkaMessage response, final Consumer<ByteBuf> sink) {
         final ByteBuffer responseBuffer = response.payload().nioBuffer();
         final int correlationId = responseBuffer.duplicate().getInt();
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Processing response with correlation ID {} (inflight: {})", correlationId, requests.keySet());
+        }
         final RequestHeader requestHeader = requests.remove(correlationId);
         if (requestHeader == null) {
-            throw new RuntimeException(format("Failed to correlate response correlation ID %d", correlationId));
+            throw new ProxyInternalException(format("Failed to correlate response correlation ID %d", correlationId));
         }
-        final short headerVersion = requestHeader.apiKey().responseHeaderVersion(requestHeader.apiVersion());
-        final ResponseHeader responseHeader = ResponseHeader.parse(responseBuffer, headerVersion);
+        final short responseHeaderVersion = requestHeader.apiKey().responseHeaderVersion(requestHeader.apiVersion());
+        final ResponseHeader responseHeader = ResponseHeader.parse(responseBuffer, responseHeaderVersion);
         sink.accept(rewriter.rewrite(requestHeader, responseHeader, responseBuffer).orElse(response.serialize()));
     }
 }

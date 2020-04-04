@@ -33,7 +33,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLPeerUnverifiedException;
 import java.net.InetSocketAddress;
+import java.util.UUID;
 
+import static com.dajudge.proxybase.LogHelper.withChannelId;
 import static com.dajudge.proxybase.ProxySslHandlerFactory.createSslHandler;
 
 public class ProxyChannel {
@@ -45,9 +47,8 @@ public class ProxyChannel {
     private final NioEventLoopGroup upstreamWorkerGroup;
     private final DownstreamChannelFactory downstreamSinkFactory;
     private final CertificateAuthority certificateAuthority;
+    private final FilterPairFactory<ByteBuf> filterPairFactory;
     private Channel channel;
-    private FilterFactory<ByteBuf> upstreamTransformFactory;
-    private FilterFactory<ByteBuf> downstreamTransformFactory;
 
     ProxyChannel(
             final Endpoint endpoint,
@@ -56,8 +57,7 @@ public class ProxyChannel {
             final NioEventLoopGroup upstreamWorkerGroup,
             final DownstreamChannelFactory downstreamSinkFactory,
             final CertificateAuthority certificateAuthority,
-            final FilterFactory<ByteBuf> upstreamFilterFactory,
-            final FilterFactory<ByteBuf> downstreamFilterFactory
+            final FilterPairFactory<ByteBuf> filterPairFactory
     ) {
         this.endpoint = endpoint;
         this.sslConfig = sslConfig;
@@ -65,8 +65,7 @@ public class ProxyChannel {
         this.upstreamWorkerGroup = upstreamWorkerGroup;
         this.downstreamSinkFactory = downstreamSinkFactory;
         this.certificateAuthority = certificateAuthority;
-        this.upstreamTransformFactory = upstreamFilterFactory;
-        this.downstreamTransformFactory = downstreamFilterFactory;
+        this.filterPairFactory = filterPairFactory;
     }
 
     public void start() {
@@ -96,21 +95,27 @@ public class ProxyChannel {
         return new ChannelInitializer<SocketChannel>() {
             @Override
             public void initChannel(final SocketChannel ch) {
-                final ChannelPipeline pipeline = ch.pipeline();
-                LOG.trace("Incoming connection: {}", ch.remoteAddress());
-                pipeline.addLast("ssl", createSslHandler(upstreamConfig));
-                pipeline.addLast(createDownstreamHandler(new SocketChannelSink(ch)));
+                final String channelId = UUID.randomUUID().toString();
+                withChannelId(channelId, () -> {
+                    final ChannelPipeline pipeline = ch.pipeline();
+                    LOG.debug("Incoming connection on {} from {}", ch.localAddress(), ch.remoteAddress());
+                    pipeline.addLast("ssl", createSslHandler(upstreamConfig));
+                    pipeline.addLast(createDownstreamHandler(channelId, new SocketChannelSink(ch)));
+                });
             }
         };
     }
 
-    private ForwardingInboundHandler createDownstreamHandler(final Sink<ByteBuf> upstreamSink) {
-        return new ForwardingInboundHandler(certSupplier -> {
+    private ForwardingInboundHandler createDownstreamHandler(
+            final String channelId,
+            final Sink<ByteBuf> upstreamSink
+    ) {
+        return new ForwardingInboundHandler(channelId, certSupplier -> {
             try {
                 return downstreamSinkFactory.create(
+                        channelId,
                         upstreamSink,
-                        upstreamTransformFactory,
-                        downstreamTransformFactory,
+                        filterPairFactory,
                         getClientKeystore(certSupplier)
                 );
             } catch (final RuntimeException e) {

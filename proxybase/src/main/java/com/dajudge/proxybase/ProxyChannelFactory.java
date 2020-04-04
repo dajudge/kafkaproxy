@@ -54,8 +54,7 @@ public class ProxyChannelFactory {
     public ProxyChannel createProxyChannel(
             final Endpoint upstreamEndpoint,
             final Endpoint downstreamEndpoint,
-            final FilterFactory<ByteBuf> upstreamFilterFactory,
-            final FilterFactory<ByteBuf> downstreamFilterFactory
+            final FilterPairFactory<ByteBuf> filterPairFactory
     ) {
         final DownstreamChannelFactory downstreamSinkFactory = new DownstreamChannelFactory(
                 downstreamEndpoint,
@@ -69,8 +68,7 @@ public class ProxyChannelFactory {
                 upstreamWorkerGroup,
                 downstreamSinkFactory,
                 certificateAuthority,
-                upstreamFilterFactory,
-                downstreamFilterFactory
+                filterPairFactory
         );
         LOG.info("Proxying {} as {}", downstreamEndpoint, upstreamEndpoint);
         return proxyChannel;
