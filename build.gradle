@@ -4,6 +4,7 @@ plugins {
 
 subprojects {
     repositories {
+        maven { url "https://dl.bintray.com/dajudge/proxybase" }
         mavenCentral()
     }
     tasks.withType(JavaCompile) {

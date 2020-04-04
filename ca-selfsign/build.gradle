@@ -1,7 +1,7 @@
 apply plugin: "java"
 
 dependencies {
-    implementation project(":proxybase")
+    implementation 'com.dajudge.proxybase:proxybase:0.0.1'
 
     // Used for certificate signing
     implementation 'org.bouncycastle:bcpkix-jdk15on:1.64'

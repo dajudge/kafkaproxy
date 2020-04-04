@@ -1,8 +1,7 @@
 apply plugin: "java"
 
 dependencies {
-    implementation project(":proxybase")
-
+    implementation 'com.dajudge.proxybase:proxybase:0.0.1'
     // We use the transport objects from the kafka client library
     implementation 'org.apache.kafka:kafka-clients:2.4.1'
     // Netty is our network layer
