@@ -19,38 +19,24 @@ package com.dajudge.kafkaproxy.protocol;
 
 import com.dajudge.proxybase.Sink;
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelFuture;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public class KafkaMessageSplitter implements Sink<ByteBuf> {
-    private static final Logger LOG = LoggerFactory.getLogger(KafkaMessageSplitter.class);
-    private final Sink<KafkaMessage> requestSink;
-    private KafkaMessage currentRequest = new KafkaMessage();
-
+public class KafkaMessageSplitter extends AbstractHeaderMessageSplitter<KafkaMessage> {
     public KafkaMessageSplitter(final Sink<KafkaMessage> requestSink) {
-        this.requestSink = requestSink;
+        super(requestSink);
     }
 
     @Override
-    public void accept(final ByteBuf remainingBytes) {
-        try {
-            LOG.trace("Processing {} available bytes.", remainingBytes.readableBytes());
-            while (remainingBytes.readableBytes() > 0) {
-                LOG.trace("Processing {} bytes remaining.", remainingBytes.readableBytes());
-                currentRequest.append(remainingBytes);
-                if (currentRequest.isComplete()) {
-                    requestSink.accept(currentRequest);
-                    currentRequest = new KafkaMessage();
-                }
-            }
-        } finally {
-            remainingBytes.release();
-        }
+    protected KafkaMessage createEmptyRequest() {
+        return new KafkaMessage();
     }
 
     @Override
-    public ChannelFuture close() {
-        return requestSink.close();
+    protected void append(final KafkaMessage request, final ByteBuf remainingBytes) {
+        request.append(remainingBytes);
+    }
+
+    @Override
+    protected boolean isComplete(final KafkaMessage request) {
+        return request.isComplete();
     }
 }
