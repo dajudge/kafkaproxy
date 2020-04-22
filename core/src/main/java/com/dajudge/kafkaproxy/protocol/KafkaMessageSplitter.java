@@ -34,14 +34,18 @@ public class KafkaMessageSplitter implements Sink<ByteBuf> {
 
     @Override
     public void accept(final ByteBuf remainingBytes) {
-        LOG.trace("Processing {} available bytes.", remainingBytes.readableBytes());
-        while (remainingBytes.readableBytes() > 0) {
-            LOG.trace("Processing {} bytes remaining.", remainingBytes.readableBytes());
-            currentRequest.append(remainingBytes);
-            if (currentRequest.isComplete()) {
-                requestSink.accept(currentRequest);
-                currentRequest = new KafkaMessage();
+        try {
+            LOG.trace("Processing {} available bytes.", remainingBytes.readableBytes());
+            while (remainingBytes.readableBytes() > 0) {
+                LOG.trace("Processing {} bytes remaining.", remainingBytes.readableBytes());
+                currentRequest.append(remainingBytes);
+                if (currentRequest.isComplete()) {
+                    requestSink.accept(currentRequest);
+                    currentRequest = new KafkaMessage();
+                }
             }
+        } finally {
+            remainingBytes.release();
         }
     }
 
