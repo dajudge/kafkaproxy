@@ -2,6 +2,11 @@ plugins {
     id "com.github.hierynomus.license" version "0.15.0" apply false
 }
 
+ext {
+    proxyBaseVersion = "0.0.1"
+    libProxyBase = "com.dajudge.proxybase:proxybase:$proxyBaseVersion"
+}
+
 subprojects {
     repositories {
         maven { url "https://dl.bintray.com/dajudge/proxybase" }
