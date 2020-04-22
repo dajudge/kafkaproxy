@@ -17,6 +17,7 @@
 
 package com.dajudge.kafkaproxy.protocol;
 
+import com.dajudge.proxybase.message.AbstractFixedSizeHeaderMessage;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 

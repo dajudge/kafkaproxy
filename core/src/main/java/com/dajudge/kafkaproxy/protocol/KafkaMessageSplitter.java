@@ -18,6 +18,7 @@
 package com.dajudge.kafkaproxy.protocol;
 
 import com.dajudge.proxybase.Sink;
+import com.dajudge.proxybase.message.AbstractHeaderMessageSplitter;
 import io.netty.buffer.ByteBuf;
 
 public class KafkaMessageSplitter extends AbstractHeaderMessageSplitter<KafkaMessage> {

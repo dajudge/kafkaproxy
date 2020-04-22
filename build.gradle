@@ -3,12 +3,13 @@ plugins {
 }
 
 ext {
-    proxyBaseVersion = "0.0.3"
+    proxyBaseVersion = "1587572836119-SNAPSHOT"
     libProxyBase = "com.dajudge.proxybase:proxybase:$proxyBaseVersion"
 }
 
 subprojects {
     repositories {
+        mavenLocal()
         maven { url "https://dl.bintray.com/dajudge/proxybase" }
         mavenCentral()
     }
