@@ -31,6 +31,6 @@ public class NullCertificateAuthorityFactory implements CertificateAuthorityFact
 
     @Override
     public CertificateAuthority createFactory(final ApplicationConfig applicationConfig) {
-        return new NullCertificateAuthority();
+        return NullCertificateAuthority.INSTANCE;
     }
 }

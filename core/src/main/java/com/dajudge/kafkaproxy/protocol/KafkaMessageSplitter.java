@@ -18,10 +18,10 @@
 package com.dajudge.kafkaproxy.protocol;
 
 import com.dajudge.proxybase.Sink;
-import com.dajudge.proxybase.message.AbstractHeaderMessageSplitter;
+import com.dajudge.proxybase.message.AbstractFixedSizeHeaderMessageSplitter;
 import io.netty.buffer.ByteBuf;
 
-public class KafkaMessageSplitter extends AbstractHeaderMessageSplitter<KafkaMessage> {
+public class KafkaMessageSplitter extends AbstractFixedSizeHeaderMessageSplitter<KafkaMessage> {
     public KafkaMessageSplitter(final Sink<KafkaMessage> requestSink) {
         super(requestSink);
     }

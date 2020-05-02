@@ -25,9 +25,9 @@ import com.dajudge.kafkaproxy.protocol.rewrite.CompositeRewriter;
 import com.dajudge.kafkaproxy.protocol.rewrite.FindCoordinatorRewriter;
 import com.dajudge.kafkaproxy.protocol.rewrite.MetadataRewriter;
 import com.dajudge.kafkaproxy.protocol.rewrite.ResponseRewriter;
-import com.dajudge.proxybase.FilterPairFactory;
 import com.dajudge.proxybase.ProxyChannel;
 import com.dajudge.proxybase.ProxyChannelFactory;
+import com.dajudge.proxybase.ProxyContextFactory;
 import com.dajudge.proxybase.Sink;
 import com.dajudge.proxybase.config.Endpoint;
 import io.netty.buffer.ByteBuf;
@@ -54,15 +54,15 @@ public class KafkaProxyChannelFactory {
         if (brokerToProxy == null) {
             throw new IllegalArgumentException("No proxy configuration provided for " + endpoint);
         }
-        final FilterPairFactory<ByteBuf> filterPairFactory = new FilterPairFactory<ByteBuf>() {
+        final ProxyContextFactory filterPairFactory = new ProxyContextFactory() {
             @Override
-            public FilterPair<ByteBuf> createFilterPair() {
+            public ProxyContext createProxyContext() {
                 final ResponseRewriter rewriter = new CompositeRewriter(asList(
                         new MetadataRewriter(manager),
                         new FindCoordinatorRewriter(manager)
                 ));
                 final KafkaRequestStore requestStore = new KafkaRequestStore(rewriter);
-                return new FilterPair<ByteBuf>() {
+                return new AbstractProxyContext() {
                     @Override
                     public Sink<ByteBuf> downstreamFilter(final Sink<ByteBuf> downstream) {
                         return new KafkaMessageSplitter(new KafkaRequestProcessor(downstream, requestStore));

@@ -38,7 +38,7 @@ public interface CertificateAuthorityFactory {
             case CA:
                 return createCertificateFactory(sslConfig.getCertificateFactory(), appConfig);
             case NONE:
-                return new NullCertificateAuthority();
+                return NullCertificateAuthority.INSTANCE;
             default:
                 throw new IllegalArgumentException("Unhandled client certificate strategy: "
                         + sslConfig.getClientCertificateStrategy());

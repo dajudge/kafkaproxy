@@ -24,7 +24,7 @@ import com.dajudge.kafkaproxy.config.KafkaBrokerConfigSource.KafkaBrokerConfig;
 import com.dajudge.proxybase.ProxyApplication;
 import com.dajudge.proxybase.ProxyChannel;
 import com.dajudge.proxybase.ProxyChannelFactory;
-import com.dajudge.proxybase.config.UpstreamConfig;
+import com.dajudge.proxybase.config.UpstreamSslConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +39,7 @@ public class KafkaProxyApplication extends ProxyApplication {
 
     private KafkaProxyApplication(final ApplicationConfig appConfig) {
         super(
-                appConfig.get(UpstreamConfig.class),
+                appConfig.get(UpstreamSslConfig.class),
                 appConfig.get(KafkaBrokerConfig.class).getDownstreamConfig(),
                 createCertificateAuthority(appConfig)
         );
