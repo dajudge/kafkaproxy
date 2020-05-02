@@ -17,15 +17,16 @@
 
 package com.dajudge.kafkaproxy;
 
-import com.dajudge.proxybase.config.Endpoint;
 import com.dajudge.proxybase.ProxyChannel;
+import com.dajudge.proxybase.config.Endpoint;
+import io.netty.buffer.ByteBuf;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 public class KafkaProxyChannelManager {
-    private final Map<String, ProxyChannel> channels = new HashMap<>();
+    private final Map<String, ProxyChannel<ByteBuf, ByteBuf, ByteBuf, ByteBuf>> channels = new HashMap<>();
     private final KafkaProxyChannelFactory channelFactory;
 
     public KafkaProxyChannelManager(
@@ -34,13 +35,14 @@ public class KafkaProxyChannelManager {
         this.channelFactory = channelFactory;
     }
 
-    public synchronized Collection<ProxyChannel> proxies() {
+    public synchronized Collection<ProxyChannel<ByteBuf, ByteBuf, ByteBuf, ByteBuf>> proxies() {
         return channels.values();
     }
 
     public synchronized BrokerMapping getByBrokerEndpoint(final Endpoint brokerEndpoint) {
-        final ProxyChannel channel = channels.computeIfAbsent(keyOf(brokerEndpoint), k ->
-                channelFactory.create(this, brokerEndpoint)
+        final ProxyChannel<ByteBuf, ByteBuf, ByteBuf, ByteBuf> channel = channels.computeIfAbsent(
+                keyOf(brokerEndpoint),
+                k -> channelFactory.create(this, brokerEndpoint)
         );
         channel.start();
         return new BrokerMapping(brokerEndpoint, new Endpoint(channel.getHost(), channel.getPort()));

@@ -39,41 +39,41 @@ import static java.util.stream.Collectors.toList;
 
 public class KafkaProxyChannelFactory {
     private final BrokerMapper brokerMapper;
-    private final ProxyChannelFactory proxyChannelFactory;
+    private final ProxyChannelFactory<ByteBuf, ByteBuf, ByteBuf, ByteBuf> proxyChannelFactory;
 
     public KafkaProxyChannelFactory(
             final BrokerMapper brokerMapper,
-            final ProxyChannelFactory proxyChannelFactory
+            final ProxyChannelFactory<ByteBuf, ByteBuf, ByteBuf, ByteBuf> proxyChannelFactory
     ) {
         this.brokerMapper = brokerMapper;
         this.proxyChannelFactory = proxyChannelFactory;
     }
 
-    public ProxyChannel create(final KafkaProxyChannelManager manager, final Endpoint endpoint) {
+    public ProxyChannel<ByteBuf, ByteBuf, ByteBuf, ByteBuf> create(
+            final KafkaProxyChannelManager manager,
+            final Endpoint endpoint
+    ) {
         final BrokerMapping brokerToProxy = brokerMapper.getBrokerMapping(endpoint);
         if (brokerToProxy == null) {
             throw new IllegalArgumentException("No proxy configuration provided for " + endpoint);
         }
-        final ProxyContextFactory filterPairFactory = new ProxyContextFactory() {
-            @Override
-            public ProxyContext createProxyContext() {
-                final ResponseRewriter rewriter = new CompositeRewriter(asList(
-                        new MetadataRewriter(manager),
-                        new FindCoordinatorRewriter(manager)
-                ));
-                final KafkaRequestStore requestStore = new KafkaRequestStore(rewriter);
-                return new AbstractProxyContext() {
-                    @Override
-                    public Sink<ByteBuf> downstreamFilter(final Sink<ByteBuf> downstream) {
-                        return new KafkaMessageSplitter(new KafkaRequestProcessor(downstream, requestStore));
-                    }
+        final ProxyContextFactory<ByteBuf, ByteBuf, ByteBuf, ByteBuf> filterPairFactory = () -> {
+            final ResponseRewriter rewriter = new CompositeRewriter(asList(
+                    new MetadataRewriter(manager),
+                    new FindCoordinatorRewriter(manager)
+            ));
+            final KafkaRequestStore requestStore = new KafkaRequestStore(rewriter);
+            return new ProxyContextFactory.AbstractSimpleProxyContext() {
+                @Override
+                public Sink<ByteBuf> downstreamFilter(final Sink<ByteBuf> downstream) {
+                    return new KafkaMessageSplitter(new KafkaRequestProcessor(downstream, requestStore));
+                }
 
-                    @Override
-                    public Sink<ByteBuf> upstreamFilter(final Sink<ByteBuf> upstream) {
-                        return new KafkaMessageSplitter(new KafkaResponseProcessor(upstream, requestStore));
-                    }
-                };
-            }
+                @Override
+                public Sink<ByteBuf> upstreamFilter(final Sink<ByteBuf> upstream) {
+                    return new KafkaMessageSplitter(new KafkaResponseProcessor(upstream, requestStore));
+                }
+            };
         };
         return proxyChannelFactory.createProxyChannel(
                 brokerToProxy.getProxy(),

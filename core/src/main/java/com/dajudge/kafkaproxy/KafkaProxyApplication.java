@@ -25,6 +25,7 @@ import com.dajudge.proxybase.ProxyApplication;
 import com.dajudge.proxybase.ProxyChannel;
 import com.dajudge.proxybase.ProxyChannelFactory;
 import com.dajudge.proxybase.config.UpstreamSslConfig;
+import io.netty.buffer.ByteBuf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +33,7 @@ import java.util.Collection;
 
 import static com.dajudge.kafkaproxy.ca.CertificateAuthorityFactory.createCertificateAuthority;
 
-public class KafkaProxyApplication extends ProxyApplication {
+public class KafkaProxyApplication extends ProxyApplication<ByteBuf, ByteBuf, ByteBuf, ByteBuf> {
     private static final Logger LOG = LoggerFactory.getLogger(KafkaProxyApplication.class);
 
     private final BrokerMapper brokerMappingStrategy;
@@ -46,12 +47,16 @@ public class KafkaProxyApplication extends ProxyApplication {
         brokerMappingStrategy = new BrokerMapper(appConfig.get(BrokerConfigSource.BrokerConfig.class));
     }
 
-    public static ProxyApplication create(final Environment environment) {
+    public static ProxyApplication<ByteBuf, ByteBuf, ByteBuf, ByteBuf> create(
+            final Environment environment
+    ) {
         return new KafkaProxyApplication(new ApplicationConfig(environment));
     }
 
     @Override
-    protected Collection<ProxyChannel> initializeProxyChannels(final ProxyChannelFactory proxyChannelFactory) {
+    protected Collection<ProxyChannel<ByteBuf, ByteBuf, ByteBuf, ByteBuf>> initializeProxyChannels(
+            final ProxyChannelFactory<ByteBuf, ByteBuf, ByteBuf, ByteBuf> proxyChannelFactory
+    ) {
         final KafkaProxyChannelFactory kafkaProxyChannelFactory = new KafkaProxyChannelFactory(
                 brokerMappingStrategy,
                 proxyChannelFactory
