@@ -37,6 +37,8 @@ public class KafkaProxyApplication extends ProxyApplication<ByteBuf, ByteBuf, By
     private static final Logger LOG = LoggerFactory.getLogger(KafkaProxyApplication.class);
 
     private final BrokerMapper brokerMappingStrategy;
+    private final String advertisedHostname;
+    private final String bindAddress;
 
     private KafkaProxyApplication(final ApplicationConfig appConfig) {
         super(
@@ -44,7 +46,10 @@ public class KafkaProxyApplication extends ProxyApplication<ByteBuf, ByteBuf, By
                 appConfig.get(KafkaBrokerConfig.class).getDownstreamConfig(),
                 createCertificateAuthority(appConfig)
         );
-        brokerMappingStrategy = new BrokerMapper(appConfig.get(BrokerConfigSource.BrokerConfig.class));
+        final BrokerConfigSource.BrokerConfig brokerConfig = appConfig.get(BrokerConfigSource.BrokerConfig.class);
+        advertisedHostname = brokerConfig.getProxyHostname();
+        bindAddress = brokerConfig.getBindAddress();
+        brokerMappingStrategy = new BrokerMapper(brokerConfig);
     }
 
     public static ProxyApplication<ByteBuf, ByteBuf, ByteBuf, ByteBuf> create(
@@ -59,9 +64,13 @@ public class KafkaProxyApplication extends ProxyApplication<ByteBuf, ByteBuf, By
     ) {
         final KafkaProxyChannelFactory kafkaProxyChannelFactory = new KafkaProxyChannelFactory(
                 brokerMappingStrategy,
+                bindAddress,
                 proxyChannelFactory
         );
-        final KafkaProxyChannelManager proxyChannelManager = new KafkaProxyChannelManager(kafkaProxyChannelFactory);
+        final KafkaProxyChannelManager proxyChannelManager = new KafkaProxyChannelManager(
+                kafkaProxyChannelFactory,
+                advertisedHostname
+        );
         kafkaProxyChannelFactory.bootstrap(proxyChannelManager)
                 .forEach(bootstrapMapping -> LOG.info("Bootstrap broker mapping: {}", bootstrapMapping));
         return proxyChannelManager.proxies();
