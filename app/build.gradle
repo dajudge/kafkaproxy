@@ -34,5 +34,5 @@ dependencies {
     implementation 'org.bouncycastle:bcpkix-jdk15on:1.64'
 
     // Force override to latest kafka client
-    implementation 'org.apache.kafka:kafka-clients:2.4.1'
+    implementation libKafkaClient
 }
