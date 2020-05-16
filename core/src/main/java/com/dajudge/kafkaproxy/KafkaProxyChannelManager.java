@@ -28,11 +28,14 @@ import java.util.Map;
 public class KafkaProxyChannelManager {
     private final Map<String, ProxyChannel<ByteBuf, ByteBuf, ByteBuf, ByteBuf>> channels = new HashMap<>();
     private final KafkaProxyChannelFactory channelFactory;
+    private final String advertisedHostname;
 
     public KafkaProxyChannelManager(
-            final KafkaProxyChannelFactory channelFactory
+            final KafkaProxyChannelFactory channelFactory,
+            final String advertisedHostname
     ) {
         this.channelFactory = channelFactory;
+        this.advertisedHostname = advertisedHostname;
     }
 
     public synchronized Collection<ProxyChannel<ByteBuf, ByteBuf, ByteBuf, ByteBuf>> proxies() {
@@ -45,7 +48,8 @@ public class KafkaProxyChannelManager {
                 k -> channelFactory.create(this, brokerEndpoint)
         );
         channel.start();
-        return new BrokerMapping(brokerEndpoint, new Endpoint(channel.getHost(), channel.getPort()));
+        final Endpoint advertisedEndpoint = new Endpoint(advertisedHostname, channel.getPort());
+        return new BrokerMapping(brokerEndpoint, advertisedEndpoint);
     }
 
     private String keyOf(final Endpoint brokerEndpoint) {

@@ -37,7 +37,8 @@ public class BrokerConfigSource implements ConfigSource<BrokerConfigSource.Broke
         return new BrokerConfig(
                 getBootstrapBrokers(environment),
                 environment.requiredString("KAFKAPROXY_HOSTNAME"),
-                environment.requiredInt("KAFKAPROXY_BASE_PORT")
+                environment.requiredInt("KAFKAPROXY_BASE_PORT"),
+                environment.requiredString("KAFKAPROXY_BIND_ADDRESS", "0.0.0.0")
         );
     }
 
@@ -56,15 +57,18 @@ public class BrokerConfigSource implements ConfigSource<BrokerConfigSource.Broke
         private final List<Endpoint> bootstrapBrokers;
         private final String proxyHostname;
         private final int proxyBasePort;
+        private final String bindAddress;
 
         public BrokerConfig(
                 final List<Endpoint> bootstrapBrokers,
                 final String proxyHostname,
-                final int proxyBasePort
+                final int proxyBasePort,
+                final String bindAddress
         ) {
             this.bootstrapBrokers = bootstrapBrokers;
             this.proxyHostname = proxyHostname;
             this.proxyBasePort = proxyBasePort;
+            this.bindAddress = bindAddress;
         }
 
         public List<Endpoint> getBootstrapBrokers() {
@@ -77,6 +81,10 @@ public class BrokerConfigSource implements ConfigSource<BrokerConfigSource.Broke
 
         public int getProxyBasePort() {
             return proxyBasePort;
+        }
+
+        public String getBindAddress() {
+            return bindAddress;
         }
     }
 }

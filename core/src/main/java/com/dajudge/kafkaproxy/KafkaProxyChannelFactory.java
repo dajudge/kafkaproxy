@@ -39,13 +39,16 @@ import static java.util.stream.Collectors.toList;
 
 public class KafkaProxyChannelFactory {
     private final BrokerMapper brokerMapper;
+    private final String bindAddress;
     private final ProxyChannelFactory<ByteBuf, ByteBuf, ByteBuf, ByteBuf> proxyChannelFactory;
 
     public KafkaProxyChannelFactory(
             final BrokerMapper brokerMapper,
+            final String bindAddress,
             final ProxyChannelFactory<ByteBuf, ByteBuf, ByteBuf, ByteBuf> proxyChannelFactory
     ) {
         this.brokerMapper = brokerMapper;
+        this.bindAddress = bindAddress;
         this.proxyChannelFactory = proxyChannelFactory;
     }
 
@@ -76,7 +79,7 @@ public class KafkaProxyChannelFactory {
             };
         };
         return proxyChannelFactory.createProxyChannel(
-                brokerToProxy.getProxy(),
+                new Endpoint(bindAddress, brokerToProxy.getProxy().getPort()),
                 brokerToProxy.getBroker(),
                 filterPairFactory
         );
