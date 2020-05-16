@@ -1,3 +1,4 @@
 next release
 - Use Kafka client v2.5.0
 - Allow customization of bind address
+- Allow customization of HTTP port

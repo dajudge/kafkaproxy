@@ -83,6 +83,7 @@ kafkaproxy requires some general information to start.
 | `KAFKAPROXY_BOOTSTRAP_SERVERS`     |               | The comma separated list of initially mapped endpoints. This is usually the list of bootstrap brokers or a load balancer in front of the kafka brokers.
 | `KAFKAPROXY_LOG_LEVEL`             | `INFO`        | The log level of the root logger. This must be a valid log level for [logback](http://logback.qos.ch/manual/configuration.html).
 | `KAFKAPROXY_ENABLE_JSON_LOGGING`   | `false`       | Enable/disable json logging feature.
+| `KAFKAPROXY_HTTP_PORT`             | `8080`        | The HTTP port the metrics REST endpoint will be exposed on. 
  
 ## Client SSL configuration
 The client SSL configuration determines how the Kafka clients have to connect to the kafkaproxy instances.
