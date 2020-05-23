@@ -17,26 +17,21 @@
 
 package com.dajudge.kafkaproxy.protocol;
 
-import com.dajudge.proxybase.Sink;
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelOutboundHandlerAdapter;
+import io.netty.channel.ChannelPromise;
 
-public class KafkaResponseProcessor implements Sink<KafkaMessage> {
-    private final Sink<ByteBuf> sink;
-    private final KafkaRequestStore requestStore;
-
-    public KafkaResponseProcessor(final Sink<ByteBuf> sink, final KafkaRequestStore requestStore) {
-        this.sink = sink;
-        this.requestStore = requestStore;
-    }
-
+public class EncodingKafkaMessageOutboundHandler extends ChannelOutboundHandlerAdapter {
     @Override
-    public void accept(final KafkaMessage response) {
-        requestStore.process(response, sink);
-    }
-
-    @Override
-    public ChannelFuture close() {
-        return sink.close();
+    public void write(
+            final ChannelHandlerContext ctx,
+            final Object msg,
+            final ChannelPromise promise
+    ) throws Exception {
+        if (msg instanceof KafkaMessage) {
+            ctx.write(((KafkaMessage) msg).all(), promise);
+        } else {
+            super.write(ctx, msg, promise);
+        }
     }
 }

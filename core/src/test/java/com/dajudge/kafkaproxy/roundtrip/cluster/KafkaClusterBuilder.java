@@ -18,7 +18,6 @@
 package com.dajudge.kafkaproxy.roundtrip.cluster;
 
 import com.dajudge.kafkaproxy.KafkaProxyApplication;
-import com.dajudge.proxybase.ProxyApplication;
 import com.dajudge.kafkaproxy.roundtrip.client.ClientFactory;
 import com.dajudge.kafkaproxy.roundtrip.cluster.container.KafkaContainer;
 import com.dajudge.kafkaproxy.roundtrip.cluster.container.ZookeeperContainer;
@@ -63,7 +62,7 @@ public class KafkaClusterBuilder {
     public TestSetup build() {
         final KafkaCluster kafka = buildKafkaCluster();
         final int proxyBootstrapPort = freePort();
-        final ProxyApplication proxy = buildProxyApp(kafka, proxyBootstrapPort);
+        final KafkaProxyApplication proxy = buildProxyApp(kafka, proxyBootstrapPort);
         final ClientFactory proxiedClientFactory = buildProxiedClientFactory(proxyBootstrapPort);
         final ClientFactory directClientFactory = buildDirectClientFactory(kafka);
         return new TestSetup(kafka, proxy, proxiedClientFactory, directClientFactory, proxyBootstrapPort);
@@ -84,7 +83,7 @@ public class KafkaClusterBuilder {
     }
 
     @NotNull
-    private ProxyApplication buildProxyApp(final KafkaCluster kafka, final int bootstrapPort) {
+    private KafkaProxyApplication buildProxyApp(final KafkaCluster kafka, final int bootstrapPort) {
         final ClientSecurity brokerSecurity = brokerComm.getClientSecurity();
         final ServerSecurity proxySecurity = proxyComm.getServerSecurity("CN=localhost");
         final ClientSslConfig proxyClient = brokerSecurity.newClient("CN=proxy");
@@ -112,7 +111,7 @@ public class KafkaClusterBuilder {
         final StringBuilder buffer = new StringBuilder();
         env.dump(line -> buffer.append(line + "\n"));
         LOG.info("ENV:\n{}", indent(4, buffer.toString()));
-        return KafkaProxyApplication.create(env).start();
+        return KafkaProxyApplication.create(env);
     }
 
     private KafkaCluster buildKafkaCluster() {

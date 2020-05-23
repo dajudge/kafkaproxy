@@ -19,7 +19,7 @@ package com.dajudge.kafkaproxy.config;
 
 import com.dajudge.kafkaproxy.ca.ClientCertificateStrategy;
 import com.dajudge.kafkaproxy.ca.NullCertificateAuthorityFactory;
-import com.dajudge.proxybase.ca.ClientCertCertificateAuthority;
+import com.dajudge.proxybase.ca.ClientCertCertificateAuthority.ClientCertificateConfig;
 import com.dajudge.proxybase.config.DownstreamSslConfig;
 
 public class KafkaBrokerConfigSource implements ConfigSource<KafkaBrokerConfigSource.KafkaBrokerConfig> {
@@ -54,7 +54,7 @@ public class KafkaBrokerConfigSource implements ConfigSource<KafkaBrokerConfigSo
                 environment.optionalString(ENV_KAFKA_SSL_TRUSTSTORE_PASSWORD).orElse(null),
                 environment.requiredBoolean(ENV_KAFKA_SSL_VERIFY_HOSTNAME, DEFAULT_KAFKA_SSL_VERIFY_HOSTNAME)
         );
-        final ClientCertCertificateAuthority.ClientCertificateConfig clientCertConfig = new ClientCertCertificateAuthority.ClientCertificateConfig(
+        final ClientCertificateConfig clientCertConfig = new ClientCertificateConfig(
                 environment.optionalFile(ENV_KAFKA_SSL_KEYSTORE_LOCATION).orElse(null),
                 environment.optionalString(ENV_KAFKA_SSL_KEYSTORE_PASSWORD).orElse(null),
                 environment.optionalString(ENV_KAFKA_SSL_KEY_PASSWORD).orElse(null)
@@ -69,20 +69,20 @@ public class KafkaBrokerConfigSource implements ConfigSource<KafkaBrokerConfigSo
 
     public static class KafkaBrokerConfig {
         private final DownstreamSslConfig downstreamConfig;
-        private final ClientCertCertificateAuthority.ClientCertificateConfig clientCertificateConfig;
+        private final ClientCertificateConfig clientCertificateConfig;
         private final String certificateFactory;
         private final ClientCertificateStrategy clientCertificateStrategy;
 
         public static final KafkaBrokerConfig DISABLED = new KafkaBrokerConfig(
                 DownstreamSslConfig.NO_SSL,
-                ClientCertCertificateAuthority.ClientCertificateConfig.DISABLED,
+                ClientCertificateConfig.DISABLED,
                 NullCertificateAuthorityFactory.NAME,
                 ClientCertificateStrategy.NONE
         );
 
         KafkaBrokerConfig(
                 final DownstreamSslConfig downstreamConfig,
-                final ClientCertCertificateAuthority.ClientCertificateConfig clientCertificateConfig,
+                final ClientCertificateConfig clientCertificateConfig,
                 final String certificateFactory,
                 final ClientCertificateStrategy clientCertificateStrategy
         ) {
@@ -96,7 +96,7 @@ public class KafkaBrokerConfigSource implements ConfigSource<KafkaBrokerConfigSo
             return downstreamConfig;
         }
 
-        public ClientCertCertificateAuthority.ClientCertificateConfig getClientCertificateConfig() {
+        public ClientCertificateConfig getClientCertificateConfig() {
             return clientCertificateConfig;
         }
 

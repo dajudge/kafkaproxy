@@ -17,7 +17,6 @@
 
 package com.dajudge.kafkaproxy.protocol.rewrite;
 
-import com.dajudge.kafkaproxy.KafkaProxyChannelManager;
 import com.dajudge.kafkaproxy.BrokerMapping;
 import com.dajudge.proxybase.config.Endpoint;
 import org.apache.kafka.common.message.MetadataResponseData;
@@ -28,13 +27,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
+import java.util.function.Function;
 
 public class MetadataRewriter extends BaseReflectingRewriter<MetadataResponse> {
     private static final Logger LOG = LoggerFactory.getLogger(MetadataRewriter.class);
-    private final KafkaProxyChannelManager proxyChannelManager;
+    private final Function<Endpoint, BrokerMapping> brokerResolver;
 
-    public MetadataRewriter(final KafkaProxyChannelManager proxyChannelManager) {
-        this.proxyChannelManager = proxyChannelManager;
+    public MetadataRewriter(final Function<Endpoint, BrokerMapping> brokerResolver) {
+        this.brokerResolver = brokerResolver;
     }
 
     @Override
@@ -43,7 +43,7 @@ public class MetadataRewriter extends BaseReflectingRewriter<MetadataResponse> {
         field.setAccessible(true);
         final MetadataResponseData data = (MetadataResponseData) field.get(response);
         data.brokers().forEach(b -> {
-            final BrokerMapping mapping = proxyChannelManager.getByBrokerEndpoint(new Endpoint(b.host(), b.port()));
+            final BrokerMapping mapping = brokerResolver.apply(new Endpoint(b.host(), b.port()));
             if (mapping == null) {
                 LOG.error("Unknown broker node seen in {}: {}:{}", ApiKeys.METADATA, b.host(), b.port());
             } else {

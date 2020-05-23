@@ -17,32 +17,25 @@
 
 package com.dajudge.kafkaproxy.protocol;
 
-import com.dajudge.proxybase.Sink;
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelFuture;
-import org.apache.kafka.common.requests.RequestHeader;
+import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
 
-public class KafkaRequestProcessor implements Sink<KafkaMessage> {
-    private final Sink<ByteBuf> requestSink;
+public class RewritingKafkaMessageDuplexHandler extends ChannelDuplexHandler {
     private final KafkaRequestStore kafkaRequestStore;
 
-    public KafkaRequestProcessor(final Sink<ByteBuf> requestSink, final KafkaRequestStore kafkaRequestStore) {
-        this.requestSink = requestSink;
+    public RewritingKafkaMessageDuplexHandler(final KafkaRequestStore kafkaRequestStore) {
         this.kafkaRequestStore = kafkaRequestStore;
     }
 
     @Override
-    public void accept(final KafkaMessage request) {
-        try {
-            kafkaRequestStore.add(RequestHeader.parse(request.payload().nioBuffer()));
-            requestSink.accept(request.serialize());
-        } finally {
-            request.release();
-        }
+    public void write(final ChannelHandlerContext ctx, final Object msg, final ChannelPromise promise) {
+        kafkaRequestStore.add((KafkaMessage) msg);
+        ctx.write(msg, promise);
     }
 
     @Override
-    public ChannelFuture close() {
-        return requestSink.close();
+    public void channelRead(final ChannelHandlerContext ctx, final Object msg) {
+        ctx.fireChannelRead(kafkaRequestStore.process((KafkaMessage) msg));
     }
 }
