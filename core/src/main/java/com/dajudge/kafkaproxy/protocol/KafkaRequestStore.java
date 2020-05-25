@@ -18,17 +18,12 @@
 package com.dajudge.kafkaproxy.protocol;
 
 import com.dajudge.kafkaproxy.protocol.rewrite.ResponseRewriter;
-import com.dajudge.proxybase.ProxyInternalException;
-import io.netty.buffer.ByteBuf;
 import org.apache.kafka.common.requests.RequestHeader;
-import org.apache.kafka.common.requests.ResponseHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 
 import static java.lang.String.format;
 import static java.util.Collections.synchronizedMap;
@@ -42,25 +37,32 @@ public class KafkaRequestStore {
         this.rewriter = rewriter;
     }
 
-    void add(final RequestHeader requestHeader) {
-        if (LOG.isErrorEnabled()) {
-            LOG.debug("Adding client request: {} (inflight {}) ", requestHeader, requests.keySet());
+    public void add(final KafkaMessage request) {
+        final RequestHeader requestHeader = request.requestHeader();
+        if (LOG.isDebugEnabled()) {
+            LOG.trace("Adding client request: {} (inflight {}) ", requestHeader, requests.keySet());
         }
         requests.put(requestHeader.correlationId(), requestHeader);
     }
 
-    void process(final KafkaMessage response, final Consumer<ByteBuf> sink) {
-        final ByteBuffer responseBuffer = response.payload().nioBuffer();
-        final int correlationId = responseBuffer.duplicate().getInt();
+    public KafkaMessage process(final KafkaMessage response) {
+        // Peek at the correlation ID
+        final int correlationId = response.correlationId();
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Processing response with correlation ID {} (inflight: {})", correlationId, requests.keySet());
+            LOG.trace(
+                    "Processing response with correlation ID {} (inflight: {})",
+                    correlationId,
+                    requests.keySet()
+            );
         }
         final RequestHeader requestHeader = requests.remove(correlationId);
         if (requestHeader == null) {
-            throw new ProxyInternalException(format("Failed to correlate response correlation ID %d", correlationId));
+            throw new RuntimeException(format(
+                    "Failed to correlate response correlation ID %d",
+                    correlationId
+            ));
         }
-        final short responseHeaderVersion = requestHeader.apiKey().responseHeaderVersion(requestHeader.apiVersion());
-        final ResponseHeader responseHeader = ResponseHeader.parse(responseBuffer, responseHeaderVersion);
-        sink.accept(rewriter.rewrite(requestHeader, responseHeader, responseBuffer).orElse(response.serialize()));
+
+        return rewriter.rewrite(requestHeader, response);
     }
 }

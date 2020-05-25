@@ -17,27 +17,17 @@
 
 package com.dajudge.kafkaproxy.protocol;
 
-import com.dajudge.proxybase.Sink;
-import com.dajudge.proxybase.message.AbstractFixedSizeHeaderMessageSplitter;
-import io.netty.buffer.ByteBuf;
+import com.dajudge.proxybase.AbstractChunkedMessageStreamInboundHandler;
+import io.netty.channel.ChannelHandlerContext;
 
-public class KafkaMessageSplitter extends AbstractFixedSizeHeaderMessageSplitter<KafkaMessage> {
-    public KafkaMessageSplitter(final Sink<KafkaMessage> requestSink) {
-        super(requestSink);
+public class DecodingKafkaMessageInboundHandler extends AbstractChunkedMessageStreamInboundHandler<KafkaMessage> {
+    @Override
+    protected void onMessageComplete(final ChannelHandlerContext ctx, final KafkaMessage msg) {
+        ctx.fireChannelRead(msg);
     }
 
     @Override
-    protected KafkaMessage createEmptyRequest() {
+    protected KafkaMessage createNewMessage() {
         return new KafkaMessage();
-    }
-
-    @Override
-    protected void append(final KafkaMessage request, final ByteBuf remainingBytes) {
-        request.append(remainingBytes);
-    }
-
-    @Override
-    protected boolean isComplete(final KafkaMessage request) {
-        return request.isComplete();
     }
 }

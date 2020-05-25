@@ -17,19 +17,19 @@
 
 package com.dajudge.kafkaproxy.roundtrip.cluster;
 
-import com.dajudge.proxybase.ProxyApplication;
+import com.dajudge.kafkaproxy.KafkaProxyApplication;
 import com.dajudge.kafkaproxy.roundtrip.client.ClientFactory;
 
 public class TestSetup implements AutoCloseable {
     private final KafkaCluster kafka;
-    private final ProxyApplication proxy;
+    private final KafkaProxyApplication proxy;
     private final ClientFactory proxiedClientFactory;
     private final ClientFactory directClientFactory;
     private final int proxyBootstrapPort;
 
     TestSetup(
             final KafkaCluster kafka,
-            final ProxyApplication proxy,
+            final KafkaProxyApplication proxy,
             final ClientFactory proxiedClientFactory,
             final ClientFactory directClientFactory,
             final int proxyBootstrapPort
@@ -53,14 +53,14 @@ public class TestSetup implements AutoCloseable {
         return kafka;
     }
 
-    public ProxyApplication getProxy() {
+    public KafkaProxyApplication getProxy() {
         return proxy;
     }
 
     @Override
     public void close() {
         kafka.close();
-        proxy.shutdown();
+        proxy.close();
     }
 
     public int getProxyBootstrapPort() {

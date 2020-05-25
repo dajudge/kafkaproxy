@@ -17,7 +17,6 @@
 
 package com.dajudge.kafkaproxy.protocol.rewrite;
 
-import com.dajudge.kafkaproxy.KafkaProxyChannelManager;
 import com.dajudge.kafkaproxy.BrokerMapping;
 import com.dajudge.proxybase.config.Endpoint;
 import org.apache.kafka.common.message.FindCoordinatorResponseData;
@@ -28,13 +27,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
+import java.util.function.Function;
 
 public class FindCoordinatorRewriter extends BaseReflectingRewriter<FindCoordinatorResponse> {
     private static final Logger LOG = LoggerFactory.getLogger(FindCoordinatorRewriter.class);
-    private final KafkaProxyChannelManager proxyChannelManager;
+    private final Function<Endpoint, BrokerMapping> brokerResolver;
 
-    public FindCoordinatorRewriter(final KafkaProxyChannelManager proxyChannelManager) {
-        this.proxyChannelManager = proxyChannelManager;
+    public FindCoordinatorRewriter(final Function<Endpoint, BrokerMapping> brokerResolver) {
+        this.brokerResolver = brokerResolver;
     }
 
     @Override
@@ -51,7 +51,7 @@ public class FindCoordinatorRewriter extends BaseReflectingRewriter<FindCoordina
         if (data.host() == null || data.host().isEmpty()) {
             return;
         }
-        final BrokerMapping mapping = proxyChannelManager.getByBrokerEndpoint(new Endpoint(data.host(), data.port()));
+        final BrokerMapping mapping = brokerResolver.apply(new Endpoint(data.host(), data.port()));
         LOG.debug(
                 "Rewriting {}: {}:{} -> {}:{}",
                 ApiKeys.FIND_COORDINATOR,
