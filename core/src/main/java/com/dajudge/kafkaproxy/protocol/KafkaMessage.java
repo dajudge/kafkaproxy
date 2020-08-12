@@ -24,6 +24,8 @@ import org.apache.kafka.common.protocol.types.Struct;
 import org.apache.kafka.common.requests.AbstractResponse;
 import org.apache.kafka.common.requests.RequestHeader;
 import org.apache.kafka.common.requests.ResponseHeader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -34,6 +36,8 @@ import static java.util.Arrays.asList;
 import static org.apache.kafka.common.requests.AbstractResponse.parseResponse;
 
 public class KafkaMessage extends AbstractChunkedMessage {
+    private static final Logger LOG = LoggerFactory.getLogger(KafkaMessage.class);
+
     private static final int KAFKA_HEADER_LENGTH = 4;
     private static final int COMPLETE_CHUNK_COUNT = 2;
 
@@ -81,8 +85,9 @@ public class KafkaMessage extends AbstractChunkedMessage {
         final short apiVersion = requestHeader.apiVersion();
         final ApiKeys apiKey = requestHeader.apiKey();
         final Struct struct = withPayload(payload -> {
+            LOG.info("Parsing response for {}/{}", apiVersion, apiKey);
             final ByteBuffer nioBuffer = payload.nioBuffer();
-            ResponseHeader.parse(nioBuffer, apiVersion); // Skip over header
+            ResponseHeader.parse(nioBuffer, apiKey.responseHeaderVersion(apiVersion)); // Skip over header
             return apiKey.parseResponse(apiVersion, nioBuffer);
         });
         // It's up to the caller to know what this message contains

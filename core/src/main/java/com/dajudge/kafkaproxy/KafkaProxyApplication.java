@@ -66,6 +66,7 @@ public class KafkaProxyApplication extends ProxyApplication {
 
     public KafkaProxyApplication(final ApplicationConfig appConfig) {
         super(createProxyRuntime(appConfig));
+        LOG.trace("Kafkaproxy init complete");
     }
 
     private static Consumer<ProxyChannelFactory> createProxyRuntime(final ApplicationConfig appConfig) {
@@ -100,7 +101,8 @@ public class KafkaProxyApplication extends ProxyApplication {
             final Function<Endpoint, BrokerMapping> brokerResolver,
             final UpstreamSslConfig upstreamSslConfig,
             final DownstreamSslConfig downstreamSslConfig,
-            final CertificateAuthority ca) {
+            final CertificateAuthority ca
+    ) {
         return brokerEndpoint -> {
             final BrokerMapping mapping = brokerMapper.getBrokerMapping(brokerEndpoint);
             final Endpoint proxyEndpoint = mapping.getProxy();
@@ -118,7 +120,7 @@ public class KafkaProxyApplication extends ProxyApplication {
                 );
             };
             channelFactory.createProxyChannel(
-                    proxyEndpoint,
+                    new Endpoint(BIND_ADDRESS),
                     brokerEndpoint,
                     initializer
             );

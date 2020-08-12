@@ -39,9 +39,6 @@ public abstract class BaseReflectingRewriter<T extends AbstractResponse> impleme
         LOG.trace("Rewriting {} with rewriter {}", requestHeader, getClass().getSimpleName());
         try {
             return rewriteMessage(requestHeader, message);
-        } catch (final RuntimeException e) {
-            e.printStackTrace();
-            throw e;
         } finally {
             message.release();
         }
@@ -58,7 +55,7 @@ public abstract class BaseReflectingRewriter<T extends AbstractResponse> impleme
         final T response = message.responseBody(requestHeader);
         try {
             rewrite(response);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
+        } catch (final NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException("Failed to rewrite metadata response", e);
         }
         return response;
