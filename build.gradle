@@ -4,7 +4,7 @@ plugins {
 
 ext {
     kafkaClientVersion = "2.5.0"
-    proxyBaseVersion = "0.0.9"
+    proxyBaseVersion = "0.0.10"
     libKafkaClient = "org.apache.kafka:kafka-clients:$kafkaClientVersion"
     libProxyBase = "com.dajudge.proxybase:proxybase:$proxyBaseVersion"
 }

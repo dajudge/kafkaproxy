@@ -85,7 +85,6 @@ public class KafkaMessage extends AbstractChunkedMessage {
         final short apiVersion = requestHeader.apiVersion();
         final ApiKeys apiKey = requestHeader.apiKey();
         final Struct struct = withPayload(payload -> {
-            LOG.info("Parsing response for {}/{}", apiVersion, apiKey);
             final ByteBuffer nioBuffer = payload.nioBuffer();
             ResponseHeader.parse(nioBuffer, apiKey.responseHeaderVersion(apiVersion)); // Skip over header
             return apiKey.parseResponse(apiVersion, nioBuffer);
