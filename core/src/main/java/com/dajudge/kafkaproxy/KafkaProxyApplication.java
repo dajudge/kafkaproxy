@@ -85,6 +85,7 @@ public class KafkaProxyApplication extends ProxyApplication {
                             channelFactory,
                             brokerMapper,
                             this,
+                            brokerConfig.getBindAddress(),
                             upstreamSslConfig,
                             downstreamSslConfig,
                             ca
@@ -99,6 +100,7 @@ public class KafkaProxyApplication extends ProxyApplication {
             final ProxyChannelFactory channelFactory,
             final BrokerMapper brokerMapper,
             final Function<Endpoint, BrokerMapping> brokerResolver,
+            final String bindAddress,
             final UpstreamSslConfig upstreamSslConfig,
             final DownstreamSslConfig downstreamSslConfig,
             final CertificateAuthority ca
@@ -120,7 +122,7 @@ public class KafkaProxyApplication extends ProxyApplication {
                 );
             };
             channelFactory.createProxyChannel(
-                    new Endpoint(BIND_ADDRESS),
+                    new Endpoint(bindAddress, proxyEndpoint.getPort()),
                     brokerEndpoint,
                     initializer
             );
