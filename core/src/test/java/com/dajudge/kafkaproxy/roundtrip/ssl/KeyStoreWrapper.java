@@ -21,15 +21,26 @@ public class KeyStoreWrapper {
     private final byte[] keyStore;
     private final String keyStorePassword;
     private final String keyPassword;
+    private final String type;
 
-    public KeyStoreWrapper(final byte[] keyStore, final String keyStorePassword, final String keyPassword) {
+    public KeyStoreWrapper(
+            final byte[] keyStore,
+            final String keyStorePassword,
+            final String keyPassword,
+            final String type
+    ) {
         this.keyStore = keyStore.clone();
         this.keyStorePassword = keyStorePassword;
         this.keyPassword = keyPassword;
+        this.type = type;
     }
 
     public byte[] getBytes() {
         return keyStore.clone();
+    }
+
+    public String getType() {
+        return type;
     }
 
     public String getKeyStorePassword() {

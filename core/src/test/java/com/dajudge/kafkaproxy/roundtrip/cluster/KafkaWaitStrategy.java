@@ -35,7 +35,10 @@ public class KafkaWaitStrategy extends AbstractWaitStrategy {
     private final int internalClientPort;
     private final ClientSecurity clientSecurity;
 
-    public KafkaWaitStrategy(final int internalClientPort, final ClientSecurity clientSecurity) {
+    public KafkaWaitStrategy(
+            final int internalClientPort,
+            final ClientSecurity clientSecurity
+    ) {
         this.internalClientPort = internalClientPort;
         this.clientSecurity = clientSecurity;
     }

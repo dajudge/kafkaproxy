@@ -24,5 +24,7 @@ public interface ClientSecurity {
 
     String getTrustStorePassword();
 
+    String getTrustStoreType();
+
     ClientSslConfig newClient(final String dn);
 }

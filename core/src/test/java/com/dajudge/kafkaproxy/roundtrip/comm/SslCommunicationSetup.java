@@ -21,26 +21,31 @@ import com.dajudge.kafkaproxy.roundtrip.ssl.CertAuthority;
 
 import java.util.Optional;
 
+import static java.util.Optional.empty;
+
 public class SslCommunicationSetup implements CommunicationSetup {
     private final CertAuthority brokerAuthority;
     private final CertAuthority clientAuthority;
     private final boolean requireClientAuth;
+    private final String keyStoreType;
 
     public SslCommunicationSetup(
             final String clientCaDn,
             final String brokerCaDn,
-            final boolean requireClientAuth
+            final boolean requireClientAuth,
+            final String keyStoreType
     ) {
         this.brokerAuthority = new CertAuthority(brokerCaDn);
         this.clientAuthority = new CertAuthority(clientCaDn);
         this.requireClientAuth = requireClientAuth;
+        this.keyStoreType = keyStoreType;
     }
 
     @Override
     public ServerSecurity getServerSecurity(final String dn) {
         return new SslServerSecurity(
-                brokerAuthority.createSignedKeyPair(dn),
-                clientAuthority.getTrustStore(),
+                brokerAuthority.createSignedKeyPair(dn, keyStoreType),
+                clientAuthority.getTrustStore(keyStoreType),
                 requireClientAuth
         );
     }
@@ -49,8 +54,8 @@ public class SslCommunicationSetup implements CommunicationSetup {
     @Override
     public ClientSecurity getClientSecurity() {
         return new SslClientSecurity(
-                brokerAuthority.getTrustStore(),
-                requireClientAuth ? Optional.of(clientAuthority::createSignedKeyPair) : Optional.empty(),
+                brokerAuthority.getTrustStore(keyStoreType),
+                requireClientAuth ? Optional.of(dn -> clientAuthority.createSignedKeyPair(dn, keyStoreType)) : empty(),
                 requireClientAuth ? "KEYSTORE" : "NONE"
         );
     }

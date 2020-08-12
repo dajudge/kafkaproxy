@@ -56,6 +56,11 @@ public class SslServerSecurity implements ServerSecurity {
     }
 
     @Override
+    public String getTrustStoreType() {
+        return trustStore.getType();
+    }
+
+    @Override
     public String getKeyStoreLocation() {
         return KEYSTORE_LOCATION;
     }
@@ -63,6 +68,11 @@ public class SslServerSecurity implements ServerSecurity {
     @Override
     public String getKeyStorePassword() {
         return keyStore.getKeyStorePassword();
+    }
+
+    @Override
+    public String getKeyStoreType() {
+        return keyStore.getType();
     }
 
     @Override

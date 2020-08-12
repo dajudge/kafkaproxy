@@ -28,9 +28,13 @@ public interface ServerSecurity {
 
     String getTrustStorePassword();
 
+    String getTrustStoreType();
+
     String getKeyStoreLocation();
 
     String getKeyStorePassword();
+
+    String getKeyStoreType();
 
     String getKeyPassword();
 

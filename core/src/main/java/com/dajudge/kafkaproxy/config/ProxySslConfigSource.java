@@ -25,11 +25,15 @@ public class ProxySslConfigSource implements ConfigSource<UpstreamSslConfig> {
     private static final String PROP_CLIENT_SSL_AUTH_REQUIRED = PREFIX_CLIENT_SSL + "AUTH_REQUIRED";
     private static final String PROP_CLIENT_SSL_TRUSTSTORE_LOCATION = PREFIX_CLIENT_SSL + "TRUSTSTORE_LOCATION";
     private static final String PROP_CLIENT_SSL_TRUSTSTORE_PASSWORD = PREFIX_CLIENT_SSL + "TRUSTSTORE_PASSWORD";
+    private static final String PROP_CLIENT_SSL_TRUSTSTORE_TYPE = PREFIX_CLIENT_SSL + "TRUSTSTORE_TYPE";
     private static final String PROP_CLIENT_SSL_KEYSTORE_LOCATION = PREFIX_CLIENT_SSL + "KEYSTORE_LOCATION";
     private static final String PROP_CLIENT_SSL_KEYSTORE_PASSWORD = PREFIX_CLIENT_SSL + "KEYSTORE_PASSWORD";
+    private static final String PROP_CLIENT_SSL_KEYSTORE_TYPE = PREFIX_CLIENT_SSL + "KEYSTORE_TYPE";
     private static final String PROP_CLIENT_SSL_KEY_PASSWORD = PREFIX_CLIENT_SSL + "KEY_PASSWORD";
     private static final boolean DEFAULT_CLIENT_SSL_ENABLED = false;
     private static final boolean DEFAULT_CLIENT_AUTH_REQUIRED = false;
+    private static final String DEFAULT_CLIENT_SSL_TRUSTSTORE_TYPE = "jks";
+    private static final String DEFAULT_CLIENT_SSL_KEYSTORE_TYPE = "jks";
 
     @Override
     public Class<UpstreamSslConfig> getConfigClass() {
@@ -46,9 +50,11 @@ public class ProxySslConfigSource implements ConfigSource<UpstreamSslConfig> {
                 true,
                 environment.optionalFile(PROP_CLIENT_SSL_TRUSTSTORE_LOCATION).orElse(null),
                 environment.optionalString(PROP_CLIENT_SSL_TRUSTSTORE_PASSWORD).orElse(null),
+                environment.optionalString(PROP_CLIENT_SSL_TRUSTSTORE_TYPE).orElse(DEFAULT_CLIENT_SSL_TRUSTSTORE_TYPE),
                 environment.optionalFile(PROP_CLIENT_SSL_KEYSTORE_LOCATION).orElse(null),
                 environment.optionalString(PROP_CLIENT_SSL_KEYSTORE_PASSWORD).orElse(null),
                 environment.optionalString(PROP_CLIENT_SSL_KEY_PASSWORD).orElse(null),
+                environment.optionalString(PROP_CLIENT_SSL_KEYSTORE_TYPE).orElse(DEFAULT_CLIENT_SSL_KEYSTORE_TYPE),
                 environment.requiredBoolean(PROP_CLIENT_SSL_AUTH_REQUIRED, DEFAULT_CLIENT_AUTH_REQUIRED)
         );
     }

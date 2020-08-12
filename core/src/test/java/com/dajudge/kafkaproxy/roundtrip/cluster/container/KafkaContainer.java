@@ -78,14 +78,19 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
                 .withEnv("KAFKA_INTER_BROKER_LISTENER_NAME", "BROKER")
                 .withEnv("KAFKA_SSL_TRUSTSTORE_LOCATION", serverSecurity.getTrustStoreLocation())
                 .withEnv("KAFKA_SSL_TRUSTSTORE_PASSWORD", serverSecurity.getTrustStorePassword())
+                .withEnv("KAFKA_SSL_TRUSTSTORE_TYPE", serverSecurity.getTrustStoreType())
                 .withEnv("KAFKA_SSL_KEYSTORE_LOCATION", serverSecurity.getKeyStoreLocation())
                 .withEnv("KAFKA_SSL_KEYSTORE_PASSWORD", serverSecurity.getKeyStorePassword())
+                .withEnv("KAFKA_SSL_KEYSTORE_TYPE", serverSecurity.getKeyStoreType())
                 .withEnv("KAFKA_SSL_KEY_PASSWORD", serverSecurity.getKeyPassword())
                 .withEnv("KAFKA_SSL_CLIENT_AUTH", serverSecurity.getClientAuth())
                 .withExposedPorts(KAFKA_CLIENT_PORT)
                 .withCopyFileToContainer(entrypointScript(), ENTRYPOINT_PATH)
                 .withCommand("sh", ENTRYPOINT_PATH)
-                .waitingFor(new KafkaWaitStrategy(KAFKA_CLIENT_PORT, communicationSetup.getClientSecurity()))
+                .waitingFor(new KafkaWaitStrategy(
+                        KAFKA_CLIENT_PORT,
+                        communicationSetup.getClientSecurity()
+                ))
                 .withStartupTimeout(Duration.ofSeconds(300))
                 .withLogConsumer(new Slf4jLogConsumer(LOG));
     }

@@ -33,20 +33,21 @@ public class CommunicationSetupBuilder {
         return this;
     }
 
-    public CommunicationSetupBuilder withSsl() {
-        return withSsl(false);
+    public CommunicationSetupBuilder withSsl(final String keyStoreType) {
+        return withSsl(false, keyStoreType);
     }
 
-    public CommunicationSetupBuilder withMutualTls() {
-        return withSsl(true);
+    public CommunicationSetupBuilder withMutualTls(final String keyStoreType) {
+        return withSsl(true, keyStoreType);
     }
 
     @NotNull
-    private CommunicationSetupBuilder withSsl(final boolean requireClientAuth) {
+    private CommunicationSetupBuilder withSsl(final boolean requireClientAuth, final String keyStoreType) {
         comm = new SslCommunicationSetup(
                 "CN=clientCA",
                 "CN=brokerCA",
-                requireClientAuth
+                requireClientAuth,
+                keyStoreType
         );
         return this;
     }

@@ -36,7 +36,7 @@ public class CertAuthority {
         cert = Helpers.selfSignedCert(dn, keyPair, 10, "SHA256withRSA", true);
     }
 
-    public KeyStoreWrapper createSignedKeyPair(final String dn) {
+    public KeyStoreWrapper createSignedKeyPair(final String dn, final String keystoreType) {
         final KeyPair newKeyPair = keyPair();
         final X509Certificate newCert = Helpers.sign(
                 dn,
@@ -49,26 +49,27 @@ public class CertAuthority {
         );
         final String keyStorePassword = randomIdentifier();
         final String keyPassword = randomIdentifier();
-        final byte[] keyStore = keyStoreOf(newKeyPair, newCert, keyStorePassword, keyPassword);
-        return new KeyStoreWrapper(keyStore, keyStorePassword, keyPassword);
+        final byte[] keyStore = keyStoreOf(newKeyPair, newCert, keyStorePassword, keyPassword, keystoreType);
+        return new KeyStoreWrapper(keyStore, keyStorePassword, keyPassword, keystoreType);
     }
 
     private byte[] keyStoreOf(
             final KeyPair keyPair,
             final X509Certificate cert,
             final String keyStorePassword,
-            final String keyPassword
+            final String keyPassword,
+            final String type
     ) {
         return createJks(keyStorePassword, keyStore -> {
             keyStore.setKeyEntry("key", keyPair.getPrivate(), keyPassword.toCharArray(), new Certificate[]{cert});
-        });
+        }, type);
     }
 
-    public KeyStoreWrapper getTrustStore() {
+    public KeyStoreWrapper getTrustStore(final String type) {
         final String keyStorePassword = randomIdentifier();
         final byte[] keyStore = createJks(keyStorePassword, keystore -> {
             keystore.setCertificateEntry("ca", cert);
-        });
-        return new KeyStoreWrapper(keyStore, keyStorePassword, null);
+        }, type);
+        return new KeyStoreWrapper(keyStore, keyStorePassword, null, type);
     }
 }

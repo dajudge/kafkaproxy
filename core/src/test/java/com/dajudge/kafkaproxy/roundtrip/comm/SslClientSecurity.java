@@ -74,6 +74,11 @@ public class SslClientSecurity implements ClientSecurity {
     }
 
     @Override
+    public String getTrustStoreType() {
+        return trustStore.getType();
+    }
+
+    @Override
     public ClientSslConfig newClient(final String dn) {
         final Optional<KeyStoreWrapper> keyStore = keyStoreFactory.map(f -> f.apply(dn));
         final Optional<File> keyStoreFile = keyStore.map(SslClientSecurity::writeToTemp);
@@ -91,6 +96,11 @@ public class SslClientSecurity implements ClientSecurity {
             @Override
             public String getKeyPassword() {
                 return keyStore.map(KeyStoreWrapper::getKeyPassword).orElse(null);
+            }
+
+            @Override
+            public String getKeyStoreType() {
+                return keyStore.map(KeyStoreWrapper::getType).orElse(null);
             }
 
             @Override

@@ -27,14 +27,18 @@ public class KafkaBrokerConfigSource implements ConfigSource<KafkaBrokerConfigSo
     private static final String ENV_KAFKA_SSL_ENABLED = KAFKA_SSL_PREFIX + "ENABLED";
     private static final String ENV_KAFKA_SSL_TRUSTSTORE_LOCATION = KAFKA_SSL_PREFIX + "TRUSTSTORE_LOCATION";
     private static final String ENV_KAFKA_SSL_TRUSTSTORE_PASSWORD = KAFKA_SSL_PREFIX + "TRUSTSTORE_PASSWORD";
+    private static final String ENV_KAFKA_SSL_TRUSTSTORE_TYPE = KAFKA_SSL_PREFIX + "TRUSTSTORE_TYPE";
     private static final String ENV_KAFKA_SSL_KEYSTORE_LOCATION = KAFKA_SSL_PREFIX + "KEYSTORE_LOCATION";
     private static final String ENV_KAFKA_SSL_KEYSTORE_PASSWORD = KAFKA_SSL_PREFIX + "KEYSTORE_PASSWORD";
+    private static final String ENV_KAFKA_SSL_KEYSTORE_TYPE = KAFKA_SSL_PREFIX + "KEYSTORE_TYPE";
     private static final String ENV_KAFKA_SSL_KEY_PASSWORD = KAFKA_SSL_PREFIX + "KEY_PASSWORD";
     private static final String ENV_KAFKA_CLIENT_CERT_STRATEGY = KAFKA_SSL_PREFIX + "CLIENT_CERT_STRATEGY";
     private static final String ENV_KAFKA_SSL_VERIFY_HOSTNAME = KAFKA_SSL_PREFIX + "VERIFY_HOSTNAME";
     private static final String ENV_KAFKA_SSL_CERTIFICATE_FACTORY = KAFKA_SSL_PREFIX + "CERTIFICATE_FACTORY";
     private static final boolean DEFAULT_KAFKA_SSL_ENABLED = false;
     private static final boolean DEFAULT_KAFKA_SSL_VERIFY_HOSTNAME = true;
+    private static final String DEFAULT_KAFKA_SSL_TRUSTSTORE_TYPE = "jks";
+    private static final String DEFAULT_KAFKA_SSL_KEYSTORE_TYPE = "jks";
     private static final String DEFAULT_CERTIFICATE_FACTORY = "null";
 
     @Override
@@ -52,12 +56,14 @@ public class KafkaBrokerConfigSource implements ConfigSource<KafkaBrokerConfigSo
                 enabled,
                 environment.optionalFile(ENV_KAFKA_SSL_TRUSTSTORE_LOCATION).orElse(null),
                 environment.optionalString(ENV_KAFKA_SSL_TRUSTSTORE_PASSWORD).orElse(null),
+                environment.optionalString(ENV_KAFKA_SSL_TRUSTSTORE_TYPE).orElse(DEFAULT_KAFKA_SSL_TRUSTSTORE_TYPE),
                 environment.requiredBoolean(ENV_KAFKA_SSL_VERIFY_HOSTNAME, DEFAULT_KAFKA_SSL_VERIFY_HOSTNAME)
         );
         final ClientCertificateConfig clientCertConfig = new ClientCertificateConfig(
                 environment.optionalFile(ENV_KAFKA_SSL_KEYSTORE_LOCATION).orElse(null),
                 environment.optionalString(ENV_KAFKA_SSL_KEYSTORE_PASSWORD).orElse(null),
-                environment.optionalString(ENV_KAFKA_SSL_KEY_PASSWORD).orElse(null)
+                environment.optionalString(ENV_KAFKA_SSL_KEY_PASSWORD).orElse(null),
+                environment.optionalString(ENV_KAFKA_SSL_KEYSTORE_TYPE).orElse(DEFAULT_KAFKA_SSL_KEYSTORE_TYPE)
         );
         return new KafkaBrokerConfig(
                 downstreamConfig,

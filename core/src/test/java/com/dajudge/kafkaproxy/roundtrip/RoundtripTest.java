@@ -55,12 +55,17 @@ import static org.junit.Assert.fail;
 @RunWith(Parameterized.class)
 public class RoundtripTest {
     private static final Logger LOG = LoggerFactory.getLogger(RoundtripTest.class);
+    private static final String KEYSTORE_TYPE_JKS = "jks";
+    private static final String KEYSTORE_TYPE_P12 = "pkcs12";
 
     private static class TestConfiguration {
         private final CommunicationSetup clientComm;
         private final CommunicationSetup brokerComm;
 
-        private TestConfiguration(final CommunicationSetup clientComm, final CommunicationSetup brokerComm) {
+        private TestConfiguration(
+                final CommunicationSetup clientComm,
+                final CommunicationSetup brokerComm
+        ) {
             this.clientComm = clientComm;
             this.brokerComm = brokerComm;
         }
@@ -70,14 +75,15 @@ public class RoundtripTest {
     public static Collection<TestConfiguration> data() {
         return asList(
                 new TestConfiguration(plaintext(), plaintext()),
-                new TestConfiguration(plaintext(), tls()),
-                new TestConfiguration(plaintext(), mtls()),
-                new TestConfiguration(tls(), tls()),
-                new TestConfiguration(tls(), mtls()),
-                new TestConfiguration(tls(), plaintext()),
-                new TestConfiguration(mtls(), plaintext()),
-                new TestConfiguration(mtls(), tls()),
-                new TestConfiguration(mtls(), mtls())
+                new TestConfiguration(plaintext(), tls(KEYSTORE_TYPE_JKS)),
+                new TestConfiguration(plaintext(), mtls(KEYSTORE_TYPE_JKS)),
+                new TestConfiguration(tls(KEYSTORE_TYPE_JKS), tls(KEYSTORE_TYPE_JKS)),
+                new TestConfiguration(tls(KEYSTORE_TYPE_JKS), mtls(KEYSTORE_TYPE_JKS)),
+                new TestConfiguration(tls(KEYSTORE_TYPE_JKS), plaintext()),
+                new TestConfiguration(mtls(KEYSTORE_TYPE_JKS), plaintext()),
+                new TestConfiguration(mtls(KEYSTORE_TYPE_JKS), tls(KEYSTORE_TYPE_JKS)),
+                new TestConfiguration(mtls(KEYSTORE_TYPE_JKS), mtls(KEYSTORE_TYPE_JKS)),
+                new TestConfiguration(mtls(KEYSTORE_TYPE_P12), mtls(KEYSTORE_TYPE_P12))
         );
     }
 
@@ -149,12 +155,12 @@ public class RoundtripTest {
         }
     }
 
-    private static CommunicationSetup tls() {
-        return new CommunicationSetupBuilder().withSsl().build();
+    private static CommunicationSetup tls(final String keyStoreType) {
+        return new CommunicationSetupBuilder().withSsl(keyStoreType).build();
     }
 
-    private static CommunicationSetup mtls() {
-        return new CommunicationSetupBuilder().withMutualTls().build();
+    private static CommunicationSetup mtls(final String keyStoreType) {
+        return new CommunicationSetupBuilder().withMutualTls(keyStoreType).build();
     }
 
     private static CommunicationSetup plaintext() {

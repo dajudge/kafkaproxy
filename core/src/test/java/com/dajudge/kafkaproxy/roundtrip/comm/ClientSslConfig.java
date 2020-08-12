@@ -24,5 +24,7 @@ public interface ClientSslConfig {
 
     String getKeyPassword();
 
+    String getKeyStoreType();
+
     String getProxyCertStrategy();
 }

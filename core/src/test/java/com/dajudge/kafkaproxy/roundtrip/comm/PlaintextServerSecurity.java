@@ -38,12 +38,22 @@ public class PlaintextServerSecurity implements ServerSecurity {
     }
 
     @Override
+    public String getTrustStoreType() {
+        return null;
+    }
+
+    @Override
     public String getKeyStoreLocation() {
         return null;
     }
 
     @Override
     public String getKeyStorePassword() {
+        return null;
+    }
+
+    @Override
+    public String getKeyStoreType() {
         return null;
     }
 

@@ -139,9 +139,13 @@ public final class Helpers {
         });
     }
 
-    public static byte[] createJks(final String password, final ThrowingConsumer<KeyStore> withKeyStore) {
+    public static byte[] createJks(
+            final String password,
+            final ThrowingConsumer<KeyStore> withKeyStore,
+            final String type
+    ) {
         return call(() -> {
-            final KeyStore keystore = KeyStore.getInstance("jks");
+            final KeyStore keystore = KeyStore.getInstance(type);
             keystore.load(null, null);
             withKeyStore.accept(keystore);
             final ByteArrayOutputStream bos = new ByteArrayOutputStream();

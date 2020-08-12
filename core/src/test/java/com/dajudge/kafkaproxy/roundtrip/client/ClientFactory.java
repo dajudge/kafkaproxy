@@ -55,9 +55,11 @@ public class ClientFactory {
             put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, clientSecurity.getProtocol());
             put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, sslConfig.getKeyStoreLocation());
             put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, sslConfig.getKeyStorePassword());
+            put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, sslConfig.getKeyStoreType());
             put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, sslConfig.getKeyPassword());
             put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, clientSecurity.getTrustStoreLocation());
             put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, clientSecurity.getTrustStorePassword());
+            put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, clientSecurity.getTrustStoreType());
         }};
     }
 

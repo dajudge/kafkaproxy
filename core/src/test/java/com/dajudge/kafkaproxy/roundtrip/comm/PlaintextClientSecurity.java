@@ -34,6 +34,11 @@ public class PlaintextClientSecurity implements ClientSecurity {
     }
 
     @Override
+    public String getTrustStoreType() {
+        return null;
+    }
+
+    @Override
     public ClientSslConfig newClient(final String dn) {
         return new ClientSslConfig() {
             @Override
@@ -48,6 +53,11 @@ public class PlaintextClientSecurity implements ClientSecurity {
 
             @Override
             public String getKeyPassword() {
+                return null;
+            }
+
+            @Override
+            public String getKeyStoreType() {
                 return null;
             }
 
