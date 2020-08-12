@@ -94,7 +94,7 @@ Configuration can be provided using the following environment variables:
 | `KAFKAPROXY_CLIENT_SSL_ENABLED`             | `false`       | Enables SSL encrypted communication between clients and kafkaproxy. 
 | `KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_LOCATION` |               | The filesystem location of the trust store to use. If no value is provided the JRE's default trust store will be used.
 | `KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_PASSWORD` |               | The password to access the trust store. Provide no value if the trust store is not password protected.
-| `KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_TYPE`     | 'jks`         | The type of the trust store.
+| `KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_TYPE`     | `jks`         | The type of the trust store.
 | `KAFKAPROXY_CLIENT_SSL_KEYSTORE_LOCATION`   |               | The filesystem location of the proxy's server key store. If no value is provided the JRE's default key store will be used.
 | `KAFKAPROXY_CLIENT_SSL_KEYSTORE_PASSWORD`   |               | The password to access the proxy's server key store. Provide no value if the key store is not password protected.
 | `KAFKAPROXY_CLIENT_SSL_KEY_PASSWORD`        |               | The password to access the proxy's server key. Provide no value if the key is not password protected.
