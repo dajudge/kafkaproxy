@@ -20,7 +20,6 @@ package com.dajudge.kafkaproxy;
 import com.dajudge.kafkaproxy.config.ApplicationConfig;
 import com.dajudge.kafkaproxy.config.BrokerConfigSource.BrokerConfig;
 import com.dajudge.kafkaproxy.config.Environment;
-import com.dajudge.kafkaproxy.config.KafkaBrokerConfigSource.KafkaBrokerConfig;
 import com.dajudge.kafkaproxy.protocol.DecodingKafkaMessageInboundHandler;
 import com.dajudge.kafkaproxy.protocol.EncodingKafkaMessageOutboundHandler;
 import com.dajudge.kafkaproxy.protocol.KafkaRequestStore;
@@ -32,29 +31,22 @@ import com.dajudge.kafkaproxy.protocol.rewrite.ResponseRewriter;
 import com.dajudge.proxybase.ProxyApplication;
 import com.dajudge.proxybase.ProxyChannelFactory;
 import com.dajudge.proxybase.ProxyChannelFactory.ProxyChannelInitializer;
-import com.dajudge.proxybase.ca.CertificateAuthority;
-import com.dajudge.proxybase.ca.KeyStoreWrapper;
-import com.dajudge.proxybase.ca.UpstreamCertificateSupplier;
+import com.dajudge.proxybase.RelayingChannelInboundHandler;
+import com.dajudge.proxybase.certs.Filesystem;
 import com.dajudge.proxybase.config.DownstreamSslConfig;
 import com.dajudge.proxybase.config.Endpoint;
 import com.dajudge.proxybase.config.UpstreamSslConfig;
-import com.dajudge.proxybase.RelayingChannelInboundHandler;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandler;
-import io.netty.handler.ssl.SslHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLPeerUnverifiedException;
-import javax.net.ssl.SSLSession;
-import java.security.cert.Certificate;
-import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
-import static com.dajudge.kafkaproxy.ca.CertificateAuthorityFactory.createCertificateAuthority;
 import static com.dajudge.proxybase.DownstreamSslHandlerFactory.createDownstreamSslHandler;
 import static com.dajudge.proxybase.UpstreamSslHandlerFactory.createUpstreamSslHandler;
 import static java.util.Arrays.asList;
@@ -64,18 +56,24 @@ public class KafkaProxyApplication extends ProxyApplication {
 
     private static final Logger LOG = LoggerFactory.getLogger(KafkaProxyApplication.class);
 
-    public KafkaProxyApplication(final ApplicationConfig appConfig) {
-        super(createProxyRuntime(appConfig));
+    public KafkaProxyApplication(
+            final ApplicationConfig appConfig,
+            final Supplier<Long> clock,
+            final Filesystem filesystem
+    ) {
+        super(createProxyRuntime(appConfig, clock, filesystem));
         LOG.trace("Kafkaproxy init complete");
     }
 
-    private static Consumer<ProxyChannelFactory> createProxyRuntime(final ApplicationConfig appConfig) {
-        final BrokerConfig brokerConfig = appConfig.get(BrokerConfig.class);
+    private static Consumer<ProxyChannelFactory> createProxyRuntime(
+            final ApplicationConfig appConfig,
+            final Supplier<Long> clock,
+            final Filesystem filesystem
+    ) {
+        final BrokerConfig brokerConfig = appConfig.require(BrokerConfig.class);
         final BrokerMapper brokerMapper = new BrokerMapper(brokerConfig);
-        final UpstreamSslConfig upstreamSslConfig = appConfig.get(UpstreamSslConfig.class);
-        final DownstreamSslConfig downstreamSslConfig = appConfig.get(KafkaBrokerConfig.class)
-                .getDownstreamConfig();
-        final CertificateAuthority ca = createCertificateAuthority(appConfig);
+        final Optional<UpstreamSslConfig> upstreamSslConfig = appConfig.optional(UpstreamSslConfig.class);
+        final Optional<DownstreamSslConfig> downstreamSslConfig = appConfig.optional(DownstreamSslConfig.class);
         return channelFactory -> {
             final Map<Endpoint, BrokerMapping> activeProxies = synchronizedMap(new HashMap<>());
             final Function<Endpoint, BrokerMapping> brokerResolver = new Function<Endpoint, BrokerMapping>() {
@@ -88,7 +86,8 @@ public class KafkaProxyApplication extends ProxyApplication {
                             brokerConfig.getBindAddress(),
                             upstreamSslConfig,
                             downstreamSslConfig,
-                            ca
+                            clock,
+                            filesystem
                     ));
                 }
             };
@@ -101,24 +100,30 @@ public class KafkaProxyApplication extends ProxyApplication {
             final BrokerMapper brokerMapper,
             final Function<Endpoint, BrokerMapping> brokerResolver,
             final String bindAddress,
-            final UpstreamSslConfig upstreamSslConfig,
-            final DownstreamSslConfig downstreamSslConfig,
-            final CertificateAuthority ca
+            final Optional<UpstreamSslConfig> upstreamSslConfig,
+            final Optional<DownstreamSslConfig> downstreamSslConfig,
+            final Supplier<Long> clock,
+            final Filesystem filesystem
     ) {
         return brokerEndpoint -> {
             final BrokerMapping mapping = brokerMapper.getBrokerMapping(brokerEndpoint);
             final Endpoint proxyEndpoint = mapping.getProxy();
             LOG.info("Initializing proxy {} for broker {}", proxyEndpoint, brokerEndpoint);
             final ProxyChannelInitializer initializer = (upstreamChannel, downstreamChannel) -> {
-                configureUpstream(upstreamSslConfig, upstreamChannel, downstreamChannel);
-                final KeyStoreWrapper clientKeyStore = getClientKeystore(ca, () -> clientCertFrom(upstreamChannel));
+                configureUpstream(
+                        upstreamSslConfig,
+                        upstreamChannel,
+                        downstreamChannel,
+                        clock,
+                        filesystem
+                );
                 configureDownstream(
                         brokerEndpoint,
                         downstreamSslConfig,
                         upstreamChannel,
                         downstreamChannel,
                         brokerResolver,
-                        clientKeyStore
+                        clock, filesystem
                 );
             };
             channelFactory.createProxyChannel(
@@ -131,27 +136,30 @@ public class KafkaProxyApplication extends ProxyApplication {
     }
 
     private static void configureUpstream(
-            final UpstreamSslConfig sslConfig,
+            final Optional<UpstreamSslConfig> sslConfig,
             final Channel upstreamChannel,
-            final Channel downstreamChannel
+            final Channel downstreamChannel,
+            final Supplier<Long> clock,
+            final Filesystem filesystem
     ) {
         upstreamChannel.pipeline().addLast(new DecodingKafkaMessageInboundHandler());
         upstreamChannel.pipeline().addLast(new EncodingKafkaMessageOutboundHandler());
         upstreamChannel.pipeline().addLast(new RelayingChannelInboundHandler("downstream", downstreamChannel));
-        upstreamChannel.pipeline().addAfter(
+        sslConfig.ifPresent(it -> upstreamChannel.pipeline().addAfter(
                 LOGGING_CONTEXT_HANDLER,
                 "SSL",
-                createUpstreamSslHandler(sslConfig)
-        );
+                createUpstreamSslHandler(it, clock, filesystem)
+        ));
     }
 
     private static void configureDownstream(
             final Endpoint downstream,
-            final DownstreamSslConfig sslConfig,
+            final Optional<DownstreamSslConfig> sslConfig,
             final Channel upstreamChannel,
             final Channel downstreamChannel,
             final Function<Endpoint, BrokerMapping> brokerResolver,
-            final KeyStoreWrapper clientKeyStore
+            final Supplier<Long> clock,
+            final Filesystem filesystem
     ) {
         final ResponseRewriter rewriter = new CompositeRewriter(asList(
                 new MetadataRewriter(brokerResolver),
@@ -162,36 +170,18 @@ public class KafkaProxyApplication extends ProxyApplication {
         downstreamChannel.pipeline().addLast(new DecodingKafkaMessageInboundHandler());
         downstreamChannel.pipeline().addLast(new RewritingKafkaMessageDuplexHandler(kafkaRequestStore));
         downstreamChannel.pipeline().addLast(new RelayingChannelInboundHandler("upstream", upstreamChannel));
-        downstreamChannel.pipeline().addAfter(
+        sslConfig.ifPresent(it -> downstreamChannel.pipeline().addAfter(
                 LOGGING_CONTEXT_HANDLER,
                 "SSL",
-                createDownstreamSslHandler(sslConfig, downstream, clientKeyStore)
-        );
+                createDownstreamSslHandler(it, downstream.getHost(), clock, filesystem)
+        ));
     }
 
-    private static KeyStoreWrapper getClientKeystore(
-            final CertificateAuthority certificateAuthority,
-            final UpstreamCertificateSupplier certSupplier
+    public static KafkaProxyApplication create(
+            final Environment environment,
+            final Supplier<Long> clock,
+            final Filesystem filesystem
     ) {
-        try {
-            return certificateAuthority.createClientCertificate(certSupplier);
-        } catch (final SSLPeerUnverifiedException e) {
-            throw new RuntimeException("Client did not provide valid certificate", e);
-        }
-    }
-
-    private static X509Certificate clientCertFrom(final Channel channel) throws SSLPeerUnverifiedException {
-        final ChannelHandler sslHandler = channel.pipeline().get("SSL");
-        if (sslHandler instanceof SslHandler) {
-            final SSLSession session = ((SslHandler) sslHandler).engine().getSession();
-            final Certificate[] clientCerts = session.getPeerCertificates();
-            return (X509Certificate) clientCerts[0];
-        } else {
-            throw new SSLPeerUnverifiedException("Upstream SSL not enabled");
-        }
-    }
-
-    public static KafkaProxyApplication create(final Environment environment) {
-        return new KafkaProxyApplication(new ApplicationConfig(environment));
+        return new KafkaProxyApplication(new ApplicationConfig(environment), clock, filesystem);
     }
 }

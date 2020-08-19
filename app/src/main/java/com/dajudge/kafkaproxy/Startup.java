@@ -26,13 +26,14 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 
 import static com.dajudge.kafkaproxy.KafkaProxyApplication.create;
+import static com.dajudge.proxybase.certs.Filesystem.DEFAULT_FILESYSTEM;
 
 @ApplicationScoped
 public class Startup {
     private KafkaProxyApplication application;
 
     void onStart(@Observes StartupEvent ev) {
-        application = create(new RealEnvironment());
+        application = create(new RealEnvironment(), System::currentTimeMillis, DEFAULT_FILESYSTEM);
     }
 
     void onStop(@Observes ShutdownEvent ev) {

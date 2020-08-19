@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.dajudge.kafkaproxy.roundtrip.util.Util.indent;
+import static com.dajudge.kafkaproxy.roundtrip.util.Util.safeToString;
 import static java.util.stream.Collectors.joining;
 
 public class ClientFactory {
@@ -54,11 +55,11 @@ public class ClientFactory {
             put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
             put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, clientSecurity.getProtocol());
             put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, sslConfig.getKeyStoreLocation());
-            put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, sslConfig.getKeyStorePassword());
+            put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, safeToString(sslConfig.getKeyStorePassword()));
             put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, sslConfig.getKeyStoreType());
-            put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, sslConfig.getKeyPassword());
+            put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, safeToString(sslConfig.getKeyPassword()));
             put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, clientSecurity.getTrustStoreLocation());
-            put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, clientSecurity.getTrustStorePassword());
+            put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, safeToString(clientSecurity.getTrustStorePassword()));
             put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, clientSecurity.getTrustStoreType());
         }};
     }

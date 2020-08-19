@@ -17,10 +17,8 @@
 
 package com.dajudge.kafkaproxy.config;
 
-import java.io.File;
 import java.util.Optional;
 
-import static com.dajudge.kafkaproxy.config.FileResource.fromFile;
 import static java.lang.System.getenv;
 
 public class RealEnvironment implements Environment {
@@ -42,8 +40,8 @@ public class RealEnvironment implements Environment {
     }
 
     @Override
-    public Optional<FileResource> optionalFile(final String variable) {
-        return optionalString(variable).map(this::file);
+    public Optional<Integer> optionalInt(final String variable) {
+        return optionalString(variable).map(Integer::parseInt);
     }
 
     @Override
@@ -56,19 +54,4 @@ public class RealEnvironment implements Environment {
         return Integer.parseInt(requiredString(variable));
     }
 
-    @Override
-    public FileResource requiredFile(final String filename) {
-        return file(filename);
-    }
-
-    private FileResource file(final String filename) {
-        final File file = new File(filename);
-        if (!file.exists()) {
-            throw new IllegalArgumentException("File " + file.getAbsolutePath() + " does not exist");
-        }
-        if (!file.isFile()) {
-            throw new IllegalArgumentException("Filesystem entry " + file.getAbsolutePath() + " is not a file");
-        }
-        return fromFile(file);
-    }
 }

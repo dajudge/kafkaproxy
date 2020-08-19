@@ -20,6 +20,7 @@ package com.dajudge.kafkaproxy.roundtrip.cluster.container;
 import com.dajudge.kafkaproxy.roundtrip.cluster.KafkaWaitStrategy;
 import com.dajudge.kafkaproxy.roundtrip.comm.CommunicationSetup;
 import com.dajudge.kafkaproxy.roundtrip.comm.ServerSecurity;
+import com.dajudge.kafkaproxy.roundtrip.util.Util;
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -35,6 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.dajudge.kafkaproxy.roundtrip.util.Util.indent;
+import static com.dajudge.kafkaproxy.roundtrip.util.Util.safeToString;
 import static java.lang.String.join;
 import static java.lang.String.valueOf;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -77,12 +79,12 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
                 ))
                 .withEnv("KAFKA_INTER_BROKER_LISTENER_NAME", "BROKER")
                 .withEnv("KAFKA_SSL_TRUSTSTORE_LOCATION", serverSecurity.getTrustStoreLocation())
-                .withEnv("KAFKA_SSL_TRUSTSTORE_PASSWORD", serverSecurity.getTrustStorePassword())
+                .withEnv("KAFKA_SSL_TRUSTSTORE_PASSWORD", safeToString(serverSecurity.getTrustStorePassword()))
                 .withEnv("KAFKA_SSL_TRUSTSTORE_TYPE", serverSecurity.getTrustStoreType())
                 .withEnv("KAFKA_SSL_KEYSTORE_LOCATION", serverSecurity.getKeyStoreLocation())
-                .withEnv("KAFKA_SSL_KEYSTORE_PASSWORD", serverSecurity.getKeyStorePassword())
+                .withEnv("KAFKA_SSL_KEYSTORE_PASSWORD", safeToString(serverSecurity.getKeyStorePassword()))
                 .withEnv("KAFKA_SSL_KEYSTORE_TYPE", serverSecurity.getKeyStoreType())
-                .withEnv("KAFKA_SSL_KEY_PASSWORD", serverSecurity.getKeyPassword())
+                .withEnv("KAFKA_SSL_KEY_PASSWORD", safeToString(serverSecurity.getKeyPassword()))
                 .withEnv("KAFKA_SSL_CLIENT_AUTH", serverSecurity.getClientAuth())
                 .withExposedPorts(KAFKA_CLIENT_PORT)
                 .withCopyFileToContainer(entrypointScript(), ENTRYPOINT_PATH)

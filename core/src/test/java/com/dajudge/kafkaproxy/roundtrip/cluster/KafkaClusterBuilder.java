@@ -27,15 +27,21 @@ import com.dajudge.kafkaproxy.roundtrip.comm.CommunicationSetup;
 import com.dajudge.kafkaproxy.roundtrip.comm.ServerSecurity;
 import com.dajudge.kafkaproxy.roundtrip.util.PortFinder;
 import com.dajudge.kafkaproxy.roundtrip.util.TestEnvironment;
+import com.dajudge.kafkaproxy.roundtrip.util.TestFilesystem;
+import com.dajudge.proxybase.certs.Filesystem;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.Network;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.List;
 
 import static com.dajudge.kafkaproxy.roundtrip.util.Util.indent;
+import static com.dajudge.kafkaproxy.roundtrip.util.Util.safeToString;
 import static java.lang.String.valueOf;
 import static java.util.Arrays.stream;
 import static java.util.Collections.singletonList;
@@ -96,27 +102,39 @@ public class KafkaClusterBuilder {
                 .withEnv("KAFKAPROXY_HOSTNAME", "localhost")
                 .withEnv("KAFKAPROXY_KAFKA_SSL_ENABLED", valueOf("SSL".equals(brokerSecurity.getProtocol())))
                 .withEnv("KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_LOCATION", brokerSecurity.getTrustStoreLocation())
-                .withEnv("KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_PASSWORD", brokerSecurity.getTrustStorePassword())
+                .withEnv("KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_PASSWORD", safeToString(brokerSecurity.getTrustStorePassword()))
                 .withEnv("KAFKAPROXY_KAFKA_SSL_KEYSTORE_LOCATION", proxyClient.getKeyStoreLocation())
-                .withEnv("KAFKAPROXY_KAFKA_SSL_KEYSTORE_PASSWORD", proxyClient.getKeyStorePassword())
+                .withEnv("KAFKAPROXY_KAFKA_SSL_KEYSTORE_PASSWORD", safeToString(proxyClient.getKeyStorePassword()))
                 .withEnv("KAFKAPROXY_KAFKA_SSL_KEYSTORE_TYPE", proxyClient.getKeyStoreType())
-                .withEnv("KAFKAPROXY_KAFKA_SSL_KEY_PASSWORD", proxyClient.getKeyPassword())
+                .withEnv("KAFKAPROXY_KAFKA_SSL_KEY_PASSWORD", safeToString(proxyClient.getKeyPassword()))
                 .withEnv("KAFKAPROXY_KAFKA_SSL_CLIENT_CERT_STRATEGY", proxyClient.getProxyCertStrategy())
                 .withEnv("KAFKAPROXY_CLIENT_SSL_ENABLED", valueOf("SSL".equals(proxySecurity.getClientProtocol())))
                 .withEnv("KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_LOCATION", proxySecurity.getTrustStoreLocation())
-                .withEnv("KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_PASSWORD", proxySecurity.getTrustStorePassword())
+                .withEnv("KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_PASSWORD", safeToString(proxySecurity.getTrustStorePassword()))
                 .withEnv("KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_TYPE", proxySecurity.getTrustStoreType())
                 .withEnv("KAFKAPROXY_CLIENT_SSL_KEYSTORE_LOCATION", proxySecurity.getKeyStoreLocation())
-                .withEnv("KAFKAPROXY_CLIENT_SSL_KEYSTORE_PASSWORD", proxySecurity.getKeyStorePassword())
-                .withEnv("KAFKAPROXY_CLIENT_SSL_KEY_PASSWORD", proxySecurity.getKeyPassword())
-                .withFile(brokerSecurity.getTrustStoreLocation())
-                .withFile(proxyClient.getKeyStoreLocation())
+                .withEnv("KAFKAPROXY_CLIENT_SSL_KEYSTORE_PASSWORD", safeToString(proxySecurity.getKeyStorePassword()))
+                .withEnv("KAFKAPROXY_CLIENT_SSL_KEY_PASSWORD", safeToString(proxySecurity.getKeyPassword()));
+        final Filesystem filesystem = new TestFilesystem()
                 .withFile(proxySecurity.getTrustStoreLocation(), proxySecurity.getTrustStore())
-                .withFile(proxySecurity.getKeyStoreLocation(), proxySecurity.getKeyStore());
+                .withFile(proxySecurity.getKeyStoreLocation(), proxySecurity.getKeyStore())
+                .withFile(brokerSecurity.getTrustStoreLocation(), read(brokerSecurity.getTrustStoreLocation()))
+                .withFile(proxyClient.getKeyStoreLocation(), read(proxyClient.getKeyStoreLocation()));
         final StringBuilder buffer = new StringBuilder();
         env.dump(line -> buffer.append(line + "\n"));
         LOG.info("ENV:\n{}", indent(4, buffer.toString()));
-        return KafkaProxyApplication.create(env);
+        return KafkaProxyApplication.create(env, System::currentTimeMillis, filesystem);
+    }
+
+    private byte[] read(final String path) {
+        if (path == null) {
+            return null;
+        }
+        try {
+            return Files.readAllBytes(new File(path).toPath());
+        } catch (final IOException e) {
+            throw new AssertionError(e);
+        }
     }
 
     private KafkaCluster buildKafkaCluster() {

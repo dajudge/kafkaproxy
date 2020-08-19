@@ -39,4 +39,8 @@ public final class Util {
     public static String randomIdentifier() {
         return "i" + UUID.randomUUID().toString().replace("-", "");
     }
+
+    public static String safeToString(final char[] c) {
+        return c == null ? null : new String(c);
+    }
 }

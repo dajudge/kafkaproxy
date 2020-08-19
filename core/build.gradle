@@ -15,7 +15,7 @@ dependencies {
 
     testImplementation 'org.testcontainers:kafka:1.12.3'
     testImplementation 'junit:junit:4.11'
-    testImplementation project(":ca-selfsign")
+    testImplementation libProxyBaseTestca
     testCompileOnly 'com.google.code.findbugs:annotations:3.0.1'
     testRuntimeOnly 'ch.qos.logback:logback-classic:1.2.3'
 }

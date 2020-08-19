@@ -20,9 +20,9 @@ package com.dajudge.kafkaproxy.roundtrip.comm;
 public interface ClientSslConfig {
     String getKeyStoreLocation();
 
-    String getKeyStorePassword();
+    char[] getKeyStorePassword();
 
-    String getKeyPassword();
+    char[] getKeyPassword();
 
     String getKeyStoreType();
 

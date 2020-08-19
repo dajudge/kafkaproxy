@@ -17,9 +17,11 @@
 
 package com.dajudge.kafkaproxy.config;
 
+
 import com.dajudge.proxybase.config.Endpoint;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.lang.Integer.parseUnsignedInt;
@@ -33,13 +35,13 @@ public class BrokerConfigSource implements ConfigSource<BrokerConfigSource.Broke
     }
 
     @Override
-    public BrokerConfig parse(final Environment environment) {
-        return new BrokerConfig(
+    public Optional<BrokerConfig> parse(final Environment environment) {
+        return Optional.of(new BrokerConfig(
                 getBootstrapBrokers(environment),
                 environment.requiredString("KAFKAPROXY_HOSTNAME"),
                 environment.requiredInt("KAFKAPROXY_BASE_PORT"),
                 environment.requiredString("KAFKAPROXY_BIND_ADDRESS", "0.0.0.0")
-        );
+        ));
     }
 
     private List<Endpoint> getBootstrapBrokers(final Environment environment) {

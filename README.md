@@ -86,37 +86,45 @@ kafkaproxy requires some general information to start.
 | `KAFKAPROXY_HTTP_PORT`             | `8080`        | The HTTP port the metrics REST endpoint will be exposed on. 
  
 ## Client SSL configuration
-The client SSL configuration determines how the Kafka clients have to connect to the kafkaproxy instances.
+The client SSL configuration determines how the Kafka clients have to connect to kafkaproxy.
 Configuration can be provided using the following environment variables:
 
-| Name                                        | Default value | Destription
-| ------------------------------------------- |---------------| -----------
-| `KAFKAPROXY_CLIENT_SSL_ENABLED`             | `false`       | Enables SSL encrypted communication between clients and kafkaproxy. 
-| `KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_LOCATION` |               | The filesystem location of the trust store to use. If no value is provided the JRE's default trust store will be used.
-| `KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_PASSWORD` |               | The password to access the trust store. Provide no value if the trust store is not password protected.
-| `KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_TYPE`     | `jks`         | The type of the trust store.
-| `KAFKAPROXY_CLIENT_SSL_KEYSTORE_LOCATION`   |               | The filesystem location of the proxy's server key store. If no value is provided the JRE's default key store will be used.
-| `KAFKAPROXY_CLIENT_SSL_KEYSTORE_PASSWORD`   |               | The password to access the proxy's server key store. Provide no value if the key store is not password protected.
-| `KAFKAPROXY_CLIENT_SSL_KEY_PASSWORD`        |               | The password to access the proxy's server key. Provide no value if the key is not password protected.
-| `KAFKAPROXY_CLIENT_SSL_KEY_TYPE`            | `jks`         | The type of the key store.
-| `KAFKAPROXY_CLIENT_SSL_AUTH_REQUIRED`       | `false`       | Require a valid client certificate from clients connecting to the proxy.
+| Name                                                 | Default value | Destription
+| ---------------------------------------------------- | ------------- | -----------
+| `KAFKAPROXY_CLIENT_SSL_ENABLED`                      | `false`       | Enables SSL encrypted communication between clients and kafkaproxy. 
+| `KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_LOCATION`          |               | The filesystem location of the trust store to use. If no value is provided the JRE's default trust store will be used.
+| `KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_REFRESH_MSECS`     | 30000         | The minimum amount if time between checks for updates of the trust store in milliseconds.
+| `KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_PASSWORD`          |               | The password to access the trust store. Provide no value if the trust store is not password protected. Ignored when `KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_PASSWORD_LOCATION` is set.
+| `KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_PASSWORD_LOCATION` |               | The filesystem location of the password to access the trust store. Overrides `KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_PASSWORD`.
+| `KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_TYPE`              | `jks`         | The type of the trust store.
+| `KAFKAPROXY_CLIENT_SSL_KEYSTORE_LOCATION`            |               | The filesystem location of the proxy's server key store. If no value is provided the JRE's default key store will be used.
+| `KAFKAPROXY_CLIENT_SSL_KEYSTORE_REFRESH_MSECS`       | 30000         | The minimum amount if time between checks for updates of the proxy's server key store in milliseconds.
+| `KAFKAPROXY_CLIENT_SSL_KEYSTORE_PASSWORD`            |               | The password to access the proxy's server key store. Provide no value if the key store is not password protected. Ignored when `KAFKAPROXY_CLIENT_SSL_KEYSTORE_PASSWORD_LOCATION` is set.
+| `KAFKAPROXY_CLIENT_SSL_KEYSTORE_PASSWORD_LOCATION`   |               | The filesystem location of the password to access the proxy's server key store. Overrides `KAFKAPROXY_CLIENT_SSL_KEYSTORE_PASSWORD`.
+| `KAFKAPROXY_CLIENT_SSL_KEY_PASSWORD`                 |               | The password to access the proxy's server key. Provide no value if the key is not password protected.
+| `KAFKAPROXY_CLIENT_SSL_KEY_TYPE`                     | `jks`         | The type of the key store.
+| `KAFKAPROXY_CLIENT_SSL_AUTH_REQUIRED`                | `false`       | Require a valid client certificate from clients connecting to the proxy.
 
 ## Kafka SSL configuration
 The Kafka SSL configuration determines how kafkaproxy connects to the Kafka broker instances.
 Configuration can be provided using the following environment variables:
 
-| Name                                        | Default value | Destription
-| ------------------------------------------- |---------------| -----------
-| `KAFKAPROXY_KAFKA_SSL_ENABLED`              | `false`       | Enables SSL encrypted communication kafkaproxy and the Kafka brokers.
-| `KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_LOCATION`  |               | The filesystem location of the trust store to use. If no value is provided the JRE's default trust store will be used.
-| `KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_PASSWORD`  |               | The password to access the trust store. Provide no value if the trust store is not password protected.
-| `KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_TYPE`      | `jks`         | The type of the trust store.
-| `KAFKAPROXY_KAFKA_SSL_VERIFY_HOSTNAME`      | `true`        | Indicates if the hostnames of the Kafka brokers are validated against the SSL certificates they provide when connecting.
-| `KAFKAPROXY_KAFKA_SSL_CLIENT_CERT_STRATEGY` | `NONE`        | <ul><li>`NONE`: don't use a client certificate for broker connections.</li><li>`KEYSTORE`: use the client certificate provided by `KAFKAPROXY_KAFKA_SSL_KEYSTORE_LOCATION`</li></ul>  
-| `KAFKAPROXY_KAFKA_SSL_KEYSTORE_LOCATION`    |               | The filesystem location of the proxy's client key store. Required only when `KAFKAPROXY_KAFKA_SSL_CLIENT_CERT_STRATEGY` is set to `KEYSTORE`. 
-| `KAFKAPROXY_KAFKA_SSL_KEYSTORE_PASSWORD`    |               | The password to access the proxy's client key store. Provide no value if the key store is not password protected.
-| `KAFKAPROXY_KAFKA_SSL_KEYSTORE_TYPE`        | `jks`         | The type of the key store.
-| `KAFKAPROXY_KAFKA_SSL_KEY_PASSWORD`         |               | The password to access the proxy's client key. Provide no value if the key is not password protected.
+| Name                                                | Default value | Destription
+| --------------------------------------------------- | ------------- | -----------
+| `KAFKAPROXY_KAFKA_SSL_ENABLED`                      | `false`       | Enables SSL encrypted communication kafkaproxy and the Kafka brokers.
+| `KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_LOCATION`          |               | The filesystem location of the trust store to use. If no value is provided the JRE's default trust store will be used.
+| `KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_REFRESH_MSECS`     | 30000         | The minimum amount if time between checks for updates of the trust store store in milliseconds.
+| `KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_PASSWORD`          |               | The password to access the trust store. Provide no value if the trust store is not password protected. Ignored when `KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_PASSWORD_LOCATION` is set.
+| `KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_PASSWORD_LOCATION` |               | The filesystem location of the password to access the trust store. Overrides `KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_PASSWORD`. 
+| `KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_TYPE`              | `jks`         | The type of the trust store.
+| `KAFKAPROXY_KAFKA_SSL_VERIFY_HOSTNAME`              | `true`        | Indicates if the hostnames of the Kafka brokers are validated against the SSL certificates they provide when connecting.
+| `KAFKAPROXY_KAFKA_SSL_KEYSTORE_LOCATION`            |               | The filesystem location of the proxy's client key store. Required only when `KAFKAPROXY_KAFKA_SSL_CLIENT_CERT_STRATEGY` is set to `KEYSTORE`.
+| `KAFKAPROXY_KAFKA_SSL_KEYSTORE_REFRESH_MSECS`       | 30000         | The minimum amount if time between checks for updates of the proxy client's key store in milliseconds.
+| `KAFKAPROXY_KAFKA_SSL_KEYSTORE_PASSWORD`            |               | The password to access the proxy's client key store. Provide no value if the key store is not password protected. Ignored when `KAFKAPROXY_KAFKA_SSL_KEYSTORE_PASSWORD_LOCATION` is set.
+| `KAFKAPROXY_KAFKA_SSL_KEYSTORE_PASSWORD_LOCATION`   |               | The filesystem location of the password to access the proxy's client key store. Overrides `KAFKAPROXY_KAFKA_SSL_KEYSTORE_PASSWORD`.
+| `KAFKAPROXY_KAFKA_SSL_KEYSTORE_TYPE`                | `jks`         | The type of the key store.
+| `KAFKAPROXY_KAFKA_SSL_KEY_PASSWORD`                 |               | The password to access the proxy's client key. Provide no value if the key is not password protected. Ignored when `KAFKAPROXY_KAFKA_SSL_KEY_PASSWORD_LOCATION` is set.
+| `KAFKAPROXY_KAFKA_SSL_KEY_PASSWORD_LOCATION`        |               | The filesytem location of the password to access the proxy's client key. Overrides `KAFKAPROXY_KAFKA_SSL_KEY_PASSWORD`.
 
 # Features
 * SSL support from client to proxy

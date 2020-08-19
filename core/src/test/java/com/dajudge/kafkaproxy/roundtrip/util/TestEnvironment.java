@@ -18,21 +18,16 @@
 package com.dajudge.kafkaproxy.roundtrip.util;
 
 import com.dajudge.kafkaproxy.config.Environment;
-import com.dajudge.kafkaproxy.config.FileResource;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import static com.dajudge.kafkaproxy.config.FileResource.fromFile;
 import static java.lang.Integer.parseInt;
 
 public class TestEnvironment implements Environment {
     private final Map<String, String> env = new HashMap<>();
-    private final Map<String, FileResource> files = new HashMap<>();
 
     public TestEnvironment withEnv(final String var, final String value) {
         env.put(var, value);
@@ -57,8 +52,8 @@ public class TestEnvironment implements Environment {
     }
 
     @Override
-    public Optional<FileResource> optionalFile(final String variable) {
-        return optionalString(variable).map(this::file);
+    public Optional<Integer> optionalInt(final String variable) {
+        return optionalString(variable).map(Integer::parseInt);
     }
 
     @Override
@@ -71,37 +66,7 @@ public class TestEnvironment implements Environment {
         return parseInt(requiredString(variable));
     }
 
-    @Override
-    public FileResource requiredFile(final String filename) {
-        if (!files.containsKey(filename)) {
-            throw new RuntimeException("No such file resource: " + filename);
-        }
-        return files.get(filename);
-    }
-
-    private FileResource file(final String filename) {
-        if (!files.containsKey(filename)) {
-            throw new IllegalArgumentException("File does not exist: " + filename);
-        }
-        return files.get(filename);
-    }
-
     public void dump(final Consumer<String> dumper) {
         env.forEach((k, v) -> dumper.accept(k + "=" + v));
-        files.forEach((k, v) -> dumper.accept(k + " - file"));
-    }
-
-    public TestEnvironment withFile(final String path) {
-        if (path != null) {
-            files.put(path, fromFile(new File(path)));
-        }
-        return this;
-    }
-
-    public TestEnvironment withFile(final String path, final byte[] data) {
-        if (path != null) {
-            files.put(path, () -> new ByteArrayInputStream(data));
-        }
-        return this;
     }
 }

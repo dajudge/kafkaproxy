@@ -26,17 +26,17 @@ public interface ServerSecurity {
 
     String getTrustStoreLocation();
 
-    String getTrustStorePassword();
+    char[] getTrustStorePassword();
 
     String getTrustStoreType();
 
     String getKeyStoreLocation();
 
-    String getKeyStorePassword();
+    char[] getKeyStorePassword();
 
     String getKeyStoreType();
 
-    String getKeyPassword();
+    char[] getKeyPassword();
 
     String getClientAuth();
 

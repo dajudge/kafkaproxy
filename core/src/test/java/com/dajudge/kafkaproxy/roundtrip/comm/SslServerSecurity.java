@@ -17,7 +17,7 @@
 
 package com.dajudge.kafkaproxy.roundtrip.comm;
 
-import com.dajudge.kafkaproxy.roundtrip.ssl.KeyStoreWrapper;
+import com.dajudge.kafkaproxy.roundtrip.ssl.KeyStoreData;
 import org.testcontainers.images.builder.Transferable;
 
 import java.util.function.BiConsumer;
@@ -26,13 +26,13 @@ public class SslServerSecurity implements ServerSecurity {
     private static final String KEYSTORE_LOCATION = "/tmp/keystore.jks";
     private static final String TRUSTSTORE_LOCATION = "/tmp/truststore.jks";
 
-    private final KeyStoreWrapper keyStore;
-    private final KeyStoreWrapper trustStore;
+    private final KeyStoreData keyStore;
+    private final KeyStoreData trustStore;
     private final boolean requireClientAuth;
 
     public SslServerSecurity(
-            final KeyStoreWrapper keyStore,
-            final KeyStoreWrapper trustStore,
+            final KeyStoreData keyStore,
+            final KeyStoreData trustStore,
             final boolean requireClientAuth
     ) {
         this.keyStore = keyStore;
@@ -51,7 +51,7 @@ public class SslServerSecurity implements ServerSecurity {
     }
 
     @Override
-    public String getTrustStorePassword() {
+    public char[] getTrustStorePassword() {
         return trustStore.getKeyStorePassword();
     }
 
@@ -66,7 +66,7 @@ public class SslServerSecurity implements ServerSecurity {
     }
 
     @Override
-    public String getKeyStorePassword() {
+    public char[] getKeyStorePassword() {
         return keyStore.getKeyStorePassword();
     }
 
@@ -76,7 +76,7 @@ public class SslServerSecurity implements ServerSecurity {
     }
 
     @Override
-    public String getKeyPassword() {
+    public char[] getKeyPassword() {
         return keyStore.getKeyPassword();
     }
 

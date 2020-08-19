@@ -29,7 +29,7 @@ public class PlaintextClientSecurity implements ClientSecurity {
     }
 
     @Override
-    public String getTrustStorePassword() {
+    public char[] getTrustStorePassword() {
         return null;
     }
 
@@ -47,12 +47,12 @@ public class PlaintextClientSecurity implements ClientSecurity {
             }
 
             @Override
-            public String getKeyStorePassword() {
+            public char[] getKeyStorePassword() {
                 return null;
             }
 
             @Override
-            public String getKeyPassword() {
+            public char[] getKeyPassword() {
                 return null;
             }
 

@@ -19,6 +19,7 @@ package com.dajudge.kafkaproxy.config;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static java.util.Collections.unmodifiableMap;
 import static java.util.ServiceLoader.load;
@@ -36,7 +37,15 @@ public class ApplicationConfig {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T get(final Class<T> configClass) {
-        return (T) sources.get(configClass).parse(environment);
+    public <T> Optional<T> optional(final Class<T> configClass) {
+        return (Optional<T>) sources.get(configClass).parse(environment);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T require(final Class<T> configClass) {
+        return ((Optional<T>) sources.get(configClass).parse(environment))
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Could not find config of type " + configClass.getName()
+                ));
     }
 }

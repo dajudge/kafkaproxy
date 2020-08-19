@@ -17,16 +17,16 @@
 
 package com.dajudge.kafkaproxy.roundtrip.ssl;
 
-public class KeyStoreWrapper {
+public class KeyStoreData {
     private final byte[] keyStore;
-    private final String keyStorePassword;
-    private final String keyPassword;
+    private final char[] keyStorePassword;
+    private final char[] keyPassword;
     private final String type;
 
-    public KeyStoreWrapper(
+    public KeyStoreData(
             final byte[] keyStore,
-            final String keyStorePassword,
-            final String keyPassword,
+            final char[] keyStorePassword,
+            final char[] keyPassword,
             final String type
     ) {
         this.keyStore = keyStore.clone();
@@ -43,11 +43,11 @@ public class KeyStoreWrapper {
         return type;
     }
 
-    public String getKeyStorePassword() {
+    public char[] getKeyStorePassword() {
         return keyStorePassword;
     }
 
-    public String getKeyPassword() {
+    public char[] getKeyPassword() {
         return keyPassword;
     }
 }

@@ -33,7 +33,7 @@ public class PlaintextServerSecurity implements ServerSecurity {
     }
 
     @Override
-    public String getTrustStorePassword() {
+    public char[] getTrustStorePassword() {
         return null;
     }
 
@@ -48,7 +48,7 @@ public class PlaintextServerSecurity implements ServerSecurity {
     }
 
     @Override
-    public String getKeyStorePassword() {
+    public char[] getKeyStorePassword() {
         return null;
     }
 
@@ -58,7 +58,7 @@ public class PlaintextServerSecurity implements ServerSecurity {
     }
 
     @Override
-    public String getKeyPassword() {
+    public char[] getKeyPassword() {
         return null;
     }
 

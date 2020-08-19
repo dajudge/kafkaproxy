@@ -22,7 +22,7 @@ public interface ClientSecurity {
 
     String getTrustStoreLocation();
 
-    String getTrustStorePassword();
+    char[] getTrustStorePassword();
 
     String getTrustStoreType();
 

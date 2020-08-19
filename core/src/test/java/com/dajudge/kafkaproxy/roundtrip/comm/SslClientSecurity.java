@@ -17,7 +17,7 @@
 
 package com.dajudge.kafkaproxy.roundtrip.comm;
 
-import com.dajudge.kafkaproxy.roundtrip.ssl.KeyStoreWrapper;
+import com.dajudge.kafkaproxy.roundtrip.ssl.KeyStoreData;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -29,13 +29,13 @@ import static java.io.File.createTempFile;
 
 public class SslClientSecurity implements ClientSecurity {
     private final File trustStoreFile;
-    private final Optional<Function<String, KeyStoreWrapper>> keyStoreFactory;
-    private final KeyStoreWrapper trustStore;
+    private final Optional<Function<String, KeyStoreData>> keyStoreFactory;
+    private final KeyStoreData trustStore;
     private final String proxyCertStrategy;
 
     public SslClientSecurity(
-            final KeyStoreWrapper trustStore,
-            final Optional<Function<String, KeyStoreWrapper>> keyStoreFactory,
+            final KeyStoreData trustStore,
+            final Optional<Function<String, KeyStoreData>> keyStoreFactory,
             final String proxyCertStrategy
     ) {
         this.trustStore = trustStore;
@@ -44,7 +44,7 @@ public class SslClientSecurity implements ClientSecurity {
         this.proxyCertStrategy = proxyCertStrategy;
     }
 
-    private static File writeToTemp(final KeyStoreWrapper trustStore) {
+    private static File writeToTemp(final KeyStoreData trustStore) {
         try {
             File keyStoreFile = createTempFile("kafkaproxy-test-", ".jks");
             keyStoreFile.deleteOnExit();
@@ -69,7 +69,7 @@ public class SslClientSecurity implements ClientSecurity {
     }
 
     @Override
-    public String getTrustStorePassword() {
+    public char[] getTrustStorePassword() {
         return trustStore.getKeyStorePassword();
     }
 
@@ -80,7 +80,7 @@ public class SslClientSecurity implements ClientSecurity {
 
     @Override
     public ClientSslConfig newClient(final String dn) {
-        final Optional<KeyStoreWrapper> keyStore = keyStoreFactory.map(f -> f.apply(dn));
+        final Optional<KeyStoreData> keyStore = keyStoreFactory.map(f -> f.apply(dn));
         final Optional<File> keyStoreFile = keyStore.map(SslClientSecurity::writeToTemp);
         return new ClientSslConfig() {
             @Override
@@ -89,18 +89,18 @@ public class SslClientSecurity implements ClientSecurity {
             }
 
             @Override
-            public String getKeyStorePassword() {
-                return keyStore.map(KeyStoreWrapper::getKeyStorePassword).orElse(null);
+            public char[] getKeyStorePassword() {
+                return keyStore.map(KeyStoreData::getKeyStorePassword).orElse(null);
             }
 
             @Override
-            public String getKeyPassword() {
-                return keyStore.map(KeyStoreWrapper::getKeyPassword).orElse(null);
+            public char[] getKeyPassword() {
+                return keyStore.map(KeyStoreData::getKeyPassword).orElse(null);
             }
 
             @Override
             public String getKeyStoreType() {
-                return keyStore.map(KeyStoreWrapper::getType).orElse(null);
+                return keyStore.map(KeyStoreData::getType).orElse(null);
             }
 
             @Override

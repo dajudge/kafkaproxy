@@ -15,7 +15,6 @@ buildNative {
 }
 
 dependencies {
-    implementation project(":ca-selfsign")
     implementation project(":core")
     implementation libProxyBase
 

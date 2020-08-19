@@ -17,59 +17,73 @@
 
 package com.dajudge.kafkaproxy.roundtrip.ssl;
 
-import com.dajudge.kafkaproxy.ca.selfsign.Helpers;
+
+import com.dajudge.proxybase.ca.Helpers;
 
 import java.security.KeyPair;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.time.Duration;
+import java.util.Date;
 
-import static com.dajudge.kafkaproxy.ca.selfsign.Helpers.createJks;
-import static com.dajudge.kafkaproxy.ca.selfsign.Helpers.keyPair;
 import static com.dajudge.kafkaproxy.roundtrip.util.Util.randomIdentifier;
+import static com.dajudge.proxybase.ca.Helpers.createJks;
+import static com.dajudge.proxybase.ca.Helpers.serialize;
+import static java.time.temporal.ChronoUnit.DAYS;
 
 public class CertAuthority {
     private final KeyPair keyPair;
     private final X509Certificate cert;
 
     public CertAuthority(final String dn) {
-        keyPair = keyPair();
-        cert = Helpers.selfSignedCert(dn, keyPair, 10, "SHA256withRSA", true);
+        keyPair = Helpers.keyPair();
+        final Date now = Helpers.now(System::currentTimeMillis);
+        cert = Helpers.selfSignedCert(
+                dn,
+                keyPair,
+                now,
+                Helpers.plus(now, Duration.of(10, DAYS)),
+                "SHA256withRSA",
+                true
+        );
     }
 
-    public KeyStoreWrapper createSignedKeyPair(final String dn, final String keystoreType) {
-        final KeyPair newKeyPair = keyPair();
+    public KeyStoreData createSignedKeyPair(final String dn, final String keystoreType) {
+        final KeyPair newKeyPair = Helpers.keyPair();
+        final Date now = Helpers.now(System::currentTimeMillis);
         final X509Certificate newCert = Helpers.sign(
                 dn,
                 cert.getSubjectDN().getName(),
                 keyPair.getPrivate(),
-                10,
                 "SHA256withRSA",
                 newKeyPair.getPublic(),
+                now,
+                Helpers.plus(now, Duration.of(10, DAYS)),
                 false
         );
-        final String keyStorePassword = randomIdentifier();
-        final String keyPassword = randomIdentifier();
+        final char[] keyStorePassword = randomIdentifier().toCharArray();
+        final char[] keyPassword = randomIdentifier().toCharArray();
         final byte[] keyStore = keyStoreOf(newKeyPair, newCert, keyStorePassword, keyPassword, keystoreType);
-        return new KeyStoreWrapper(keyStore, keyStorePassword, keyPassword, keystoreType);
+        return new KeyStoreData(keyStore, keyStorePassword, keyPassword, keystoreType);
     }
 
     private byte[] keyStoreOf(
             final KeyPair keyPair,
             final X509Certificate cert,
-            final String keyStorePassword,
-            final String keyPassword,
+            final char[] keyStorePassword,
+            final char[] keyPassword,
             final String type
     ) {
-        return createJks(keyStorePassword, keyStore -> {
-            keyStore.setKeyEntry("key", keyPair.getPrivate(), keyPassword.toCharArray(), new Certificate[]{cert});
-        }, type);
+        return serialize(createJks(keyStore -> {
+            keyStore.setKeyEntry("key", keyPair.getPrivate(), keyPassword, new Certificate[]{cert});
+        }, type), keyStorePassword);
     }
 
-    public KeyStoreWrapper getTrustStore(final String type) {
-        final String keyStorePassword = randomIdentifier();
-        final byte[] keyStore = createJks(keyStorePassword, keystore -> {
+    public KeyStoreData getTrustStore(final String type) {
+        final char[] keyStorePassword = randomIdentifier().toCharArray();
+        final byte[] keyStore = serialize(createJks(keystore -> {
             keystore.setCertificateEntry("ca", cert);
-        }, type);
-        return new KeyStoreWrapper(keyStore, keyStorePassword, null, type);
+        }, type), keyStorePassword);
+        return new KeyStoreData(keyStore, keyStorePassword, null, type);
     }
 }

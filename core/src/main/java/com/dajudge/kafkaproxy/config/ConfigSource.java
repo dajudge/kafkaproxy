@@ -17,10 +17,12 @@
 
 package com.dajudge.kafkaproxy.config;
 
+import java.util.Optional;
+
 public interface ConfigSource<T> {
     String PREFIX = "KAFKAPROXY_";
 
     Class<T> getConfigClass();
 
-    T parse(final Environment environment);
+    Optional<T> parse(final Environment environment);
 }
