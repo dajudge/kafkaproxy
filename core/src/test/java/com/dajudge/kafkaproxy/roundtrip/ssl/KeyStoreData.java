@@ -30,8 +30,8 @@ public class KeyStoreData {
             final String type
     ) {
         this.keyStore = keyStore.clone();
-        this.keyStorePassword = keyStorePassword;
-        this.keyPassword = keyPassword;
+        this.keyStorePassword = keyStorePassword == null ? null : keyStorePassword.clone();
+        this.keyPassword = keyPassword == null ? null : keyPassword.clone();
         this.type = type;
     }
 
@@ -44,10 +44,10 @@ public class KeyStoreData {
     }
 
     public char[] getKeyStorePassword() {
-        return keyStorePassword;
+        return keyStorePassword == null ? null : keyStorePassword.clone();
     }
 
     public char[] getKeyPassword() {
-        return keyPassword;
+        return keyPassword == null ? null : keyPassword.clone();
     }
 }
