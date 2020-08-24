@@ -1,4 +1,5 @@
-![ci](https://gitlab.com/dajudge/kafkaproxy/badges/master/pipeline.svg)
+[![ci](https://gitlab.com/dajudge/kafkaproxy/badges/master/pipeline.svg)](https://gitlab.com/dajudge/kafkaproxy/-/pipelines)
+[![docker](https://img.shields.io/docker/v/dajudge/kafkaproxy?label=dockerhub&sort=semver)](https://hub.docker.com/repository/docker/dajudge/kafkaproxy)
 
 # kafkaproxy
 kafkaproxy is a reverse proxy for the wire protocol of Apache Kafka. 
