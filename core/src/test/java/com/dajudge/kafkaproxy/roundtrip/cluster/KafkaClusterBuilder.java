@@ -28,7 +28,6 @@ import com.dajudge.kafkaproxy.roundtrip.comm.ServerSecurity;
 import com.dajudge.kafkaproxy.roundtrip.util.PortFinder;
 import com.dajudge.kafkaproxy.roundtrip.util.TestEnvironment;
 import com.dajudge.kafkaproxy.roundtrip.util.TestFilesystem;
-import com.dajudge.proxybase.certs.Filesystem;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,10 +38,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import static com.dajudge.kafkaproxy.roundtrip.util.Util.indent;
 import static com.dajudge.kafkaproxy.roundtrip.util.Util.safeToString;
 import static java.lang.String.valueOf;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.stream;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
@@ -113,17 +114,30 @@ public class KafkaClusterBuilder {
                 .withEnv("KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_PASSWORD", safeToString(proxySecurity.getTrustStorePassword()))
                 .withEnv("KAFKAPROXY_CLIENT_SSL_TRUSTSTORE_TYPE", proxySecurity.getTrustStoreType())
                 .withEnv("KAFKAPROXY_CLIENT_SSL_KEYSTORE_LOCATION", proxySecurity.getKeyStoreLocation())
-                .withEnv("KAFKAPROXY_CLIENT_SSL_KEYSTORE_PASSWORD", safeToString(proxySecurity.getKeyStorePassword()))
                 .withEnv("KAFKAPROXY_CLIENT_SSL_KEY_PASSWORD", safeToString(proxySecurity.getKeyPassword()));
-        final Filesystem filesystem = new TestFilesystem()
+        final TestFilesystem filesystem = new TestFilesystem()
                 .withFile(proxySecurity.getTrustStoreLocation(), proxySecurity.getTrustStore())
                 .withFile(proxySecurity.getKeyStoreLocation(), proxySecurity.getKeyStore())
                 .withFile(brokerSecurity.getTrustStoreLocation(), read(brokerSecurity.getTrustStoreLocation()))
                 .withFile(proxyClient.getKeyStoreLocation(), read(proxyClient.getKeyStoreLocation()));
+        passwordFile(env, filesystem, "KAFKAPROXY_CLIENT_SSL_KEYSTORE_PASSWORD_LOCATION", proxySecurity.getKeyStorePassword());
         final StringBuilder buffer = new StringBuilder();
         env.dump(line -> buffer.append(line + "\n"));
         LOG.info("ENV:\n{}", indent(4, buffer.toString()));
         return KafkaProxyApplication.create(env, System::currentTimeMillis, filesystem);
+    }
+
+    private void passwordFile(
+            final TestEnvironment env,
+            final TestFilesystem filesystem,
+            final String varName,
+            final char[] password
+    ) {
+        if (password != null) {
+            final String path = UUID.randomUUID().toString();
+            env.withEnv(varName, path);
+            filesystem.withFile(path, safeToString(password).getBytes(UTF_8));
+        }
     }
 
     private byte[] read(final String path) {
