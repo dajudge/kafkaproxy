@@ -24,7 +24,7 @@ services:
       KAFKA_BROKER_ID: 1
 
   kafkaproxy:
-    image: "dajudge/kafkaproxy:0.0.10"
+    image: "dajudge/kafkaproxy:0.0.11"
     ports:
       - 4000:4000
     depends_on:
