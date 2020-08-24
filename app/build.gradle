@@ -1,24 +1,19 @@
 plugins {
     id 'java'
-    id 'io.quarkus' version "1.3.1.Final"
+    id 'io.quarkus' version "1.7.0.Final"
 }
 
-buildNative {
-    enableHttpUrlHandler = true
-    enableHttpsUrlHandler = true
-    autoServiceLoaderRegistration = true
-    additionalBuildArgs = [
-        "-H:+ReportUnsupportedElementsAtRuntime",
-        "-H:+TraceClassInitialization",
-        "--initialize-at-run-time=com.dajudge.kafkaproxy.ca.selfsign.Helpers"
-    ]
+quarkusBuild {
+    nativeArgs {
+        autoServiceLoaderRegistration = "true"
+    }
 }
 
 dependencies {
     implementation project(":core")
     implementation libProxyBase
 
-    implementation enforcedPlatform("io.quarkus:quarkus-universe-bom:1.3.1.Final") {
+    implementation enforcedPlatform("io.quarkus:quarkus-universe-bom:1.7.0.Final") {
         exclude group: 'org.apache.kafka', module: 'kafka-clients'
     }
     implementation 'io.quarkus:quarkus-resteasy'

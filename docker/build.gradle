@@ -25,7 +25,7 @@ task copyApp(type: Copy) {
     from project(":app").buildDir
     include "*-runner"
     into dockerBuildDir
-    dependsOn project(":app").tasks.getByName("buildNative")
+    dependsOn project(":app").tasks.getByName("build")
 }
 
 task copyDockerSources(type: Copy) {

@@ -1,4 +1,4 @@
-FROM oracle/graalvm-ce:19.3.1-java11
+FROM oracle/graalvm-ce:20.2.0-java11
 
 RUN	yum install -y bash curl sudo wget tar
 
