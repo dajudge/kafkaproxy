@@ -13,7 +13,7 @@ stages:
 build:
   stage: build
   script:
-    - "./workbench ./gradlew clean build publish"
+    - "./workbench ./gradlew clean build publish -Dquarkus.package.type=native"
   artifacts:
     when: always
     paths:
