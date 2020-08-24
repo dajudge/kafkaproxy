@@ -28,7 +28,7 @@ public class ZookeeperContainer extends GenericContainer<ZookeeperContainer> {
     private static final int ZOOKEEPER_PORT = 2181;
 
     public ZookeeperContainer(final Network network) {
-        super("confluentinc/cp-zookeeper:5.4.1");
+        super("confluentinc/cp-zookeeper:5.5.1");
         this.withNetworkAliases(NETWORK_ALIAS)
                 .withNetwork(network)
                 .withEnv("ZOOKEEPER_CLIENT_PORT", valueOf(ZOOKEEPER_PORT))

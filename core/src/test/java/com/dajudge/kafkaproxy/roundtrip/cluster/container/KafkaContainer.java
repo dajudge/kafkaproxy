@@ -57,7 +57,7 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
             final Network network,
             final CommunicationSetup communicationSetup
     ) {
-        super("confluentinc/cp-kafka:5.4.1");
+        super("confluentinc/cp-kafka:5.5.1");
         this.internalHostname = "broker" + brokerId;
         serverSecurity = communicationSetup.getServerSecurity("CN=localhost");
         this.withNetwork(network)

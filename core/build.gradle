@@ -4,6 +4,8 @@ dependencies {
     implementation libProxyBase
     // We use the transport objects from the kafka client library
     implementation libKafkaClient
+    // Kafka client needs jackson
+    runtimeOnly 'com.fasterxml.jackson.core:jackson-databind:2.11.2'
     // Netty is our network layer
     implementation 'io.netty:netty-all:4.1.45.Final'
     // For parsing configs
