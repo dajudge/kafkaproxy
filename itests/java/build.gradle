@@ -1,0 +1,9 @@
+apply plugin: "java"
+
+dependencies {
+    implementation "org.apache.kafka:kafka-clients:2.6.0"
+    implementation 'ch.qos.logback:logback-classic:1.2.3'
+
+    // Kafka client needs jackson
+    runtimeOnly 'com.fasterxml.jackson.core:jackson-databind:2.11.2'
+}

@@ -8,3 +8,5 @@ out/
 .classpath
 .project
 bin/
+obj/
+*.user
