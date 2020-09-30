@@ -33,7 +33,10 @@ namespace testrunner
             {
                 BootstrapServers = _bootstrapServers,
                 GroupId = _groupId,
-                AutoOffsetReset = AutoOffsetReset.Earliest
+                AutoOffsetReset = AutoOffsetReset.Earliest,
+                EnableAutoCommit = false,
+                EnableAutoOffsetStore = false,
+                SocketTimeoutMs = (int)TimeSpan.FromSeconds(1).TotalMilliseconds,
             }).Build();
             consumer.Subscribe(_topic);
             return new ConsumerPoll(consumer);
