@@ -4,4 +4,4 @@ WORKDIR /work/
 EXPOSE 8080
 USER 1001
 
-CMD ["./application", "-Dquarkus.http.host=0.0.0.0", "--vm.XX:MaximumHeapSizePercent=80"]
+CMD ["./application", "-Xmx64m", "-Dquarkus.http.host=0.0.0.0"]
