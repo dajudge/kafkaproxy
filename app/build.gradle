@@ -6,6 +6,7 @@ plugins {
 quarkusBuild {
     nativeArgs {
         autoServiceLoaderRegistration = "true"
+        enableAllSecurityServices = "true"
     }
 }
 
