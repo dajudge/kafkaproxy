@@ -13,25 +13,38 @@ services:
     depends_on:
       - zookeeper
     restart: always
+    volumes:
+      - ./ssl:/etc/kafka/secrets
     environment:
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092,SSL://kafka1:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,SSL://0.0.0.0:9093
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS: 1
       KAFKA_BROKER_ID: 1
+      KAFKA_SSL_KEYSTORE_FILENAME: server.p12
+      KAFKA_SSL_KEYSTORE_PASSWORD: test
+      KAFKA_SSL_KEY_CREDENTIALS: password
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: password
 
   kafkaproxy:
-    image: "dajudge/kafkaproxy:0.0.12"
+    image: ccad69966acc
     ports:
       - 4000:4000
     depends_on:
       - kafka1
     restart: always
+    volumes:
+      - ./ssl:/ssl
     environment:
       KAFKAPROXY_HOSTNAME: localhost
       KAFKAPROXY_BASE_PORT: 4000
-      KAFKAPROXY_BOOTSTRAP_SERVERS: kafka1:9092
+      KAFKAPROXY_BOOTSTRAP_SERVERS: kafka1:9093
       KAFKAPROXY_LOG_LEVEL: DEBUG
+      KAFKAPROXY_KAFKA_SSL_ENABLED: "true"
+      KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_LOCATION: /ssl/server.p12
+      KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_TYPE: pkcs12
+      KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_PASSWORD_LOCATION: /ssl/password
+      KAFKAPROXY_KAFKA_SSL_VERIFY_HOSTNAME: "false"
