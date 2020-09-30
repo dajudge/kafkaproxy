@@ -1,5 +1,9 @@
 apply plugin: "java"
 
+repositories {
+    mavenCentral()
+}
+
 dependencies {
     implementation "org.apache.kafka:kafka-clients:2.6.0"
     implementation 'ch.qos.logback:logback-classic:1.2.3'
