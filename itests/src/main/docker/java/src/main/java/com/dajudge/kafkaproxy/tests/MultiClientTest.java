@@ -2,6 +2,7 @@ package com.dajudge.kafkaproxy.tests;
 
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
+import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -14,6 +15,7 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
 import static java.lang.System.currentTimeMillis;
@@ -36,7 +38,11 @@ public class MultiClientTest {
     }
 
     public static void main(final String[] args) {
-        final String bootstrapServers = args[0];
+        final String bootstrapServers = System.getenv("BOOTSTRAP_SERVERS");
+        if (bootstrapServers == null || bootstrapServers.trim().isEmpty()) {
+            System.err.println("Specify BOOTSTRAP_SERVERS env variable.");
+            System.exit(1);
+        }
         final long start = currentTimeMillis();
         final Set<String> messages = synchronizedSet(new HashSet<>());
         final String topicName = randomUUID().toString();
@@ -45,6 +51,7 @@ public class MultiClientTest {
         final Supplier<Sink> sinkFactory = () -> producer(bootstrapServers, topicName);
         final Supplier<Poll> pollFactory = () -> consumer(bootstrapServers, topicName, groupId);
         int producedMessages = 0;
+        boolean success = true;
         try (
                 final SinkMaster sinkMaster = new SinkMaster(messages, 10, sinkFactory);
                 final PollMaster pollMaster = new PollMaster(messages, 20, pollFactory);
@@ -62,6 +69,11 @@ public class MultiClientTest {
                     Thread.yield();
                 }
             }
+            System.out.println("Produced messages: " + producedMessages);
+            if (producedMessages == 0) {
+                System.out.println("FAILED to produce messages.");
+                System.exit(1);
+            }
             System.out.println("Producing phase complete, waiting for consumers to finish...");
             while (!messages.isEmpty() && (currentTimeMillis() - pollMaster.lastMessageTimestamp()) < 10000) {
                 try {
@@ -70,18 +82,33 @@ public class MultiClientTest {
                     throw new RuntimeException(e);
                 }
             }
-            System.out.println("Produced messages: " + producedMessages);
             System.out.println("Unseen messages: " + messages);
+            success = messages.isEmpty();
         }
         final long duration = currentTimeMillis() - start;
-        System.out.println("Test completed in " + duration + "ms");
+        final String result = success ? "SUCCEEDED" : "FAILED";
+        System.out.println("Test " + result + " in " + duration + "ms");
     }
 
     private static void createTopic(final String bootstrapServers, final String topicName) {
         final Properties props = new Properties();
         props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         try (final AdminClient adminClient = AdminClient.create(props)) {
-            adminClient.createTopics(singletonList(new NewTopic(topicName, 20, (short) 1)));
+            final List<NewTopic> topics = singletonList(new NewTopic(topicName, 20, (short) 1));
+            final CreateTopicsResult result = adminClient.createTopics(topics);
+            try {
+                result.all().get();
+            } catch (final InterruptedException | ExecutionException e) {
+                throw new RuntimeException("Failed to create topics", e);
+            }
+            System.out.println("Created topic: " + topicName);
+            try {
+                adminClient.describeCluster().nodes().get().forEach(node -> {
+                    System.out.println("Node: " + node.host() + ":" + node.port());
+                });
+            } catch (final InterruptedException | ExecutionException e) {
+                throw new RuntimeException("Failed to describe cluster", e);
+            }
         }
     }
 

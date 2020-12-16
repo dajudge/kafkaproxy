@@ -100,7 +100,7 @@ namespace testrunner
             }
         }
 
-        public void Report()
+        public bool Report()
         {
             Console.WriteLine("Produced messages: " + _producedMessages);
             if (_messages.Count > 20)
@@ -111,6 +111,8 @@ namespace testrunner
             {
                 Console.WriteLine("Unseen messages: " + string.Join(",", _messages));
             }
+
+            return _messages.Count == 0;
         }
 
         public void Dispose()
