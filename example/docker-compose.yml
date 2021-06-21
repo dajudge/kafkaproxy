@@ -30,7 +30,7 @@ services:
       KAFKA_SSL_KEYSTORE_CREDENTIALS: password
 
   kafkaproxy:
-    image: "dajudge/kafkaproxy:0.0.13"
+    image: "dajudge/kafkaproxy:0.0.14"
     ports:
       - 4000:4000
     depends_on:
