@@ -1,0 +1,20 @@
+name: CI Build
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up GraalVM
+        uses: ayltai/setup-graalvm@v1
+        with:
+          java-version: 11
+          graalvm-version: 20.2.0
+          native-image: true
+      - name: Build with Gradle
+        run: ./gradlew clean build -Dquarkus.package.type=native --stacktrace
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+          files: "**/test-results/**/*.xml"

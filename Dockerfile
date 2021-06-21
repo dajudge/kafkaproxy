@@ -1,5 +1,5 @@
 FROM ubuntu:eoan-20200313
-COPY *-runner /work/application
+COPY app/build/*-runner /work/application
 WORKDIR /work/
 EXPOSE 8080
 USER 1001

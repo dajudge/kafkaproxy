@@ -22,6 +22,7 @@ import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 
 import static java.lang.String.valueOf;
+import static org.testcontainers.images.PullPolicy.alwaysPull;
 
 public class ZookeeperContainer extends GenericContainer<ZookeeperContainer> {
     private static final String NETWORK_ALIAS = "zookeeper";
@@ -30,6 +31,7 @@ public class ZookeeperContainer extends GenericContainer<ZookeeperContainer> {
     public ZookeeperContainer(final Network network) {
         super("confluentinc/cp-zookeeper:5.5.1");
         this.withNetworkAliases(NETWORK_ALIAS)
+                .withImagePullPolicy(alwaysPull())
                 .withNetwork(network)
                 .withEnv("ZOOKEEPER_CLIENT_PORT", valueOf(ZOOKEEPER_PORT))
                 .waitingFor(new LogMessageWaitStrategy().withRegEx(".*binding to port.*"));

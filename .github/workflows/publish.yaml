@@ -1,0 +1,22 @@
+name: Publish release to dockerhub
+on:
+  release:
+    types: [created]
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up GraalVM
+        uses: ayltai/setup-graalvm@v1
+        with:
+          java-version: 11
+          graalvm-version: 20.2.0
+          native-image: true
+      - name: Build with Gradle
+        run: ./gradlew build -x test -Dquarkus.package.type=native
+      - name: Publish
+        run: ./publish.sh
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}

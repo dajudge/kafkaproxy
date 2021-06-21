@@ -4,6 +4,7 @@ dependencies {
     implementation libProxyBase
     // We use the transport objects from the kafka client library
     implementation libKafkaClient
+    implementation 'org.jetbrains:annotations:20.1.0'
     // Kafka client needs jackson
     runtimeOnly 'com.fasterxml.jackson.core:jackson-databind:2.11.2'
     // Netty is our network layer
@@ -15,7 +16,7 @@ dependencies {
     // The logging API
     implementation 'org.slf4j:slf4j-api:1.7.29'
 
-    testImplementation 'org.testcontainers:kafka:1.12.3'
+    testImplementation "org.testcontainers:kafka:$testContainersVersion"
     testImplementation 'junit:junit:4.11'
     testImplementation libProxyBaseTestca
     testCompileOnly 'com.google.code.findbugs:annotations:3.0.1'

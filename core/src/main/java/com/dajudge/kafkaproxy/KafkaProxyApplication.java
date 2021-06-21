@@ -37,6 +37,7 @@ import com.dajudge.proxybase.config.DownstreamSslConfig;
 import com.dajudge.proxybase.config.Endpoint;
 import com.dajudge.proxybase.config.UpstreamSslConfig;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -170,11 +171,15 @@ public class KafkaProxyApplication extends ProxyApplication {
         downstreamChannel.pipeline().addLast(new DecodingKafkaMessageInboundHandler());
         downstreamChannel.pipeline().addLast(new RewritingKafkaMessageDuplexHandler(kafkaRequestStore));
         downstreamChannel.pipeline().addLast(new RelayingChannelInboundHandler("upstream", upstreamChannel));
-        sslConfig.ifPresent(it -> downstreamChannel.pipeline().addAfter(
-                LOGGING_CONTEXT_HANDLER,
-                "SSL",
-                createDownstreamSslHandler(it, downstream.getHost(), clock, filesystem)
-        ));
+        sslConfig.ifPresent(it -> {
+            final ChannelHandler sslHandler = createDownstreamSslHandler(it, downstream, clock, filesystem)
+                    .apply(downstreamChannel.pipeline().channel());
+            downstreamChannel.pipeline().addAfter(
+                    LOGGING_CONTEXT_HANDLER,
+                    "SSL",
+                    sslHandler
+            );
+        });
     }
 
     public static KafkaProxyApplication create(

@@ -28,6 +28,8 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.images.ImagePullPolicy;
+import org.testcontainers.images.PullPolicy;
 import org.testcontainers.images.builder.Transferable;
 import org.testcontainers.utility.MountableFile;
 
@@ -41,6 +43,7 @@ import static java.lang.String.join;
 import static java.lang.String.valueOf;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.joining;
+import static org.testcontainers.images.PullPolicy.alwaysPull;
 import static org.testcontainers.utility.MountableFile.forClasspathResource;
 
 public class KafkaContainer extends GenericContainer<KafkaContainer> {
@@ -61,6 +64,7 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
         this.internalHostname = "broker" + brokerId;
         serverSecurity = communicationSetup.getServerSecurity("CN=localhost");
         this.withNetwork(network)
+                .withImagePullPolicy(alwaysPull())
                 .withNetworkAliases(internalHostname)
                 .withEnv("KAFKA_ZOOKEEPER_CONNECT", zookeeper.getEndpoint())
                 .withEnv("CONFLUENT_SUPPORT_METRICS_ENABLE", "0")
