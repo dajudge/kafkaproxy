@@ -4,7 +4,7 @@ plugins {
 
 ext {
     kafkaClientVersion = "2.6.0"
-    proxyBaseVersion = "0.0.13"
+    proxyBaseVersion = "0.0.14"
     libKafkaClient = "org.apache.kafka:kafka-clients:$kafkaClientVersion"
     libProxyBase = "com.dajudge.proxybase:proxybase:$proxyBaseVersion"
     libProxyBaseTestca = "com.dajudge.proxybase:testca:$proxyBaseVersion"
@@ -13,7 +13,6 @@ ext {
 subprojects {
     repositories {
         mavenLocal()
-        maven { url "https://dl.bintray.com/dajudge/proxybase" }
         mavenCentral()
     }
     tasks.withType(JavaCompile) {
