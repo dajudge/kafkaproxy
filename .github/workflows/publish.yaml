@@ -15,7 +15,7 @@ jobs:
           native-image: true
       - name: Build with Gradle
         run: ./gradlew build -x test -Dquarkus.package.type=native
-      - name: Publish
+      - name: Publish to Docker Hub
         run: ./publish.sh
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
