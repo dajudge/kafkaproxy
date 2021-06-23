@@ -1,4 +1,5 @@
-[![ci](https://github.com/dajudge/kafkaproxy/actions/workflows/build.yaml/badge.svg)](https://github.com/dajudge/kafkaproxy/actions/workflows/build.yaml)
+[![CI](https://github.com/dajudge/kafkaproxy/actions/workflows/build.yaml/badge.svg)](https://github.com/dajudge/kafkaproxy/actions/workflows/build.yaml)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/2842f83708864fd68a65bf0a82f32bb0)](https://www.codacy.com/gh/dajudge/kafkaproxy/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dajudge/kafkaproxy&amp;utm_campaign=Badge_Grade)
 
 # kafkaproxy
 kafkaproxy is a reverse proxy for the wire protocol of Apache Kafka. 
