@@ -1,0 +1,32 @@
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+
+plugins {
+    id "java"
+    id 'com.bmuschko.docker-remote-api' version '6.7.0'
+}
+
+dependencies {
+    testImplementation libJunit4
+    testImplementation libTestContainers
+    testImplementation project(":core")
+    testImplementation project(":testutil")
+    testImplementation libProxyBaseTestca
+    testRuntimeOnly libLogback
+}
+
+
+def clients = new File(project.projectDir, "src/main/clients").listFiles().collect { it.name }
+clients.forEach { client ->
+    def buildTask = task "buildClient-${client}"(type: DockerBuildImage, group: "itest-clients") {
+        inputDir = file("src/main/clients/${client}")
+        images.add("kafkaproxy/itest-${client}:latest")
+    }
+    test.dependsOn buildTask
+}
+
+
+test {
+    testLogging {
+        showStandardStreams = true
+    }
+}

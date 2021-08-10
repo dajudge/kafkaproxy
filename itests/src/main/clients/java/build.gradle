@@ -1,0 +1,30 @@
+apply plugin: "java"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "org.apache.kafka:kafka-clients:2.6.0"
+    implementation 'ch.qos.logback:logback-classic:1.2.3'
+
+    // Kafka client needs jackson
+    runtimeOnly 'com.fasterxml.jackson.core:jackson-databind:2.11.2'
+}
+
+task copyRuntimeLibs(type: Copy) {
+    into new File(project.buildDir, "libs")
+    from configurations.runtimeClasspath
+}
+
+jar {
+    manifest {
+        attributes(
+                'Manifest-Version': "1.0",
+                'Main-Class': "com.dajudge.kafkaproxy.tests.Startup",
+                "Class-Path": configurations.runtimeClasspath.collect { it }.join(" ")
+        )
+    }
+}
+
+build.dependsOn copyRuntimeLibs

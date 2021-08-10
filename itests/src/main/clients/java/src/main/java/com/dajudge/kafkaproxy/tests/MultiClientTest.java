@@ -16,6 +16,7 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import java.util.*;
 import java.util.function.Supplier;
 
+import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.synchronizedSet;
@@ -24,6 +25,12 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 
 public class MultiClientTest {
+    private static final int RUNTIME_SECS = 10;
+    private final String bootstrapServers;
+
+    public MultiClientTest(final String bootstrapServers) {
+        this.bootstrapServers = bootstrapServers;
+    }
 
     interface Sink extends AutoCloseable {
         void publish(String uid);
@@ -35,8 +42,8 @@ public class MultiClientTest {
         void cancel();
     }
 
-    public static void main(final String[] args) {
-        final String bootstrapServers = args[0];
+    public boolean run() {
+        System.out.println(format("Running multi-client test for %ss", RUNTIME_SECS));
         final long start = currentTimeMillis();
         final Set<String> messages = synchronizedSet(new HashSet<>());
         final String topicName = randomUUID().toString();
@@ -51,7 +58,7 @@ public class MultiClientTest {
         ) {
             System.out.println("Producing to " + topicName);
             long lastStats = currentTimeMillis();
-            while ((currentTimeMillis() - start) < 10000) {
+            while ((currentTimeMillis() - start) < RUNTIME_SECS * 1000) {
                 if ((currentTimeMillis() - lastStats) > 1000) {
                     lastStats = currentTimeMillis();
                     System.out.println("sent: " + producedMessages + " inflight: " + messages.size());
@@ -67,7 +74,7 @@ public class MultiClientTest {
                 try {
                     Thread.sleep(1);
                 } catch (final InterruptedException e) {
-                    throw new RuntimeException(e);
+                    throw new IllegalStateException(e);
                 }
             }
             System.out.println("Produced messages: " + producedMessages);
@@ -75,9 +82,10 @@ public class MultiClientTest {
         }
         final long duration = currentTimeMillis() - start;
         System.out.println("Test completed in " + duration + "ms");
+        return messages.size() == 0;
     }
 
-    private static void createTopic(final String bootstrapServers, final String topicName) {
+    private void createTopic(final String bootstrapServers, final String topicName) {
         final Properties props = new Properties();
         props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         try (final AdminClient adminClient = AdminClient.create(props)) {
@@ -85,7 +93,7 @@ public class MultiClientTest {
         }
     }
 
-    private static Poll consumer(final String bootstrapServers, final String topicName, final String groupId) {
+    private Poll consumer(final String bootstrapServers, final String topicName, final String groupId) {
         final Properties props = new Properties();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.CLIENT_ID_CONFIG, randomUUID().toString());
@@ -115,7 +123,7 @@ public class MultiClientTest {
         };
     }
 
-    private static Sink producer(final String bootstrapServers, final String topicName) {
+    private Sink producer(final String bootstrapServers, final String topicName) {
         final Properties props = new Properties();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ProducerConfig.CLIENT_ID_CONFIG, randomUUID().toString());

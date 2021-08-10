@@ -16,11 +16,12 @@ dependencies {
     // The logging API
     implementation 'org.slf4j:slf4j-api:1.7.29'
 
-    testImplementation "org.testcontainers:kafka:$testContainersVersion"
-    testImplementation 'junit:junit:4.11'
+    testImplementation libTestContainers
+    testImplementation libJunit4
     testImplementation libProxyBaseTestca
+    testImplementation project(":testutil")
     testCompileOnly 'com.google.code.findbugs:annotations:3.0.1'
-    testRuntimeOnly 'ch.qos.logback:logback-classic:1.2.3'
+    testRuntimeOnly libLogback
 }
 
 test {

@@ -118,5 +118,10 @@ namespace testrunner
             _pollMaster.Dispose();
             _sinkMaster.Dispose();
         }
+
+        public bool IsSucceeded()
+        {
+            return _messages.Count == 0;
+        }
     }
 }
