@@ -84,14 +84,13 @@ public class KafkaMessage extends AbstractChunkedMessage {
     public <T extends AbstractResponse> T responseBody(final RequestHeader requestHeader) {
         final short apiVersion = requestHeader.apiVersion();
         final ApiKeys apiKey = requestHeader.apiKey();
-        final Struct struct = withPayload(payload -> {
+        return withPayload(payload -> {
             final ByteBuffer nioBuffer = payload.nioBuffer();
             ResponseHeader.parse(nioBuffer, apiKey.responseHeaderVersion(apiVersion)); // Skip over header
-            return apiKey.parseResponse(apiVersion, nioBuffer);
+            // It's up to the caller to know what this message contains
+            @SuppressWarnings("unchecked") final T response = (T) parseResponse(apiKey, nioBuffer, apiVersion);
+            return response;
         });
-        // It's up to the caller to know what this message contains
-        @SuppressWarnings("unchecked") final T responseBody = (T) parseResponse(apiKey, struct, apiVersion);
-        return responseBody;
     }
 
     private <T> T withPayload(final Function<ByteBuf, T> f) {

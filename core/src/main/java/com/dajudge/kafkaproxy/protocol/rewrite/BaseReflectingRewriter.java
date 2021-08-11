@@ -20,10 +20,13 @@ package com.dajudge.kafkaproxy.protocol.rewrite;
 import com.dajudge.kafkaproxy.protocol.KafkaMessage;
 import org.apache.kafka.common.requests.AbstractResponse;
 import org.apache.kafka.common.requests.RequestHeader;
+import org.apache.kafka.common.requests.RequestUtils;
+import org.apache.kafka.common.requests.ResponseHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static io.netty.buffer.Unpooled.wrappedBuffer;
+import static org.apache.kafka.common.requests.RequestUtils.serialize;
 
 public abstract class BaseReflectingRewriter<T extends AbstractResponse> implements ResponseRewriter {
     private static final Logger LOG = LoggerFactory.getLogger(BaseReflectingRewriter.class);
@@ -45,10 +48,15 @@ public abstract class BaseReflectingRewriter<T extends AbstractResponse> impleme
     }
 
     private KafkaMessage rewriteMessage(final RequestHeader requestHeader, final KafkaMessage message) {
-        return new KafkaMessage(wrappedBuffer(
-                rewriteMessageBody(requestHeader, message)
-                        .serialize(requestHeader.apiVersion(), message.responseHeader(requestHeader))
-        ));
+        final ResponseHeader header = message.responseHeader(requestHeader);
+        final T rewrittenMessage = rewriteMessageBody(requestHeader, message);
+        return new KafkaMessage(wrappedBuffer(serialize(
+                header.data(),
+                header.headerVersion(),
+                rewrittenMessage.data(),
+                requestHeader.apiVersion()
+        )));
+
     }
 
     private T rewriteMessageBody(final RequestHeader requestHeader, final KafkaMessage message) {
