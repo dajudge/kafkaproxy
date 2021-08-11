@@ -14,14 +14,26 @@ dependencies {
     testRuntimeOnly libLogback
 }
 
+task composeKafkaProxyDockerContext(type: Copy) {
+    from project(":app").tasks.findByName("quarkusBuild").outputs.files
+    from "src/main/docker"
+    into file("build/kafkaproxy")
+}
+
+task buildKafkaProxy(type: DockerBuildImage) {
+    dependsOn composeKafkaProxyDockerContext
+    inputDir = file("build/kafkaproxy")
+    images.add("localhost/kafkaproxy/kafkaproxy:latest")
+}
+test.dependsOn buildKafkaProxy
 
 def clients = new File(project.projectDir, "src/main/clients").listFiles().collect { it.name }
 clients.forEach { client ->
     def buildTask = task "buildClient-${client}"(type: DockerBuildImage, group: "itest-clients") {
         inputDir = file("src/main/clients/${client}")
-        images.add("kafkaproxy/itest-${client}:latest")
+        images.add("localhost/kafkaproxy/itest-${client}:latest")
         buildArgs = [
-                KAFKA_CLIENT_VERSION_JAVA  : System.getenv("KAFKA_CLIENT_VERSION_JAVA") ?: "2.6.0",
+                KAFKA_CLIENT_VERSION_JAVA: System.getenv("KAFKA_CLIENT_VERSION_JAVA") ?: "2.6.0",
         ]
     }
     test.dependsOn buildTask
