@@ -20,12 +20,9 @@ package com.dajudge.kafkaproxy.protocol;
 import com.dajudge.proxybase.AbstractChunkedMessage;
 import io.netty.buffer.ByteBuf;
 import org.apache.kafka.common.protocol.ApiKeys;
-import org.apache.kafka.common.protocol.types.Struct;
 import org.apache.kafka.common.requests.AbstractResponse;
 import org.apache.kafka.common.requests.RequestHeader;
 import org.apache.kafka.common.requests.ResponseHeader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -36,8 +33,6 @@ import static java.util.Arrays.asList;
 import static org.apache.kafka.common.requests.AbstractResponse.parseResponse;
 
 public class KafkaMessage extends AbstractChunkedMessage {
-    private static final Logger LOG = LoggerFactory.getLogger(KafkaMessage.class);
-
     private static final int KAFKA_HEADER_LENGTH = 4;
     private static final int COMPLETE_CHUNK_COUNT = 2;
 

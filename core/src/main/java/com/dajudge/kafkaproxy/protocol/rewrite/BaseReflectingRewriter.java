@@ -20,7 +20,6 @@ package com.dajudge.kafkaproxy.protocol.rewrite;
 import com.dajudge.kafkaproxy.protocol.KafkaMessage;
 import org.apache.kafka.common.requests.AbstractResponse;
 import org.apache.kafka.common.requests.RequestHeader;
-import org.apache.kafka.common.requests.RequestUtils;
 import org.apache.kafka.common.requests.ResponseHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

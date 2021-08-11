@@ -58,7 +58,8 @@ public class BaseIntegrationTest {
     }
 
     private static class KafkaProxyPorts {
-        private final int proxyPort, httpPort;
+        private final int proxyPort;
+        private final int httpPort;
 
         private KafkaProxyPorts(final int proxyPort, final int httpPort) {
             this.proxyPort = proxyPort;
