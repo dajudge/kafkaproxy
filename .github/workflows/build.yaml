@@ -21,11 +21,6 @@ jobs:
           native-image: true
       - name: Build with Gradle
         run: CONFLUENT_PLATFORM_VERSION="${{ matrix.cp-platform-version }}"  KAFKA_CLIENT_VERSION_JAVA="${{ matrix.java-client-version }}" ./gradlew clean :itest:test --stacktrace
-      - name: Publish Unit Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v1
-        if: always()
-        with:
-          files: "**/test-results/**/*.xml"
 
   build:
     runs-on: ubuntu-latest
@@ -39,8 +34,3 @@ jobs:
           native-image: true
       - name: Build with Gradle
         run: ./gradlew clean build -x :itest:test -Dquarkus.package.type=native --stacktrace
-      - name: Publish Unit Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v1
-        if: always()
-        with:
-          files: "**/test-results/**/*.xml"
