@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 
 public class JavaTest extends BaseIntegrationTest {
     @ClassRule
-    public static final ITest CONTAINER = new ITest("kafkaproxy/itest-java:latest")
+    public static final ITest CONTAINER = new ITest("localhost/kafkaproxy/itest-java:latest")
             .withEnv("CONNECTION_ATTEMPTS", "5000");
 
     @Test

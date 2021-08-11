@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 
 public class DotNetTest extends BaseIntegrationTest {
     @ClassRule
-    public static final ITest CONTAINER = new ITest("kafkaproxy/itest-dotnet:latest");
+    public static final ITest CONTAINER = new ITest("localhost/kafkaproxy/itest-dotnet:latest");
 
     @Test
     public void run() {
