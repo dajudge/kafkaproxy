@@ -17,7 +17,7 @@ jobs:
         uses: ayltai/setup-graalvm@v1
         with:
           java-version: 11
-          graalvm-version: 20.2.0
+          graalvm-version: 21.2.0
           native-image: true
       - name: Build with Gradle
         run: CONFLUENT_PLATFORM_VERSION="${{ matrix.cp-platform-version }}"  KAFKA_CLIENT_VERSION_JAVA="${{ matrix.java-client-version }}" ./gradlew clean :itest:test -Dquarkus.package.type=native --stacktrace
@@ -30,7 +30,7 @@ jobs:
         uses: ayltai/setup-graalvm@v1
         with:
           java-version: 11
-          graalvm-version: 20.2.0
+          graalvm-version: 21.2.0
           native-image: true
       - name: Build with Gradle
         run: ./gradlew clean build -x :itest:test -Dquarkus.package.type=native --stacktrace
