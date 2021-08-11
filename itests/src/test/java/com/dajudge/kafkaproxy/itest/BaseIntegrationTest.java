@@ -30,8 +30,10 @@ import static java.lang.String.valueOf;
 import static org.testcontainers.containers.KafkaContainer.KAFKA_PORT;
 
 public class BaseIntegrationTest {
+    private static final String CONFLUENT_PLATFORM_VERSION = System.getenv("CONFLUENT_PLATFORM_VERSION");
+    private static final String KAFKA_IMAGE = "confluentinc/cp-kafka:" + CONFLUENT_PLATFORM_VERSION;
     @ClassRule
-    public static final KafkaContainer KAFKA = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"));
+    public static final KafkaContainer KAFKA = new KafkaContainer(DockerImageName.parse(KAFKA_IMAGE));
 
     public <T> T withKafkaProxy(final ThrowingFunction<String, T> runnable) {
         try (final ProxyContainer proxy = createKafkaProxy(KAFKA.getHost(), KAFKA.getMappedPort(KAFKA_PORT))) {

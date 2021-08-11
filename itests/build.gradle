@@ -20,12 +20,16 @@ clients.forEach { client ->
     def buildTask = task "buildClient-${client}"(type: DockerBuildImage, group: "itest-clients") {
         inputDir = file("src/main/clients/${client}")
         images.add("kafkaproxy/itest-${client}:latest")
+        buildArgs = [
+                KAFKA_CLIENT_VERSION_JAVA  : System.getenv("KAFKA_CLIENT_VERSION_JAVA") ?: "2.6.0",
+        ]
     }
     test.dependsOn buildTask
 }
 
 
 test {
+    environment "CONFLUENT_PLATFORM_VERSION", System.getenv("CONFLUENT_PLATFORM_VERSION") ?: "5.5.1"
     testLogging {
         showStandardStreams = true
     }
