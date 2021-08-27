@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'io.quarkus' version "1.7.0.Final"
+    id 'io.quarkus' version "1.13.7.Final"
 }
 
 quarkusBuild {
@@ -14,7 +14,7 @@ dependencies {
     implementation project(":core")
     implementation libProxyBase
 
-    implementation enforcedPlatform("io.quarkus:quarkus-universe-bom:1.7.0.Final") {
+    implementation enforcedPlatform("io.quarkus:quarkus-universe-bom:1.13.7.Final") {
         exclude group: 'org.apache.kafka', module: 'kafka-clients'
     }
     implementation 'io.quarkus:quarkus-resteasy'

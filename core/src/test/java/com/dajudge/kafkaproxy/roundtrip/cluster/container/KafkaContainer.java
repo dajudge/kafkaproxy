@@ -37,6 +37,7 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.dajudge.kafkaproxy.roundtrip.cluster.container.Version.CP_VERSION;
 import static com.dajudge.kafkaproxy.roundtrip.util.Util.indent;
 import static com.dajudge.kafkaproxy.roundtrip.util.Util.safeToString;
 import static java.lang.String.join;
@@ -60,12 +61,15 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
             final Network network,
             final CommunicationSetup communicationSetup
     ) {
-        super("confluentinc/cp-kafka:5.5.1");
+        super("confluentinc/cp-kafka:" + CP_VERSION);
         this.internalHostname = "broker" + brokerId;
         serverSecurity = communicationSetup.getServerSecurity("CN=localhost");
         this.withNetwork(network)
                 .withImagePullPolicy(alwaysPull())
                 .withNetworkAliases(internalHostname)
+                .withCreateContainerCmdModifier(mod -> {
+                    mod.withUser("root");
+                })
                 .withEnv("KAFKA_ZOOKEEPER_CONNECT", zookeeper.getEndpoint())
                 .withEnv("CONFLUENT_SUPPORT_METRICS_ENABLE", "0")
                 .withEnv("KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR", "1")

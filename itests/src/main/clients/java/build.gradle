@@ -4,8 +4,10 @@ repositories {
     mavenCentral()
 }
 
+def kafkaClientVersion = System.getenv("KAFKA_CLIENT_VERSION_JAVA") ?: "2.6.0"
+
 dependencies {
-    implementation "org.apache.kafka:kafka-clients:2.6.0"
+    implementation "org.apache.kafka:kafka-clients:${kafkaClientVersion}"
     implementation 'ch.qos.logback:logback-classic:1.2.3'
 
     // Kafka client needs jackson

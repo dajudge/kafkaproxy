@@ -16,11 +16,8 @@
  */
 package com.dajudge.kafkaproxy.itest;
 
-import com.dajudge.kafkaproxy.KafkaProxyApplication;
-import com.dajudge.kafkaproxy.config.ApplicationConfig;
-import com.dajudge.kafkaproxy.itest.util.NullFileSystem;
+import com.dajudge.kafkaproxy.itest.util.KafkaProxyContainer;
 import com.dajudge.kafkaproxy.roundtrip.util.PortFinder;
-import com.dajudge.kafkaproxy.roundtrip.util.TestEnvironment;
 import org.junit.ClassRule;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -30,8 +27,10 @@ import static java.lang.String.valueOf;
 import static org.testcontainers.containers.KafkaContainer.KAFKA_PORT;
 
 public class BaseIntegrationTest {
+    private static final String CONFLUENT_PLATFORM_VERSION = System.getenv("CONFLUENT_PLATFORM_VERSION");
+    private static final String KAFKA_IMAGE = "confluentinc/cp-kafka:" + CONFLUENT_PLATFORM_VERSION;
     @ClassRule
-    public static final KafkaContainer KAFKA = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"));
+    public static final KafkaContainer KAFKA = new KafkaContainer(DockerImageName.parse(KAFKA_IMAGE));
 
     public <T> T withKafkaProxy(final ThrowingFunction<String, T> runnable) {
         try (final ProxyContainer proxy = createKafkaProxy(KAFKA.getHost(), KAFKA.getMappedPort(KAFKA_PORT))) {
@@ -42,37 +41,44 @@ public class BaseIntegrationTest {
     }
 
     private ProxyContainer createKafkaProxy(final String kafkaHost, final int kafkaPort) {
-        final int proxyPort = findFreePort();
-        final TestEnvironment environment = new TestEnvironment()
+        final KafkaProxyPorts ports = findFreePorts();
+        final KafkaProxyContainer container = new KafkaProxyContainer()
                 .withEnv("KAFKAPROXY_BOOTSTRAP_SERVERS", format("%s:%s", kafkaHost, kafkaPort))
-                .withEnv("KAFKAPROXY_BASE_PORT", valueOf(proxyPort))
+                .withEnv("KAFKAPROXY_BASE_PORT", valueOf(ports.proxyPort))
+                .withEnv("KAFKAPROXY_HTTP_PORT", valueOf(ports.httpPort))
                 .withEnv("KAFKAPROXY_HOSTNAME", "localhost");
-        final KafkaProxyApplication app = new KafkaProxyApplication(
-                new ApplicationConfig(environment),
-                System::currentTimeMillis,
-                new NullFileSystem()
-        );
-        return new ProxyContainer(app, format("localhost:%d", proxyPort));
+        container.start();
+        return new ProxyContainer(container, format("localhost:%d", ports.proxyPort));
     }
 
-    private int findFreePort() {
+    private KafkaProxyPorts findFreePorts() {
         try (final PortFinder portFinder = new PortFinder()) {
-            return portFinder.nextPort();
+            return new KafkaProxyPorts(portFinder.nextPort(), portFinder.nextPort());
+        }
+    }
+
+    private static class KafkaProxyPorts {
+        private final int proxyPort;
+        private final int httpPort;
+
+        private KafkaProxyPorts(final int proxyPort, final int httpPort) {
+            this.proxyPort = proxyPort;
+            this.httpPort = httpPort;
         }
     }
 
     private static class ProxyContainer implements AutoCloseable {
-        private final KafkaProxyApplication application;
+        private final KafkaProxyContainer container;
         private final String proxyEndpoint;
 
-        private ProxyContainer(final KafkaProxyApplication application, final String proxyEndpoint) {
-            this.application = application;
+        private ProxyContainer(final KafkaProxyContainer container, final String proxyEndpoint) {
+            this.container = container;
             this.proxyEndpoint = proxyEndpoint;
         }
 
         @Override
         public void close() {
-            application.close();
+            container.close();
         }
 
         public String getProxyEndpoint() {

@@ -14,21 +14,13 @@
  * limitations under the License.
  *
  */
-package com.dajudge.kafkaproxy.itest;
+package com.dajudge.kafkaproxy.itest.util;
 
-import com.dajudge.kafkaproxy.itest.util.ITest;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.testcontainers.containers.GenericContainer;
 
-import static org.junit.Assert.assertEquals;
-
-public class DotNetTest extends BaseIntegrationTest {
-    @ClassRule
-    public static final ITest CONTAINER = new ITest("localhost/kafkaproxy/itest-dotnet:latest");
-
-    @Test
-    public void run() {
-        final int exitCode = withKafkaProxy(proxyEndpoint -> CONTAINER.exec("dotnet", "run", proxyEndpoint));
-        assertEquals("Test run failed", 0, exitCode);
+public class KafkaProxyContainer extends GenericContainer<KafkaProxyContainer> {
+    public KafkaProxyContainer() {
+        super("localhost/kafkaproxy/kafkaproxy:latest");
+        this.withNetworkMode("host");
     }
 }

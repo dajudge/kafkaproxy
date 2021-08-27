@@ -21,6 +21,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 
+import static com.dajudge.kafkaproxy.roundtrip.cluster.container.Version.CP_VERSION;
 import static java.lang.String.valueOf;
 import static org.testcontainers.images.PullPolicy.alwaysPull;
 
@@ -29,7 +30,7 @@ public class ZookeeperContainer extends GenericContainer<ZookeeperContainer> {
     private static final int ZOOKEEPER_PORT = 2181;
 
     public ZookeeperContainer(final Network network) {
-        super("confluentinc/cp-zookeeper:5.5.1");
+        super("confluentinc/cp-zookeeper:" + CP_VERSION);
         this.withNetworkAliases(NETWORK_ALIAS)
                 .withImagePullPolicy(alwaysPull())
                 .withNetwork(network)

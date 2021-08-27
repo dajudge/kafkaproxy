@@ -1,6 +1,27 @@
 name: CI Build
 on: [push]
 jobs:
+
+  itest:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java-client-version: [ "2.6.1", "2.8.0" ]
+        cp-platform-version: [
+            "6.0.3", # Kafka 2.6.3
+            "6.2.0", # Kafka 2.8.0
+        ]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up GraalVM
+        uses: ayltai/setup-graalvm@v1
+        with:
+          java-version: 11
+          graalvm-version: 21.2.0
+          native-image: true
+      - name: Build with Gradle
+        run: CONFLUENT_PLATFORM_VERSION="${{ matrix.cp-platform-version }}"  KAFKA_CLIENT_VERSION_JAVA="${{ matrix.java-client-version }}" ./gradlew clean :itest:test -Dquarkus.package.type=native --stacktrace
+
   build:
     runs-on: ubuntu-latest
     steps:
@@ -9,12 +30,7 @@ jobs:
         uses: ayltai/setup-graalvm@v1
         with:
           java-version: 11
-          graalvm-version: 20.2.0
+          graalvm-version: 21.2.0
           native-image: true
       - name: Build with Gradle
-        run: ./gradlew clean build -Dquarkus.package.type=native --stacktrace
-      - name: Publish Unit Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v1
-        if: always()
-        with:
-          files: "**/test-results/**/*.xml"
+        run: ./gradlew clean build -x :itest:test -Dquarkus.package.type=native --stacktrace

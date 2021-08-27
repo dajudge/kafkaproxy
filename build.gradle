@@ -3,8 +3,8 @@ plugins {
 }
 
 ext {
-    kafkaClientVersion = "2.6.0"
-    proxyBaseVersion = "0.0.14"
+    kafkaClientVersion = "2.8.0"
+    proxyBaseVersion = "0.0.15"
     testContainersVersion = "1.15.3"
     junit4Version = "4.11"
     libLogback = 'ch.qos.logback:logback-classic:1.2.3'
