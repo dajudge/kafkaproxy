@@ -27,7 +27,7 @@ import java.time.Duration;
 import java.util.Date;
 
 import static com.dajudge.kafkaproxy.roundtrip.util.Util.randomIdentifier;
-import static com.dajudge.proxybase.ca.Helpers.createJks;
+import static com.dajudge.proxybase.ca.Helpers.createKeyStore;
 import static com.dajudge.proxybase.ca.Helpers.serialize;
 import static java.time.temporal.ChronoUnit.DAYS;
 
@@ -74,14 +74,14 @@ public class CertAuthority {
             final char[] keyPassword,
             final String type
     ) {
-        return serialize(createJks(keyStore -> {
+        return serialize(createKeyStore(keyStore -> {
             keyStore.setKeyEntry("key", keyPair.getPrivate(), keyPassword, new Certificate[]{cert});
         }, type), keyStorePassword);
     }
 
     public KeyStoreData getTrustStore(final String type) {
         final char[] keyStorePassword = randomIdentifier().toCharArray();
-        final byte[] keyStore = serialize(createJks(keystore -> {
+        final byte[] keyStore = serialize(createKeyStore(keystore -> {
             keystore.setCertificateEntry("ca", cert);
         }, type), keyStorePassword);
         return new KeyStoreData(keyStore, keyStorePassword, null, type);
