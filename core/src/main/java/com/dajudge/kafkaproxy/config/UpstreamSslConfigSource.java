@@ -21,7 +21,6 @@ import com.dajudge.proxybase.config.UpstreamSslConfig;
 
 import java.util.Optional;
 
-import static com.dajudge.kafkaproxy.config.KeyStoreConfigHelper.optionalTrustStoreConfig;
 import static com.dajudge.kafkaproxy.config.KeyStoreConfigHelper.requiredKeyStoreConfig;
 
 
@@ -44,7 +43,7 @@ public class UpstreamSslConfigSource implements ConfigSource<UpstreamSslConfig> 
             return Optional.empty();
         }
         return Optional.of(new UpstreamSslConfig(
-                optionalTrustStoreConfig(environment, PREFIX_CLIENT_SSL),
+                KeyStoreConfigHelper.loadTrustStoreConfig(environment, PREFIX_CLIENT_SSL),
                 requiredKeyStoreConfig(environment, PREFIX_CLIENT_SSL),
                 environment.requiredBoolean(PROP_CLIENT_SSL_AUTH_REQUIRED, DEFAULT_CLIENT_AUTH_REQUIRED)
         ));
