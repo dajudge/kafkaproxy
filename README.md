@@ -7,10 +7,10 @@ kafkaproxy is a reverse proxy for the wire protocol of Apache Kafka.
 Since the Kafka wire protocol publishes the set of available broker endpoints from the brokers to the clients during
 client bootstrapping, the brokers must be configured to publish endpoints that are reachable from the client side. This
 can be a cumbersome restriction in several different situations, such as:
-* Network topologies preventing direct access to the broker nodes
-* Multiple networks from which broker nodes should be reachable
-* DNS resolution restrictions when accessing TLS secured broker nodes
-* Using the sidecar pattern for TLS termination in Kubernetes 
+*  Network topologies preventing direct access to the broker nodes
+*  Multiple networks from which broker nodes should be reachable
+*  DNS resolution restrictions when accessing TLS secured broker nodes
+*  Using the sidecar pattern for TLS termination in Kubernetes 
 
 This is where kafkaproxy comes into play and allows for transparent relaying of the Kafka wire protocol by rewriting
 the relevant parts of the communication where the brokers publish the endpoint names - with user-configurable endpoints
@@ -127,14 +127,6 @@ Configuration can be provided using the following environment variables:
 | `KAFKAPROXY_KAFKA_SSL_KEY_PASSWORD`                 |               | The password to access the proxy's client key. Provide no value if the key is not password protected. Ignored when `KAFKAPROXY_KAFKA_SSL_KEY_PASSWORD_LOCATION` is set.
 | `KAFKAPROXY_KAFKA_SSL_KEY_PASSWORD_LOCATION`        |               | The filesytem location of the password to access the proxy's client key. Overrides `KAFKAPROXY_KAFKA_SSL_KEY_PASSWORD`.
 
-# Features
-* SSL support from client to proxy
-* SSL support from proxy to broker
-* TODO: Forwarding 2-way client SSL authentication information via on-the-fly generation of impostor certificates via
-  * local KeyPair generation / signing
-  * CFSSL
-  * AWS Certificate Manager Private CA
-
 # Further Reading
-* [A Guide To The Kafka Protocol](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol)
-* [Kafka protocol guide](http://kafka.apache.org/protocol.html)
+*  [A Guide To The Kafka Protocol](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol)
+*  [Kafka protocol guide](http://kafka.apache.org/protocol.html)
