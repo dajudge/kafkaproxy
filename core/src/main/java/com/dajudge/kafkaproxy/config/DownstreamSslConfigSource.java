@@ -43,7 +43,7 @@ public class DownstreamSslConfigSource implements ConfigSource<DownstreamSslConf
             return Optional.empty();
         }
         final DownstreamSslConfig downstreamConfig = new DownstreamSslConfig(
-                requiredTrustStoreConfig(environment, KAFKA_SSL_PREFIX),
+                loadTrustStoreConfig(environment, KAFKA_SSL_PREFIX),
                 optionalKeyStoreConfig(environment, KAFKA_SSL_PREFIX),
                 environment.requiredBoolean(ENV_KAFKA_SSL_VERIFY_HOSTNAME, DEFAULT_KAFKA_SSL_VERIFY_HOSTNAME)
         );

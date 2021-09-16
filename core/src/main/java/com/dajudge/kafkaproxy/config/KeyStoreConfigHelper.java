@@ -44,23 +44,11 @@ final class KeyStoreConfigHelper {
         return loadKeyStoreConfig(environment, prefix, false);
     }
 
-    static KeyStoreConfig requiredTrustStoreConfig(final Environment environment, final String prefix) {
-        return loadTrustStoreConfig(environment, prefix, true).orElseThrow(IllegalStateException::new);
-    }
-
-    static Optional<KeyStoreConfig> optionalTrustStoreConfig(final Environment environment, final String prefix) {
-        return loadTrustStoreConfig(environment, prefix, false);
-    }
-
-    private static Optional<KeyStoreConfig> loadTrustStoreConfig(
+    static Optional<KeyStoreConfig> loadTrustStoreConfig(
             final Environment environment,
-            final String prefix,
-            final boolean required
+            final String prefix
     ) {
         final String truststorePrefix = prefix + QUALIFIER_TRUSTSTORE;
-        if (required) {
-            environment.requiredString(truststorePrefix + SUFFIX_LOCATION);
-        }
         return environment.optionalString(truststorePrefix + SUFFIX_LOCATION).map(path -> new KeyStoreConfig(
                 path,
                 environment.optionalString(truststorePrefix + SUFFIX_PASSWORD).orElse("").toCharArray(),
