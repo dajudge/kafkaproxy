@@ -20,7 +20,6 @@ package com.dajudge.kafkaproxy.roundtrip.cluster.container;
 import com.dajudge.kafkaproxy.roundtrip.cluster.KafkaWaitStrategy;
 import com.dajudge.kafkaproxy.roundtrip.comm.CommunicationSetup;
 import com.dajudge.kafkaproxy.roundtrip.comm.ServerSecurity;
-import com.dajudge.kafkaproxy.roundtrip.util.Util;
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -28,8 +27,6 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
-import org.testcontainers.images.ImagePullPolicy;
-import org.testcontainers.images.PullPolicy;
 import org.testcontainers.images.builder.Transferable;
 import org.testcontainers.utility.MountableFile;
 
