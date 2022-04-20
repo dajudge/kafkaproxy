@@ -33,11 +33,6 @@ wrapper {
 allprojects {
     apply plugin: 'com.github.hierynomus.license'
     apply plugin: 'pmd'
-    apply plugin: 'findbugs'
-
-    findbugs {
-        toolVersion = "3.0.1"
-    }
 
     tasks.withType(FindBugs) {
         reports {
