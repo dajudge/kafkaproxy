@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java-client-version: [ "2.6.1", "2.8.0" ]
+        java-client-version: [ "2.6.1", "2.8.0", "3.0.0" ]
         cp-platform-version: [
             "6.0.3", # Kafka 2.6.3
             "6.2.0", # Kafka 2.8.0
