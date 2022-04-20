@@ -19,7 +19,6 @@ package com.dajudge.kafkaproxy.roundtrip.cluster;
 
 import com.dajudge.kafkaproxy.roundtrip.client.ClientFactory;
 import com.dajudge.kafkaproxy.roundtrip.comm.ClientSecurity;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,10 +43,6 @@ public class KafkaWaitStrategy extends AbstractWaitStrategy {
     }
 
     @Override
-    @SuppressFBWarnings(
-            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
-            justification = "False positive" // see https://sourceforge.net/p/findbugs/bugs/1169/
-    )
     protected void waitUntilReady() {
         final String bootstrapServers = "localhost:" + waitStrategyTarget.getMappedPort(internalClientPort);
         try (final AdminClient admin = new ClientFactory(bootstrapServers, clientSecurity).admin("CN=admin")) {

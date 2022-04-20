@@ -22,7 +22,6 @@ import com.dajudge.kafkaproxy.roundtrip.cluster.CommunicationSetupBuilder;
 import com.dajudge.kafkaproxy.roundtrip.cluster.KafkaClusterBuilder;
 import com.dajudge.kafkaproxy.roundtrip.cluster.TestSetup;
 import com.dajudge.kafkaproxy.roundtrip.comm.CommunicationSetup;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -109,10 +108,6 @@ public class RoundtripTest {
                 .build();
     }
 
-    @SuppressFBWarnings(
-            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
-            justification = "False positive" // see https://sourceforge.net/p/findbugs/bugs/1169/
-    )
     private void runRoundtripTest(
             final ClientFactory producerClientFactory,
             final ClientFactory consumerClientFactory
