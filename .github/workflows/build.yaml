@@ -10,6 +10,7 @@ jobs:
         cp-platform-version: [
             "6.0.3", # Kafka 2.6.3
             "6.2.0", # Kafka 2.8.0
+            "7.0.3", # Kafka 3.0.3
         ]
     steps:
       - uses: actions/checkout@v2
