@@ -38,6 +38,7 @@ public class MetadataRewriter extends BaseReflectingRewriter<MetadataResponse> {
     }
 
     @Override
+    @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
     protected void rewrite(final MetadataResponse response) throws NoSuchFieldException, IllegalAccessException {
         final Field field = MetadataResponse.class.getDeclaredField("data");
         field.setAccessible(true);

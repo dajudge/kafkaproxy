@@ -25,6 +25,7 @@ import java.util.List;
 public class PortFinder implements AutoCloseable {
     private final List<ServerSocket> sockets = new ArrayList<>();
 
+    @SuppressWarnings("PMD.CloseResource")
     public int nextPort() {
         try {
             final ServerSocket s = new ServerSocket(0);
