@@ -20,7 +20,6 @@ dependencies {
     testImplementation libJunit4
     testImplementation libProxyBaseTestca
     testImplementation project(":testutil")
-    testCompileOnly 'com.google.code.findbugs:annotations:3.0.1'
     testRuntimeOnly libLogback
 }
 

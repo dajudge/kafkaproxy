@@ -53,12 +53,15 @@ public class ITest extends GenericContainer<ITest> {
     public Integer exec(final String... command) throws InterruptedException, IOException {
         final InspectContainerResponse containerInfo = getContainerInfo();
         final String containerId = containerInfo.getId();
+        @SuppressWarnings("PMD.CloseResource")
         final DockerClient dockerClient = DockerClientFactory.instance().client();
         final ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId)
                 .withAttachStdout(true)
                 .withAttachStderr(true)
                 .withCmd(command)
                 .exec();
+
+        @SuppressWarnings("PMD.CloseResource")
         final FrameConsumerResultCallback callback = new FrameConsumerResultCallback();
         Throwable error = null;
 

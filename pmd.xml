@@ -26,11 +26,8 @@
         <!-- Not a JEE application -->
         <exclude name="UseProperClassLoader" />
 
-        <!-- False positivies with throwables as last parameter -->
-        <!-- https://github.com/pmd/pmd/issues/939 -->
-        <exclude name="InvalidSlf4jMessageFormat"/>
-
         <!-- Not super useful -->
         <exclude name="ReturnEmptyArrayRatherThanNull" />
+        <exclude name="ReturnEmptyCollectionRatherThanNull" />
     </rule>
 </ruleset>

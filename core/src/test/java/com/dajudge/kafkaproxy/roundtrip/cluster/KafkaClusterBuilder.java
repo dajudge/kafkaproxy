@@ -69,6 +69,7 @@ public class KafkaClusterBuilder {
     public TestSetup build() {
         final KafkaCluster kafka = buildKafkaCluster();
         final int proxyBootstrapPort = freePort();
+        @SuppressWarnings("PMD.CloseResource")
         final KafkaProxyApplication proxy = buildProxyApp(kafka, proxyBootstrapPort);
         final ClientFactory proxiedClientFactory = buildProxiedClientFactory(proxyBootstrapPort);
         final ClientFactory directClientFactory = buildDirectClientFactory(kafka);
@@ -152,7 +153,9 @@ public class KafkaClusterBuilder {
     }
 
     private KafkaCluster buildKafkaCluster() {
+        @SuppressWarnings("PMD.CloseResource")
         final Network network = newNetwork();
+        @SuppressWarnings("PMD.CloseResource")
         final ZookeeperContainer zookeeper = new ZookeeperContainer(network);
         zookeeper.start();
         final List<KafkaContainer> kafkaContainers = rangeClosed(1, 3)

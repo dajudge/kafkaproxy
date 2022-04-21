@@ -44,6 +44,7 @@ public class FindCoordinatorRewriter extends BaseReflectingRewriter<FindCoordina
 
 
     @Override
+    @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
     protected void rewrite(final FindCoordinatorResponse response) throws NoSuchFieldException, IllegalAccessException {
         final Field field = FindCoordinatorResponse.class.getDeclaredField("data");
         field.setAccessible(true);
