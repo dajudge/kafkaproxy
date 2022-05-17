@@ -4,7 +4,7 @@ plugins {
 }
 
 application {
-    mainClass = 'SimpleConsumer'
+    mainClass = 'SimpleTest'
 }
 
 repositories {
