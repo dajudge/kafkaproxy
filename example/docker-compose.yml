@@ -1,7 +1,7 @@
 version: '3'
 services:
   zookeeper:
-    image: "confluentinc/cp-zookeeper:5.2.1"
+    image: "confluentinc/cp-zookeeper:7.0.3"
     restart: always
     ports:
       - "2181:2181"
@@ -9,7 +9,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
 
   kafka1:
-    image: "confluentinc/cp-kafka:5.2.1"
+    image: "confluentinc/cp-kafka:7.0.3"
     depends_on:
       - zookeeper
     restart: always
@@ -30,7 +30,7 @@ services:
       KAFKA_SSL_KEYSTORE_CREDENTIALS: password
 
   kafkaproxy:
-    image: "dajudge/kafkaproxy:0.0.15"
+    image: "dajudge/kafkaproxy:0.0.17"
     ports:
       - 4000:4000
     depends_on:
