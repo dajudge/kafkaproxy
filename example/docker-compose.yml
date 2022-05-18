@@ -48,17 +48,3 @@ services:
       KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_TYPE: pkcs12
       KAFKAPROXY_KAFKA_SSL_TRUSTSTORE_PASSWORD_LOCATION: /ssl/password
       KAFKAPROXY_KAFKA_SSL_VERIFY_HOSTNAME: "false"
-
-  akhq:
-    image: tchiotludo/akhq
-    environment:
-      AKHQ_CONFIGURATION: |
-        akhq:
-          connections:
-            docker-kafka-server:
-              properties:
-                bootstrap.servers: "kafka1:9092"
-    ports:
-      - 8080:8080
-    depends_on:
-      - kafka1
