@@ -29,6 +29,8 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Field;
 import java.util.function.Function;
 
+import static io.netty.util.internal.StringUtil.isNullOrEmpty;
+
 public class FindCoordinatorRewriter extends BaseReflectingRewriter<FindCoordinatorResponse> {
     private static final Logger LOG = LoggerFactory.getLogger(FindCoordinatorRewriter.class);
     private final Function<Endpoint, BrokerMapping> brokerResolver;
@@ -49,19 +51,37 @@ public class FindCoordinatorRewriter extends BaseReflectingRewriter<FindCoordina
         final Field field = FindCoordinatorResponse.class.getDeclaredField("data");
         field.setAccessible(true);
         final FindCoordinatorResponseData data = (FindCoordinatorResponseData) field.get(response);
-        if (data.host() == null || data.host().isEmpty()) {
-            return;
+        if (!isNullOrEmpty(data.host())) {
+            final BrokerMapping mapping = brokerResolver.apply(new Endpoint(data.host(), data.port()));
+            LOG.debug(
+                    "Rewriting {}: {}:{} (sole) -> {}:{}",
+                    ApiKeys.FIND_COORDINATOR,
+                    data.host(),
+                    data.port(),
+                    mapping.getProxy().getHost(),
+                    mapping.getProxy().getPort()
+            );
+            data.setHost(mapping.getProxy().getHost());
+            data.setPort(mapping.getProxy().getPort());
         }
-        final BrokerMapping mapping = brokerResolver.apply(new Endpoint(data.host(), data.port()));
-        LOG.debug(
-                "Rewriting {}: {}:{} -> {}:{}",
-                ApiKeys.FIND_COORDINATOR,
-                data.host(),
-                data.port(),
-                mapping.getProxy().getHost(),
-                mapping.getProxy().getPort()
-        );
-        data.setHost(mapping.getProxy().getHost());
-        data.setPort(mapping.getProxy().getPort());
+        if (data.coordinators() != null) {
+            data.coordinators()
+                    .stream()
+                    .filter(it -> !isNullOrEmpty(it.host()))
+                    .forEach(coordinator -> {
+                        final Endpoint coordinatorEndpoint = new Endpoint(coordinator.host(), coordinator.port());
+                        final BrokerMapping mapping = brokerResolver.apply(coordinatorEndpoint);
+                        LOG.debug(
+                                "Rewriting {}: {}:{} (list) -> {}:{}",
+                                ApiKeys.FIND_COORDINATOR,
+                                coordinator.host(),
+                                coordinator.port(),
+                                mapping.getProxy().getHost(),
+                                mapping.getProxy().getPort()
+                        );
+                        coordinator.setHost(mapping.getProxy().getHost());
+                        coordinator.setPort(mapping.getProxy().getPort());
+                    });
+        }
     }
 }

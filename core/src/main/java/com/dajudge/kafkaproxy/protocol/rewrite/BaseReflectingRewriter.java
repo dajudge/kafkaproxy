@@ -48,14 +48,19 @@ public abstract class BaseReflectingRewriter<T extends AbstractResponse> impleme
 
     private KafkaMessage rewriteMessage(final RequestHeader requestHeader, final KafkaMessage message) {
         final ResponseHeader header = message.responseHeader(requestHeader);
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("Original message: {}", message.responseBody(requestHeader));
+        }
         final T rewrittenMessage = rewriteMessageBody(requestHeader, message);
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("Rewritten message: {}", rewrittenMessage);
+        }
         return new KafkaMessage(wrappedBuffer(serialize(
                 header.data(),
                 header.headerVersion(),
                 rewrittenMessage.data(),
                 requestHeader.apiVersion()
         )));
-
     }
 
     private T rewriteMessageBody(final RequestHeader requestHeader, final KafkaMessage message) {
