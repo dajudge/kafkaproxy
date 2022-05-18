@@ -18,5 +18,5 @@
 package com.dajudge.kafkaproxy.roundtrip.cluster.container;
 
 public class Version {
-    static final String CP_VERSION = "6.2.0";
+    static final String CP_VERSION = "7.0.3";
 }
