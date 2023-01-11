@@ -16,11 +16,14 @@ dependencies {
 
 task composeKafkaProxyDockerContext(type: Copy) {
     from project(":app").tasks.findByName("quarkusBuild").outputs.files
-    from "src/main/docker"
+    from rootProject.file("Dockerfile")
     into file("build/kafkaproxy")
 }
 
 task buildKafkaProxy(type: DockerBuildImage) {
+    buildArgs = [
+            "APP_DIR": "."
+    ]
     dependsOn composeKafkaProxyDockerContext
     inputDir = file("build/kafkaproxy")
     images.add("localhost/kafkaproxy/kafkaproxy:latest")
