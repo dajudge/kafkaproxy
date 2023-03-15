@@ -7,7 +7,7 @@ ext {
     proxyBaseVersion = "0.0.16"
     testContainersVersion = "1.17.6"
     junit4Version = "4.13.2"
-    libLogback = 'ch.qos.logback:logback-classic:1.4.1'
+    libLogback = 'ch.qos.logback:logback-classic:1.4.6'
     libKafkaClient = "org.apache.kafka:kafka-clients:$kafkaClientVersion"
     libProxyBase = "com.dajudge.proxybase:proxybase:$proxyBaseVersion"
     libProxyBaseTestca = "com.dajudge.proxybase:testca:$proxyBaseVersion"
