@@ -5,7 +5,7 @@ plugins {
 ext {
     kafkaClientVersion = "3.4.0"
     proxyBaseVersion = "0.0.16"
-    testContainersVersion = "1.17.6"
+    testContainersVersion = "1.18.0"
     junit4Version = "4.13.2"
     libLogback = 'ch.qos.logback:logback-classic:1.4.1'
     libKafkaClient = "org.apache.kafka:kafka-clients:$kafkaClientVersion"
